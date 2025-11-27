@@ -15,6 +15,8 @@ QT -= gui
 DEFINES += COMMON_LIBRARY
 
 INCLUDEPATH += $$PWD/../../config
+INCLUDEPATH += $$PWD/../../third_party
+INCLUDEPATH += $$PWD/../../third_party/opencv/include
 
 # ------------------ 头文件 ------------------
 HEADERS += \
@@ -39,6 +41,13 @@ SOURCES += \
     ThreadPool.cpp \
     Timer.cpp \
     Utils.cpp
+# OpenCV 链接（MinGW）
+win32-g++ {
+    OPENCV_LIB_DIR = $$PWD/../../third_party/opencv/x64/mingw/lib
+    LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+    QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+    QMAKE_LIBS += -lopencv_world460
+}
 
 # ------------------ 安装规则 ------------------
 target.path = $$DESTDIR/lib

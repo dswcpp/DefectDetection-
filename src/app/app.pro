@@ -21,6 +21,8 @@ win32:RC_ICONS = ../../resources/icons/app.ico
 macx:ICON = ../../resources/icons/app.icns
 
 INCLUDEPATH += $$PWD/../../config
+INCLUDEPATH += $$PWD/../../third_party
+INCLUDEPATH += $$PWD/../../third_party/opencv/include
 # ------------------ 头文件 ------------------
 HEADERS += \
     DetectPipeline.h \
@@ -102,6 +104,14 @@ DEPENDPATH += $$PWD/../algorithm
 win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
 else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/algorithm.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
+
+# OpenCV 链接（MinGW）
+win32-g++ {
+    OPENCV_LIB_DIR = $$PWD/../../third_party/opencv/x64/mingw/lib
+    LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+    QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+    QMAKE_LIBS += -lopencv_world460
+}
 
 # 确保 Qt6EntryPoint 依赖的 C 运行时符号可解析
 LIBS += -lmingwex -lmsvcrt

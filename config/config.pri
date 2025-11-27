@@ -38,32 +38,41 @@ RCC_DIR = $$OUT_PWD/rcc
 UI_DIR = $$OUT_PWD/ui
 
 # ------------------ OpenCV 配置 ------------------
-# 方式1: 系统安装 (pkg-config)
+# Linux/Unix：走 pkg-config 或手动路径
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += opencv4
+
+    OPENCV_DIR = $$EXTERNAL_DIR/opencv_prebuilt/linux-x64
+    INCLUDEPATH += $$OPENCV_DIR/include/opencv4
+    LIBS += -L$$OPENCV_DIR/lib \
+            -lopencv_core -lopencv_imgproc -lopencv_imgcodecs \
+            -lopencv_highgui -lopencv_dnn
 }
 
-# 方式2: 自定义路径
-# OPENCV_DIR = $$EXTERNAL_DIR/opencv_prebuilt/linux-x64
-# INCLUDEPATH += $$OPENCV_DIR/include/opencv4
-# LIBS += -L$$OPENCV_DIR/lib \
-#         -lopencv_core -lopencv_imgproc -lopencv_imgcodecs \
-#         -lopencv_highgui -lopencv_dnn
+# Windows
+win32 {
+    OPENCV_DIR = $$THIRD_PARTY_DIR/opencv
+    INCLUDEPATH += $$OPENCV_DIR/include
 
-# Windows 配置
-# win32 {
-#     OPENCV_DIR = C:/opencv/build
-#     INCLUDEPATH += $$OPENCV_DIR/include
-
-#     CONFIG(debug, debug|release) {
-#         LIBS += -L$$OPENCV_DIR/x64/vc16/lib \
-#                 -lopencv_world460d
-#     } else {
-#         LIBS += -L$$OPENCV_DIR/x64/vc16/lib \
-#                 -lopencv_world460
-#     }
-# }
+    # MinGW 和 MSVC 路径不一样，别搞混
+    win32-g++ {
+        OPENCV_LIB_DIR = $$OPENCV_DIR/x64/mingw/lib
+        QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+        LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+        QMAKE_LIBS += -lopencv_world460
+    } else {
+        OPENCV_LIB_DIR = $$OPENCV_DIR/x64/vc16/lib
+        QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+        CONFIG(debug, debug|release) {
+            LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460d
+            QMAKE_LIBS += -lopencv_world460d
+        } else {
+            LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+            QMAKE_LIBS += -lopencv_world460
+        }
+    }
+}
 
 # ------------------ 第三方库 ------------------
 # spdlog (header-only)

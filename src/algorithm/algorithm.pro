@@ -48,9 +48,24 @@ SOURCES += \
     preprocess/ImagePreprocessor.cpp \
     scoring/DefectScorer.cpp
 
+# OpenCV 链接（MinGW）
+win32-g++ {
+    OPENCV_LIB_DIR = $$PWD/../../third_party/opencv/x64/mingw/lib
+    LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+    QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+    QMAKE_LIBS += -lopencv_world460
+}
 # ------------------ 安装规则 ------------------
 target.path = $$DESTDIR/lib
 INSTALLS += target
+
+# OpenCV 链接（MinGW）
+win32-g++ {
+    OPENCV_LIB_DIR = $$PWD/../../third_party/opencv/x64/mingw/lib
+    LIBS += -L$$OPENCV_LIB_DIR -lopencv_world460
+    QMAKE_LIBDIR += $$OPENCV_LIB_DIR
+    QMAKE_LIBS += -lopencv_world460
+}
 
 LIBS += -L$$OUT_PWD/../common -lcommon
 
