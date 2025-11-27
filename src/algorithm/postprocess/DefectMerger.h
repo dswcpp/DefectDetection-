@@ -1,0 +1,4 @@
+#ifndef DEFECTMERGER_H
+#define DEFECTMERGER_H
+
+#endif // DEFECTMERGER_H

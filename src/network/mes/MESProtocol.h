@@ -1,0 +1,4 @@
+#ifndef MESPROTOCOL_H
+#define MESPROTOCOL_H
+
+#endif // MESPROTOCOL_H

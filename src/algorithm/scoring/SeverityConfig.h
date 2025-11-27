@@ -1,0 +1,4 @@
+#ifndef SEVERITYCONFIG_H
+#define SEVERITYCONFIG_H
+
+#endif // SEVERITYCONFIG_H

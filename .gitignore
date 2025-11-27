@@ -1,0 +1,82 @@
+# C++ Qt项目 - .gitignore
+
+# 构建输出
+bin/
+build/
+debug/
+release/
+
+# qmake生成的文件
+Makefile
+Makefile.*
+*.pro.user
+*.pro.user.*
+.qmake.stash
+
+# Qt生成的文件
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# 编译产物
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# 调试文件
+*.pdb
+*.ilk
+
+# IDE配置文件
+.vscode/
+.idea/
+*.code-workspace
+
+# Qt Creator
+*.autosave
+*.user
+CMakeLists.txt.user*
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件和缓存
+temp/
+*.tmp.png
+
+# 安装包输出目录
+package/
+install/
+
+# Windows
+desktop.ini
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj*
+*.suo
+
+# 保留资源文件中的 logo.ico
+!resources/logo.ico

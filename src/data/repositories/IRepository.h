@@ -1,0 +1,4 @@
+#ifndef IREPOSITORY_H
+#define IREPOSITORY_H
+
+#endif // IREPOSITORY_H
