@@ -23,11 +23,8 @@ ui_*.h
 *.o
 *.obj
 *.exe
-*.dll
 *.so
 *.dylib
-*.a
-*.lib
 
 # 调试文件
 *.pdb
@@ -77,6 +74,3 @@ desktop.ini
 *.sln
 *.vcxproj*
 *.suo
-
-# 保留资源文件中的 logo.ico
-!resources/logo.ico

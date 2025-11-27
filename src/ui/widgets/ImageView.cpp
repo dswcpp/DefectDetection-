@@ -52,7 +52,7 @@ void ImageView::setROI(const cv::Rect &roi)
 
 cv::Rect ImageView::getROI() const
 {
-
+  return cv::Rect();
 }
 
 void ImageView::enableROIEdit(bool enable)

@@ -27,6 +27,8 @@ HEADERS += \
     detectors/ScratchDetector.h \
     dnn/DnnDetector.h \
     dnn/ModelManager.h \
+    dnn/ModelValidationReport.h \
+    dnn/ModelValidator.h \
     dnn/YoloDetector.h \
     postprocess/DefectMerger.h \
     postprocess/NMSFilter.h \
@@ -44,6 +46,7 @@ SOURCES += \
     detectors/ForeignDetector.cpp \
     detectors/ScratchDetector.cpp \
     dnn/DnnDetector.cpp \
+    dnn/ModelValidator.cpp \
     dnn/YoloDetector.cpp \
     preprocess/ImagePreprocessor.cpp \
     scoring/DefectScorer.cpp

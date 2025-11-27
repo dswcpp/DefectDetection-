@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QListWidget>
 #include <QStackedWidget>
+#include <QLabel>
 
 class SettingsDialog : public QDialog {
   Q_OBJECT
@@ -25,9 +26,12 @@ private:
   void setupUI();
   void createNavList();
   void createStackedPages();
+  void updateSectionHeader(int index);
 
   QListWidget* m_navList;
   QStackedWidget* m_stackedWidget;
+  QLabel* m_sectionIconLabel;
+  QLabel* m_sectionTitleLabel;
 
   // 各设置页
   QWidget* createCameraPage();
