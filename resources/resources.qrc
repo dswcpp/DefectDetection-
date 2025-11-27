@@ -1,4 +1,15 @@
 <RCC>
   <qresource prefix="/">
+    <file alias="icons/play.svg">icons/play.svg</file>
+    <file alias="icons/stop.svg">icons/stop.svg</file>
+    <file alias="icons/camera.svg">icons/camera.svg</file>
+    <file alias="icons/settings.svg">icons/settings.svg</file>
+    <file alias="icons/chart.svg">icons/chart.svg</file>
+    <file alias="icons/light.svg">icons/light.svg</file>
+    <file alias="icons/plc.svg">icons/plc.svg</file>
+    <file alias="icons/storage.svg">icons/storage.svg</file>
+    <file alias="icons/detect.svg">icons/detect.svg</file>
+    <file alias="icons/user.svg">icons/user.svg</file>
+    <file alias="styles/app.qss">styles/app.qss</file>
   </qresource>
 </RCC>

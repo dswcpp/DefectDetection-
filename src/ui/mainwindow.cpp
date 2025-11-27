@@ -1,25 +1,37 @@
 #include "mainwindow.h"
+#include "dialogs/SettingsDialog.h"
+#include "views/StatisticsView.h"
 #include "widgets/ImageView.h"
 #include "widgets/ParamPanel.h"
 #include "widgets/ResultCard.h"
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGroupBox>
-#include <QMenuBar>
-#include <QToolBar>
-#include <QStatusBar>
-#include <QLabel>
+
 #include <QAction>
 #include <QApplication>
+#include <QDialog>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QIcon>
+#include <QKeySequence>
+#include <QLabel>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QSplitter>
+#include <QToolButton>
+#include <QVariantMap>
+#include <QSize>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QToolBar>
+#include <QVBoxLayout>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow{parent}
+{
   setupUI();
 }
 
-MainWindow::~MainWindow()
-{
-
-}
+MainWindow::~MainWindow() = default;
 
 void MainWindow::onStartClicked()
 {
@@ -42,226 +54,283 @@ void MainWindow::onSingleShotClicked()
 
 void MainWindow::onSettingsClicked()
 {
-    // TODO: Show Settings Dialog
+  SettingsDialog dialog(this);
+  dialog.exec();
 }
 
 void MainWindow::onStatisticsClicked()
 {
-    // TODO: Show Statistics View
+  QDialog dialog(this);
+  dialog.setWindowTitle(tr("统计看板"));
+  dialog.resize(960, 600);
+  auto* layout = new QVBoxLayout(&dialog);
+  auto* statsView = new StatisticsView(&dialog);
+  layout->addWidget(statsView);
+  dialog.exec();
 }
 
-void MainWindow::onResultReady(const DetectResult &result)
+void MainWindow::onResultReady(const DetectResult& result)
 {
-    // TODO: Update ResultCard and StatusBar
-}
+  if (m_resultCard) {
+    m_resultCard->setResult(result);
+  }
 
-void MainWindow::onFrameReady(const cv::Mat &frame)
-{
-    if (m_imageView) {
-        m_imageView->setImage(frame);
+  m_totalCount++;
+  if (result.isOK) {
+    m_okCount++;
+  } else {
+    m_ngCount++;
+  }
+  if (result.cycleTimeMs > 0) {
+    m_lastCycleTimeMs = result.cycleTimeMs;
+    if (m_cycleTimeLabel) {
+      m_cycleTimeLabel->setText(tr("节拍: %1 ms").arg(result.cycleTimeMs));
     }
+  }
+  updateStatistics();
+
+  statusBar()->showMessage(result.isOK ? tr("最新检测结果: OK") : tr("最新检测结果: NG"), 2000);
 }
 
-void MainWindow::onError(const QString &module, const QString &message)
+void MainWindow::onFrameReady(const cv::Mat& frame)
 {
-    statusBar()->showMessage(QString("[%1] %2").arg(module, message), 3000);
+  if (m_imageView) {
+    m_imageView->setImage(frame);
+  }
+}
+
+void MainWindow::onError(const QString& module, const QString& message)
+{
+  statusBar()->showMessage(QStringLiteral("[%1] %2").arg(module, message), 3000);
 }
 
 void MainWindow::updateStatistics()
 {
-    // TODO: Update stats labels
+  if (m_totalCountLabel) {
+    m_totalCountLabel->setText(tr("总数: %1").arg(m_totalCount));
+  }
+  if (m_okCountLabel) {
+    m_okCountLabel->setText(tr("OK: %1").arg(m_okCount));
+  }
+  if (m_ngCountLabel) {
+    m_ngCountLabel->setText(tr("NG: %1").arg(m_ngCount));
+  }
+  if (m_yieldLabel) {
+    const double yield = m_totalCount > 0
+                             ? static_cast<double>(m_okCount) / static_cast<double>(m_totalCount) * 100.0
+                             : 0.0;
+    m_yieldLabel->setText(tr("良率: %1%").arg(yield, 0, 'f', 1));
+  }
 }
 
 void MainWindow::setupUI()
 {
-  // 窗口属性
-  setWindowTitle(tr("缺陷检测系统"));
-  resize(1280, 800);
-  
-  // 设置样式
-  setStyleSheet(R"(
-    QMainWindow {
-        background-color: #f3f4f6; /* bg-gray-100 */
-    }
-    QMenuBar {
-        background-color: #1f2937; /* bg-gray-800 */
-        color: white;
-        border-bottom: 1px solid #374151; /* border-gray-700 */
-    }
-    QMenuBar::item {
-        background-color: transparent;
-        padding: 8px 12px;
-        margin: 0px;
-        border-radius: 4px;
-    }
-    QMenuBar::item:selected {
-        background-color: #374151; /* hover:bg-gray-700 */
-    }
-    QToolBar {
-        background-color: #f3f4f6; /* bg-gray-100 */
-        border-bottom: 1px solid #d1d5db; /* border-gray-300 */
-        spacing: 12px;
-        padding: 12px;
-    }
-    QToolButton {
-        background-color: transparent;
-        border-radius: 4px;
-        padding: 8px 16px;
-        color: white;
-        font-weight: bold;
-    }
-    QStatusBar {
-        background-color: #1f2937; /* bg-gray-800 */
-        color: white;
-        border-top: 1px solid #374151; /* border-gray-700 */
-    }
-    QLabel {
-        color: #1f2937;
-    }
-    QStatusBar QLabel {
-        color: white;
-        padding: 0 10px;
-    }
-  )");
+  setWindowTitle(tr("缺陷检测系统 v1.0"));
+  setMinimumSize(1024, 768);
+  resize(1360, 900);
 
-  // 中心组件
   m_centralWidget = new QWidget(this);
+  m_centralWidget->setObjectName(QStringLiteral("MainSurface"));
   setCentralWidget(m_centralWidget);
 
-  auto* mainLayout = new QHBoxLayout(m_centralWidget);
-  mainLayout->setContentsMargins(0, 0, 0, 0);
-  mainLayout->setSpacing(0);
+  auto* rootLayout = new QHBoxLayout(m_centralWidget);
+  rootLayout->setContentsMargins(8, 8, 8, 8);
+  rootLayout->setSpacing(8);
 
-  // 左侧：图像显示区 (Flex-1)
-  // ImagePreview container to match padding/margins if needed, 
-  // but design says "flex-1 min-w-0" inside a "flex-1 flex overflow-hidden"
-  m_imageView = new ImageView(this);
-  mainLayout->addWidget(m_imageView, 1);
+  auto* splitter = new QSplitter(Qt::Horizontal, m_centralWidget);
+  splitter->setObjectName(QStringLiteral("MainSplitter"));
+  rootLayout->addWidget(splitter);
 
-  // 右侧：结果 + 参数面板 (w-96 = 384px)
-  m_rightPanel = new QWidget(this);
-  m_rightPanel->setObjectName("rightPanel");
-  m_rightPanel->setFixedWidth(384);
-  m_rightPanel->setStyleSheet("#rightPanel { background-color: white; border-left: 1px solid #d1d5db; }");
+  auto* imageContainer = new QWidget(splitter);
+  imageContainer->setObjectName(QStringLiteral("ImagePreviewContainer"));
+  auto* imageLayout = new QVBoxLayout(imageContainer);
+  imageLayout->setContentsMargins(0, 0, 0, 0);
+  imageLayout->setSpacing(0);
 
+  m_imageView = new ImageView(imageContainer);
+  m_imageView->setObjectName(QStringLiteral("ImagePreview"));
+  m_imageView->setMinimumSize(640, 480);
+  imageLayout->addWidget(m_imageView);
+
+  splitter->addWidget(imageContainer);
+
+  m_rightPanel = new QWidget(splitter);
+  m_rightPanel->setObjectName(QStringLiteral("SidebarPanel"));
   auto* rightLayout = new QVBoxLayout(m_rightPanel);
   rightLayout->setContentsMargins(0, 0, 0, 0);
-  rightLayout->setSpacing(0);
+  rightLayout->setSpacing(12);
 
-  // 检测结果卡片
-  m_resultCard = new ResultCard(this);
-  // ResultCard styles should be handled inside ResultCard or here
+  m_resultCard = new ResultCard(m_rightPanel);
   rightLayout->addWidget(m_resultCard);
 
-  // 参数面板
-  m_paramPanel = new ParamPanel(this);
-  rightLayout->addWidget(m_paramPanel, 1);
+  auto* paramGroup = new QGroupBox(tr("参数面板"), m_rightPanel);
+  paramGroup->setObjectName(QStringLiteral("ParamsPanelContainer"));
+  paramGroup->setFlat(true);
+  auto* paramLayout = new QVBoxLayout(paramGroup);
+  paramLayout->setContentsMargins(8, 8, 8, 8);
+  m_paramPanel = new ParamPanel(paramGroup);
+  m_paramPanel->setObjectName(QStringLiteral("ParametersPanelWidget"));
+  paramLayout->addWidget(m_paramPanel);
+  rightLayout->addWidget(paramGroup, 1);
 
-  mainLayout->addWidget(m_rightPanel);
+  splitter->addWidget(m_rightPanel);
+  splitter->setStretchFactor(0, 3);
+  splitter->setStretchFactor(1, 2);
 
+  createActions();
   setupMenuBar();
   setupToolBar();
   setupStatusBar();
   setupConnections();
 }
 
+void MainWindow::createActions()
+{
+  m_actionStart = new QAction(QIcon(QStringLiteral(":/icons/play.svg")), tr("启动"), this);
+  m_actionStart->setShortcut(QKeySequence(QStringLiteral("F5")));
+
+  m_actionStop = new QAction(QIcon(QStringLiteral(":/icons/stop.svg")), tr("停止"), this);
+  m_actionStop->setShortcut(QKeySequence(QStringLiteral("F6")));
+  m_actionStop->setEnabled(false);
+
+  m_actionSingleShot = new QAction(QIcon(QStringLiteral(":/icons/camera.svg")), tr("单拍"), this);
+  m_actionSingleShot->setShortcut(QKeySequence(QStringLiteral("F7")));
+
+  m_actionSettings = new QAction(QIcon(QStringLiteral(":/icons/settings.svg")), tr("参数"), this);
+  m_actionStatistics = new QAction(QIcon(QStringLiteral(":/icons/chart.svg")), tr("统计"), this);
+
+  m_actionOpenConfig = new QAction(tr("打开配置..."), this);
+  m_actionOpenConfig->setShortcut(QKeySequence::Open);
+  m_actionSaveConfig = new QAction(tr("保存配置..."), this);
+  m_actionSaveConfig->setShortcut(QKeySequence::Save);
+  m_actionExit = new QAction(tr("退出"), this);
+  m_actionExit->setShortcut(QKeySequence::Quit);
+  m_actionAbout = new QAction(tr("关于"), this);
+}
+
 void MainWindow::setupMenuBar()
 {
-    // Header: File, Settings, Help
-    auto* menuBar = this->menuBar();
-    
-    // File
-    auto* fileMenu = menuBar->addMenu(tr("文件"));
-    m_actionFile = fileMenu->menuAction();
-    
-    // Settings (Header)
-    auto* settingsMenu = menuBar->addMenu(tr("设置"));
-    // Note: Design has "Settings" button in Header AND "Parameters" button in Toolbar.
-    
-    // Help
-    auto* helpMenu = menuBar->addMenu(tr("帮助"));
-    m_actionHelp = helpMenu->menuAction();
+  auto* bar = menuBar();
+  bar->setObjectName(QStringLiteral("PrimaryMenuBar"));
+  bar->clear();
+
+  auto* fileMenu = bar->addMenu(tr("文件"));
+  fileMenu->addAction(m_actionOpenConfig);
+  fileMenu->addAction(m_actionSaveConfig);
+  fileMenu->addSeparator();
+  fileMenu->addAction(m_actionExit);
+
+  auto* settingsMenu = bar->addMenu(tr("设置"));
+  settingsMenu->addAction(m_actionSettings);
+  settingsMenu->addAction(m_actionStatistics);
+
+  auto* helpMenu = bar->addMenu(tr("帮助"));
+  helpMenu->addAction(m_actionAbout);
 }
 
 void MainWindow::setupToolBar()
 {
-    auto* toolBar = addToolBar(tr("Main Toolbar"));
-    toolBar->setMovable(false);
-    toolBar->setFloatable(false);
-    toolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+  auto* toolBar = addToolBar(tr("主工具栏"));
+  toolBar->setObjectName(QStringLiteral("PrimaryToolbar"));
+  toolBar->setIconSize(QSize(32, 32));
+  toolBar->setMovable(false);
+  toolBar->setFloatable(false);
+  toolBar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-    // Start
-    m_actionStart = new QAction(QIcon(":/icons/play.svg"), tr("启动"), this);
-    m_actionStart->setToolTip(tr("开始检测"));
-    toolBar->addAction(m_actionStart);
-    // Custom style for Start button (Green)
-    auto* startBtn = toolBar->widgetForAction(m_actionStart);
-    if(startBtn) startBtn->setStyleSheet("background-color: #16a34a; color: white;"); // green-600
+  toolBar->addAction(m_actionStart);
+  toolBar->addAction(m_actionStop);
+  toolBar->addSeparator();
+  toolBar->addAction(m_actionSingleShot);
+  toolBar->addSeparator();
+  toolBar->addAction(m_actionSettings);
+  toolBar->addAction(m_actionStatistics);
 
-    // Stop
-    m_actionStop = new QAction(QIcon(":/icons/square.svg"), tr("停止"), this);
-    m_actionStop->setToolTip(tr("停止检测"));
-    m_actionStop->setEnabled(false);
-    toolBar->addAction(m_actionStop);
-    auto* stopBtn = toolBar->widgetForAction(m_actionStop);
-    if(stopBtn) stopBtn->setStyleSheet("background-color: #dc2626; color: white;"); // red-600
-
-    // Single Shot
-    m_actionSingleShot = new QAction(QIcon(":/icons/camera.svg"), tr("单拍"), this);
-    toolBar->addAction(m_actionSingleShot);
-    auto* shotBtn = toolBar->widgetForAction(m_actionSingleShot);
-    if(shotBtn) shotBtn->setStyleSheet("background-color: #2563eb; color: white;"); // blue-600
-
-    // Parameters
-    m_actionSettings = new QAction(QIcon(":/icons/settings.svg"), tr("参数"), this);
-    toolBar->addAction(m_actionSettings);
-    auto* setBtn = toolBar->widgetForAction(m_actionSettings);
-    if(setBtn) setBtn->setStyleSheet("background-color: #4b5563; color: white;"); // gray-600
-
-    // Statistics
-    m_actionStatistics = new QAction(QIcon(":/icons/chart.svg"), tr("统计"), this);
-    toolBar->addAction(m_actionStatistics);
-    auto* statBtn = toolBar->widgetForAction(m_actionStatistics);
-    if(statBtn) statBtn->setStyleSheet("background-color: #9333ea; color: white;"); // purple-600
+  auto assignButtonName = [toolBar](QAction* action, const QString& name) {
+    if (auto* button = qobject_cast<QToolButton*>(toolBar->widgetForAction(action))) {
+      button->setObjectName(name);
+      button->setCursor(Qt::PointingHandCursor);
+    }
+  };
+  assignButtonName(m_actionStart, QStringLiteral("ToolbarButtonStart"));
+  assignButtonName(m_actionStop, QStringLiteral("ToolbarButtonStop"));
+  assignButtonName(m_actionSingleShot, QStringLiteral("ToolbarButtonCapture"));
+  assignButtonName(m_actionSettings, QStringLiteral("ToolbarButtonSettings"));
+  assignButtonName(m_actionStatistics, QStringLiteral("ToolbarButtonStats"));
 }
 
 void MainWindow::setupStatusBar()
 {
-    auto* statusBar = this->statusBar();
+  auto* bar = statusBar();
+  bar->setObjectName(QStringLiteral("PrimaryStatusBar"));
 
-    // Detection Speed
-    m_speedLabel = new QLabel(tr("检测速度: 0ms"));
-    m_speedLabel->setStyleSheet("color: white;");
-    statusBar->addWidget(m_speedLabel);
+  m_cycleTimeLabel = new QLabel(tr("检测速度: -- ms"), bar);
+  m_cycleTimeLabel->setObjectName(QStringLiteral("StatusCycleLabel"));
+  m_cycleTimeLabel->setMinimumWidth(140);
+  bar->addWidget(m_cycleTimeLabel);
 
-    statusBar->addWidget(new QLabel("|"));
+  bar->addWidget(new QLabel(QStringLiteral("|"), bar));
 
-    // Total
-    m_totalCountLabel = new QLabel(tr("总数: 0"));
-    m_totalCountLabel->setStyleSheet("color: #60a5fa;"); // blue-400
-    statusBar->addWidget(m_totalCountLabel);
+  m_totalCountLabel = new QLabel(tr("总数: 0"), bar);
+  m_totalCountLabel->setObjectName(QStringLiteral("StatusTotalLabel"));
+  bar->addWidget(m_totalCountLabel);
 
-    // OK
-    m_okCountLabel = new QLabel(tr("OK: 0"));
-    m_okCountLabel->setStyleSheet("color: #4ade80;"); // green-400
-    statusBar->addWidget(m_okCountLabel);
+  m_okCountLabel = new QLabel(tr("OK: 0"), bar);
+  m_okCountLabel->setObjectName(QStringLiteral("StatusOkLabel"));
+  bar->addWidget(m_okCountLabel);
 
-    // NG
-    m_ngCountLabel = new QLabel(tr("NG: 0"));
-    m_ngCountLabel->setStyleSheet("color: #f87171;"); // red-400
-    statusBar->addWidget(m_ngCountLabel);
+  m_ngCountLabel = new QLabel(tr("NG: 0"), bar);
+  m_ngCountLabel->setObjectName(QStringLiteral("StatusNgLabel"));
+  bar->addWidget(m_ngCountLabel);
 
-    // Yield
-    m_yieldLabel = new QLabel(tr("良率: 0.0%"));
-    m_yieldLabel->setStyleSheet("color: #facc15;"); // yellow-400
-    statusBar->addWidget(m_yieldLabel);
+  bar->addWidget(new QLabel(QStringLiteral("|"), bar));
+
+  m_yieldLabel = new QLabel(tr("良率: 0.0%"), bar);
+  m_yieldLabel->setObjectName(QStringLiteral("StatusYieldLabel"));
+  m_yieldLabel->setMinimumWidth(140);
+  bar->addWidget(m_yieldLabel);
 }
 
 void MainWindow::setupConnections()
 {
-    connect(m_actionStart, &QAction::triggered, this, &MainWindow::onStartClicked);
-    connect(m_actionStop, &QAction::triggered, this, &MainWindow::onStopClicked);
-    connect(m_actionSingleShot, &QAction::triggered, this, &MainWindow::onSingleShotClicked);
-    connect(m_actionSettings, &QAction::triggered, this, &MainWindow::onSettingsClicked);
-    connect(m_actionStatistics, &QAction::triggered, this, &MainWindow::onStatisticsClicked);
+  connect(m_actionStart, &QAction::triggered, this, &MainWindow::onStartClicked);
+  connect(m_actionStop, &QAction::triggered, this, &MainWindow::onStopClicked);
+  connect(m_actionSingleShot, &QAction::triggered, this, &MainWindow::onSingleShotClicked);
+  connect(m_actionSettings, &QAction::triggered, this, &MainWindow::onSettingsClicked);
+  connect(m_actionStatistics, &QAction::triggered, this, &MainWindow::onStatisticsClicked);
+  connect(m_actionOpenConfig, &QAction::triggered, this, &MainWindow::openConfigFile);
+  connect(m_actionSaveConfig, &QAction::triggered, this, &MainWindow::saveConfigFile);
+  connect(m_actionExit, &QAction::triggered, this, &QWidget::close);
+  connect(m_actionAbout, &QAction::triggered, this, [this]() {
+    QMessageBox::information(this, tr("关于"), tr("缺陷检测系统 v1.0"));
+  });
+
+  if (m_paramPanel) {
+    connect(m_paramPanel, &ParamPanel::paramsChanged, this,
+            [this](const QString& detector, const QVariantMap&) {
+              statusBar()->showMessage(tr("%1 参数已更新").arg(detector), 1500);
+            });
+  }
+}
+
+void MainWindow::openConfigFile()
+{
+  const QString fileName = QFileDialog::getOpenFileName(
+      this, tr("打开参数配置"), QString(), tr("配置文件 (*.json);;所有文件 (*.*)"));
+  if (fileName.isEmpty() || !m_paramPanel) {
+    return;
+  }
+  m_paramPanel->loadParams(fileName);
+  statusBar()->showMessage(tr("已加载配置: %1").arg(QFileInfo(fileName).fileName()), 2000);
+}
+
+void MainWindow::saveConfigFile()
+{
+  const QString fileName = QFileDialog::getSaveFileName(
+      this, tr("保存参数配置"), QStringLiteral("config/params.json"),
+      tr("配置文件 (*.json);;所有文件 (*.*)"));
+  if (fileName.isEmpty() || !m_paramPanel) {
+    return;
+  }
+  m_paramPanel->saveParams(fileName);
+  statusBar()->showMessage(tr("已保存配置: %1").arg(QFileInfo(fileName).fileName()), 2000);
 }

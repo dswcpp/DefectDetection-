@@ -20,18 +20,18 @@ enum class SeverityLevel {
 };
 
 struct DetectResult {
-  QString defectType;                    // 缺陷类型（如 "scratch", "crack"）
-  std::vector<cv::Rect> regions;         // 检测到的缺陷区域列表
-  std::vector<DefectRegion> defects;     // 带置信度的缺陷列表（DNN用）
-  double severity;                       // 严重度评分
-  SeverityLevel level;                   // 严重度等级（OK/NG/Warning等）
-  bool isOK;                             // 是否合格
-  qint64 timestamp;                      // 检测时间戳
-  QString errorMsg;                      // 错误信息（如有）
+  QString defectType;                    // 缺陷类型
+  std::vector<cv::Rect> regions;         // 检测到的缺陷框列表
+  std::vector<DefectRegion> defects;     // 带置信度的缺陷列表
+  double severity = 0.0;                 // 严重度分数
+  SeverityLevel level = SeverityLevel::OK; // 严重度等级
+  double confidence = 0.0;               // 置信度 0-1
+  bool isOK = true;                      // 是否合格
+  int cycleTimeMs = 0;                   // 单次检测耗时
+  qint64 timestamp = 0;                  // 检测时间戳
+  QString errorMsg;                      // 错误信息
 };
 
 Q_DECLARE_METATYPE(DetectResult);
-
-
 
 #endif // TYPES_H

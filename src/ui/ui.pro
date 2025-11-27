@@ -58,12 +58,7 @@ SOURCES += \
 FORMS += \
 
 # ------------------ 资源文件 ------------------
-RESOURCES += \
-    $$PWD/../../resources/icons.qrc \
-    $$PWD/../../resources/resources.qrc \
-    $$PWD/../../resources/styles.qrc \
-    $$PWD/../../resources/translations.qrc \
-    resource.qrc
+
 
 # ------------------ 翻译文件 ------------------
 TRANSLATIONS += \
@@ -100,3 +95,6 @@ LIBS += -L$$OUT_PWD/../algorithm/ -lalgorithm
 
 INCLUDEPATH += $$PWD/../algorithm
 DEPENDPATH += $$PWD/../algorithm
+
+RESOURCES += \
+    resource.qrc

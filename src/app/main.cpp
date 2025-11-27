@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QObject>
+#include <QFile>
+#include <QDebug>
 #include "DetectPipeline.h"
 #include "mainwindow.h"
 
@@ -23,6 +25,28 @@ void InitConnectFunc(MainWindow* desktop, DetectPipeline& pipeline) {
 
 int main(int argc, char* argv[]) {
   QApplication a(argc, argv);
+
+  auto loadStyleSheet = []() -> QString {
+    QFile resourceFile(QStringLiteral(":/styles/app.qss"));
+    if (resourceFile.open(QIODevice::ReadOnly)) {
+      return QString::fromUtf8(resourceFile.readAll());
+    }
+    qWarning() << "Failed to load :/styles/app.qss:" << resourceFile.errorString();
+
+    QFile localFile(QStringLiteral(":resources/styles/app.qss"));
+    if (localFile.open(QIODevice::ReadOnly)) {
+      qWarning() << "Loaded fallback stylesheet from resources/styles/app.qss";
+      return QString::fromUtf8(localFile.readAll());
+    }
+    qWarning() << "Fallback stylesheet missing:" << localFile.errorString();
+    return {};
+  };
+
+  const QString styleSheet = loadStyleSheet();
+  if (!styleSheet.isEmpty()) {
+    a.setStyleSheet(styleSheet);
+  }
+
   MainWindow* desktop = new MainWindow();
   DetectPipeline pipeline;
 

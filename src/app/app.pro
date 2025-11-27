@@ -116,3 +116,7 @@ win32-g++ {
 # 确保 Qt6EntryPoint 依赖的 C 运行时符号可解析
 LIBS += -lmingwex -lmsvcrt
 LIBS += -Wl,--start-group $$[QT_INSTALL_LIBS]/libQt6EntryPoint.a -lmingw32 -Wl,--end-group
+
+RESOURCES += \
+    resource.qrc
+

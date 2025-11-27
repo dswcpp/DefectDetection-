@@ -2,8 +2,14 @@
 #define IMAGEVIEW_H
 
 #include <QGraphicsView>
+#include <QImage>
+#include <QVector>
 #include "ui_global.h"
 #include "opencv2/opencv.hpp"
+
+class QGraphicsScene;
+class QGraphicsPixmapItem;
+class QGraphicsRectItem;
 
 class ImageView : public QGraphicsView {
   Q_OBJECT
@@ -48,15 +54,17 @@ protected:
   void resizeEvent(QResizeEvent* event) override;
 
 private:
-  QGraphicsScene* m_scene;
-  QGraphicsPixmapItem* m_imageItem;
-  QGraphicsRectItem* m_roiItem;
-  std::vector<QGraphicsRectItem*> m_defectItems;
+  QGraphicsScene* m_scene = nullptr;
+  QGraphicsPixmapItem* m_imageItem = nullptr;
+  QGraphicsRectItem* m_roiItem = nullptr;
+  QVector<QGraphicsRectItem*> m_defectItems;
 
   bool m_roiEditEnabled = false;
   bool m_isDragging = false;
   QPointF m_dragStart;
   double m_zoomFactor = 1.0;
+  DisplayMode m_displayMode = DisplayMode::Original;
+  QImage m_currentImage;
 
   QImage cvMatToQImage(const cv::Mat& mat);
 };

@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="styles/app.qss">../../resources/styles/app.qss</file>
+        <file alias="icons/play.svg">../../resources/icons/play.svg</file>
+        <file alias="icons/stop.svg">../../resources/icons/stop.svg</file>
+        <file alias="icons/camera.svg">../../resources/icons/camera.svg</file>
+        <file alias="icons/settings.svg">../../resources/icons/settings.svg</file>
+        <file alias="icons/chart.svg">../../resources/icons/chart.svg</file>
+    </qresource>
+</RCC>

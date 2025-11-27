@@ -1,0 +1,427 @@
+/* Base */
+QMainWindow {
+    background-color: #f3f4f6;
+    color: #0f172a;
+    font-family: "Microsoft YaHei", "Segoe UI", "Roboto", sans-serif;
+}
+
+#MainSurface {
+    background-color: #f3f4f6;
+}
+
+/* Header / Menu bar */
+QMenuBar#PrimaryMenuBar {
+    background-color: #1f2937;
+    border-bottom: 1px solid #374151;
+    padding: 6px 16px;
+    color: #f8fafc;
+}
+
+QMenuBar#PrimaryMenuBar::item {
+    padding: 6px 18px;
+    margin: 0 6px;
+    border-radius: 10px;
+    color: #f8fafc;
+}
+
+QMenuBar#PrimaryMenuBar::item:selected {
+    background-color: #374151;
+}
+
+QMenu {
+    background-color: #111827;
+    color: #f8fafc;
+    border: 1px solid #374151;
+    padding: 6px;
+}
+
+QMenu::item {
+    padding: 6px 24px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #374151;
+}
+
+/* Image preview */
+#ImagePreviewContainer {
+    background-color: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+    padding: 12px;
+}
+
+#ImagePreview {
+    background-color: transparent;
+    border: none;
+}
+
+/* Sidebar */
+#SidebarPanel {
+    background-color: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    padding: 0;
+}
+
+/* Toolbar */
+QToolBar#PrimaryToolbar {
+    background-color: #f3f4f6;
+    border-bottom: 1px solid #d1d5db;
+    padding: 12px 16px;
+    spacing: 12px;
+}
+
+QToolBar#PrimaryToolbar QToolButton {
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+QToolButton#ToolbarButtonStart {
+    background-color: #16a34a;
+    color: #ffffff;
+}
+QToolButton#ToolbarButtonStart:hover { background-color: #22c55e; }
+QToolButton#ToolbarButtonStart:disabled {
+    background-color: #9ca3af;
+    color: #f8fafc;
+}
+
+QToolButton#ToolbarButtonStop {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+QToolButton#ToolbarButtonStop:hover { background-color: #ef4444; }
+QToolButton#ToolbarButtonStop:disabled {
+    background-color: #9ca3af;
+    color: #f8fafc;
+}
+
+QToolButton#ToolbarButtonCapture {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+QToolButton#ToolbarButtonCapture:hover { background-color: #3b82f6; }
+
+QToolButton#ToolbarButtonSettings {
+    background-color: #4b5563;
+    color: #ffffff;
+}
+QToolButton#ToolbarButtonSettings:hover { background-color: #6b7280; }
+
+QToolButton#ToolbarButtonStats {
+    background-color: #7c3aed;
+    color: #ffffff;
+}
+QToolButton#ToolbarButtonStats:hover { background-color: #8b5cf6; }
+
+/* Parameters panel */
+QGroupBox#ParamsPanelContainer {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    margin-top: 0px;
+    padding-top: 28px;
+    background-color: #ffffff;
+}
+
+QGroupBox#ParamsPanelContainer::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+#ParametersPanelWidget {
+    background-color: transparent;
+}
+
+QTabWidget#ParamTabs::pane {
+    border: none;
+    margin-top: 16px;
+}
+
+QTabWidget#ParamTabs QTabBar::tab {
+    background-color: #eef2ff;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 6px 18px;
+    margin-right: 8px;
+    color: #475569;
+    font-weight: 600;
+}
+
+QTabWidget#ParamTabs QTabBar::tab:selected {
+    background-color: #ffffff;
+    border-color: #93c5fd;
+    color: #2563eb;
+}
+
+QWidget#ParamSectionPage QLabel {
+    color: #475569;
+    font-size: 13px;
+}
+
+QFormLayout > * {
+    font-size: 13px;
+}
+
+QAbstractSpinBox, QDoubleSpinBox, QSpinBox {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 4px 8px;
+    background-color: #ffffff;
+}
+
+QCheckBox {
+    padding: 2px;
+}
+
+/* Status bar */
+QStatusBar#PrimaryStatusBar {
+    background-color: #1f2937;
+    border-top: 1px solid #374151;
+    color: #e5e7eb;
+}
+
+QStatusBar#PrimaryStatusBar QLabel {
+    color: #f1f5f9;
+}
+
+#StatusCycleLabel {
+    color: #34d399;
+    font-weight: 600;
+}
+
+#StatusTotalLabel {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+QLabel#StatusOkLabel {
+    color: #34d399;
+    font-weight: 700;
+}
+
+QLabel#StatusNgLabel {
+    color: #f87171;
+    font-weight: 700;
+}
+
+#StatusYieldLabel {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+/* Results panel */
+#ResultsPanel {
+    background-color: #ffffff;
+    border-bottom: 1px solid #d1d5db;
+    border-radius: 16px;
+}
+
+#ResultsPanelTitle {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+#ResultsStatusIcon {
+    border-radius: 18px;
+    font-size: 18px;
+    font-weight: 600;
+    background-color: #f5f5f5;
+    min-width: 36px;
+}
+
+#ResultsStatusText {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+#ResultsPanel[status="ok"] #ResultsStatusText,
+#ResultsPanel[status="ok"] #ResultsStatusIcon {
+    color: #16a34a;
+}
+
+#ResultsPanel[status="ng"] #ResultsStatusText,
+#ResultsPanel[status="ng"] #ResultsStatusIcon {
+    color: #dc2626;
+}
+
+#ResultsDefectList {
+    background-color: transparent;
+}
+
+#ResultsDefectEntry {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+}
+
+#ResultsDefectName {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+#ResultsDefectConfidence {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+#ResultsEmptyHint {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+#ResultsTimestamp {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+/* Settings dialog */
+#SettingsDialogOverlay {
+    background-color: rgba(15, 23, 42, 0.85);
+}
+
+#SettingsDialogContainer {
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0px 20px 50px rgba(15, 23, 42, 0.4);
+}
+
+#SettingsDialogHeader {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#SettingsDialogTitle {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+QPushButton#SettingsDialogCloseButton {
+    color: #475569;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+}
+
+QPushButton#SettingsDialogCloseButton:hover {
+    background-color: #f1f5f9;
+}
+
+#SettingsNavPanel {
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
+}
+
+#SettingsNavLabel {
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: #94a3b8;
+}
+
+QPushButton#SettingsNavButton {
+    text-align: left;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    background-color: transparent;
+    color: #475569;
+}
+
+QPushButton#SettingsNavButton:hover {
+    background-color: #e2e8f0;
+}
+
+QPushButton#SettingsNavButton:checked {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+#SettingsContentHeader {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f8fafc;
+}
+
+#SettingsSectionTitle {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+#SettingsFooter {
+    border-top: 1px solid #e5e7eb;
+    background-color: #f8fafc;
+}
+
+QPushButton#SettingsRestoreButton,
+QPushButton#SettingsCancelButton {
+    border: 1px solid #cbd5f5;
+    border-radius: 10px;
+    padding: 8px 18px;
+    background-color: #ffffff;
+    color: #475569;
+}
+
+QPushButton#SettingsApplyButton,
+QPushButton#SettingsOkButton {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    color: #ffffff;
+}
+
+QPushButton#SettingsApplyButton {
+    background-color: #2563eb;
+}
+
+QPushButton#SettingsApplyButton:hover {
+    background-color: #1d4ed8;
+}
+
+QPushButton#SettingsOkButton {
+    background-color: #16a34a;
+}
+
+QPushButton#SettingsOkButton:hover {
+    background-color: #22c55e;
+}
+
+#SettingsCard {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+}
+
+#SettingsCardTitle {
+    font-weight: 600;
+    color: #475569;
+}
+
+#SettingsPreviewBox {
+    background-color: #0f172a;
+    border-radius: 14px;
+}
+
+QFrame#SettingsNavDivider {
+    border: none;
+    border-top: 1px solid #cbd5f5;
+}
+
+#UserAvatarBadge {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-radius: 24px;
+    font-weight: bold;
+    font-size: 18px;
+}

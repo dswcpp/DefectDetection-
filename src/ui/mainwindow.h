@@ -38,10 +38,13 @@ public slots:
 
 private:
   void setupUI();
+  void createActions();
   void setupMenuBar();
   void setupToolBar();
   void setupStatusBar();
   void setupConnections();
+  void openConfigFile();
+  void saveConfigFile();
 
   // UI 组件
   QWidget* m_centralWidget;
@@ -56,11 +59,13 @@ private:
   QAction* m_actionSingleShot;
   QAction* m_actionSettings;
   QAction* m_actionStatistics;
-  QAction* m_actionFile;
-  QAction* m_actionHelp;
+  QAction* m_actionOpenConfig;
+  QAction* m_actionSaveConfig;
+  QAction* m_actionExit;
+  QAction* m_actionAbout;
 
   // 状态栏组件
-  QLabel* m_speedLabel;
+  QLabel* m_cycleTimeLabel;
   QLabel* m_totalCountLabel;
   QLabel* m_okCountLabel;
   QLabel* m_ngCountLabel;
@@ -70,5 +75,6 @@ private:
   int m_totalCount = 0;
   int m_okCount = 0;
   int m_ngCount = 0;
+  int m_lastCycleTimeMs = 0;
 };
 #endif // MAINWINDOW_H

@@ -2,9 +2,10 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QListWidget>
-#include <QStackedWidget>
 #include <QLabel>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QVector>
 
 class SettingsDialog : public QDialog {
   Q_OBJECT
@@ -17,29 +18,37 @@ public:
 signals:
   void settingsChanged();
 
-private slots:
-  void onNavItemClicked(int index);
+private:
+  struct Section {
+    QString id;
+    QString title;
+    QString icon;
+    QWidget* page = nullptr;
+    QPushButton* button = nullptr;
+  };
+
+  void setupUI();
+  void buildSections();
+  QWidget* createSectionWidget(const QString& id);
+  QPushButton* createNavButton(int index);
+  void setActiveSection(int index);
   void onRestoreDefaultClicked();
   void onApplyClicked();
 
-private:
-  void setupUI();
-  void createNavList();
-  void createStackedPages();
-  void updateSectionHeader(int index);
-
-  QListWidget* m_navList;
-  QStackedWidget* m_stackedWidget;
-  QLabel* m_sectionIconLabel;
-  QLabel* m_sectionTitleLabel;
-
-  // 各设置页
+  // Section pages
   QWidget* createCameraPage();
   QWidget* createLightPage();
   QWidget* createPLCPage();
   QWidget* createStoragePage();
   QWidget* createDetectorPage();
   QWidget* createUserPage();
+
+  QVector<Section> m_sections;
+  int m_activeSection = -1;
+
+  QStackedWidget* m_stackedWidget = nullptr;
+  QLabel* m_sectionIconLabel = nullptr;
+  QLabel* m_sectionTitleLabel = nullptr;
 };
 
 #endif // SETTINGSDIALOG_H
