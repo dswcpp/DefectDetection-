@@ -59,9 +59,11 @@ FORMS += \
 
 # ------------------ 资源文件 ------------------
 RESOURCES += \
-    ../../resources/icons.qrc \
-    ../../resources/styles.qrc \
-    ../../resources/translations.qrc
+    $$PWD/../../resources/icons.qrc \
+    $$PWD/../../resources/resources.qrc \
+    $$PWD/../../resources/styles.qrc \
+    $$PWD/../../resources/translations.qrc \
+    resource.qrc
 
 # ------------------ 翻译文件 ------------------
 TRANSLATIONS += \

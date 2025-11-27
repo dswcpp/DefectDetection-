@@ -6,6 +6,7 @@
 #include "ui_global.h"
 #include "opencv2/opencv.hpp"
 class QLabel;
+class QAction;
 class ImageView;
 class ResultCard;
 class ParamPanel;
@@ -43,12 +44,23 @@ private:
   void setupConnections();
 
   // UI 组件
+  QWidget* m_centralWidget;
   ImageView* m_imageView;
+  QWidget* m_rightPanel;
   ResultCard* m_resultCard;
   ParamPanel* m_paramPanel;
 
+  // 动作
+  QAction* m_actionStart;
+  QAction* m_actionStop;
+  QAction* m_actionSingleShot;
+  QAction* m_actionSettings;
+  QAction* m_actionStatistics;
+  QAction* m_actionFile;
+  QAction* m_actionHelp;
+
   // 状态栏组件
-  QLabel* m_cycleTimeLabel;
+  QLabel* m_speedLabel;
   QLabel* m_totalCountLabel;
   QLabel* m_okCountLabel;
   QLabel* m_ngCountLabel;
