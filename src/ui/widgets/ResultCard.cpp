@@ -14,7 +14,7 @@ ResultCard::ResultCard(QWidget* parent) : QFrame{parent}
 
 void ResultCard::setupUI()
 {
-  setObjectName(QStringLiteral("ResultsPanel"));
+  setObjectName(QStringLiteral("ResultCard"));
   setFrameShape(QFrame::NoFrame);
   setFrameShadow(QFrame::Plain);
 
@@ -23,20 +23,23 @@ void ResultCard::setupUI()
   rootLayout->setSpacing(12);
 
   m_titleLabel = new QLabel(tr("检测结果"), this);
-  m_titleLabel->setObjectName(QStringLiteral("ResultsPanelTitle"));
+  m_titleLabel->setObjectName(QStringLiteral("titleLabel"));
+  m_titleLabel->setAlignment(Qt::AlignLeft);
   rootLayout->addWidget(m_titleLabel);
 
+  // 状态显示区域 - 更大的OK/NG显示
   auto* statusLayout = new QHBoxLayout();
-  statusLayout->setSpacing(12);
+  statusLayout->setSpacing(8);
 
-  m_statusIcon = new QLabel(QStringLiteral("—"), this);
-  m_statusIcon->setObjectName(QStringLiteral("ResultsStatusIcon"));
+  m_statusIcon = new QLabel(this);
+  m_statusIcon->setObjectName(QStringLiteral("statusIcon"));
   m_statusIcon->setAlignment(Qt::AlignCenter);
-  m_statusIcon->setFixedSize(36, 36);
+  m_statusIcon->setFixedSize(48, 48);
   statusLayout->addWidget(m_statusIcon);
 
-  m_statusText = new QLabel(tr("--"), this);
-  m_statusText->setObjectName(QStringLiteral("ResultsStatusText"));
+  m_statusText = new QLabel(tr("待检测"), this);
+  m_statusText->setObjectName(QStringLiteral("statusText"));
+  m_statusText->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
   statusLayout->addWidget(m_statusText);
   statusLayout->addStretch();
 
@@ -87,8 +90,25 @@ void ResultCard::clear()
 void ResultCard::updateStatus(bool isOk)
 {
   setProperty("status", isOk ? "ok" : "ng");
-  m_statusIcon->setText(isOk ? QStringLiteral("✔") : QStringLiteral("✖"));
-  m_statusText->setText(isOk ? tr("OK") : tr("NG"));
+
+  // 设置图标和文字
+  if (isOk) {
+    m_statusIcon->setText(QStringLiteral("✔"));
+    m_statusIcon->setObjectName(QStringLiteral("okLabel"));
+    m_statusText->setText(tr("OK"));
+    m_statusText->setObjectName(QStringLiteral("okLabel"));
+  } else {
+    m_statusIcon->setText(QStringLiteral("✖"));
+    m_statusIcon->setObjectName(QStringLiteral("ngLabel"));
+    m_statusText->setText(tr("NG"));
+    m_statusText->setObjectName(QStringLiteral("ngLabel"));
+  }
+
+  // 刷新样式
+  m_statusIcon->style()->unpolish(m_statusIcon);
+  m_statusIcon->style()->polish(m_statusIcon);
+  m_statusText->style()->unpolish(m_statusText);
+  m_statusText->style()->polish(m_statusText);
   style()->unpolish(this);
   style()->polish(this);
 }

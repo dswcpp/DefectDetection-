@@ -64,8 +64,9 @@ QWidget* createPathEditor(QWidget* parent, const QString& placeholder)
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog{parent}
 {
   setModal(true);
-  setObjectName(QStringLiteral("SettingsDialogOverlay"));
-  setWindowFlag(Qt::FramelessWindowHint);
+  // 移除无边框设置，使用标准对话框边框
+  // setWindowFlag(Qt::FramelessWindowHint);
+  setWindowTitle(tr("系统设置"));
   setupUI();
   loadSettings();
 }
@@ -80,18 +81,17 @@ void SettingsDialog::saveSettings()
 
 void SettingsDialog::setupUI()
 {
-  auto* overlayLayout = new QVBoxLayout(this);
-  overlayLayout->setContentsMargins(kDialogPadding, kDialogPadding, kDialogPadding, kDialogPadding);
+  // 设置对话框大小
+  setMinimumSize(960, 640);
+  resize(1024, 700);
 
-  auto* container = new QWidget(this);
-  container->setObjectName(QStringLiteral("SettingsDialogContainer"));
-  container->setMinimumSize(960, 640);
-  auto* containerLayout = new QVBoxLayout(container);
-  containerLayout->setContentsMargins(0, 0, 0, 0);
-  overlayLayout->addWidget(container, 0, Qt::AlignCenter);
+  // 主布局 - 直接使用对话框作为容器
+  auto* mainLayout = new QVBoxLayout(this);
+  mainLayout->setContentsMargins(0, 0, 0, 0);
+  mainLayout->setSpacing(0);
 
   // Header
-  auto* header = new QWidget(container);
+  auto* header = new QWidget(this);
   header->setObjectName(QStringLiteral("SettingsDialogHeader"));
   auto* headerLayout = new QHBoxLayout(header);
   headerLayout->setContentsMargins(24, 16, 24, 16);
@@ -101,25 +101,19 @@ void SettingsDialog::setupUI()
   headerLayout->addWidget(titleLabel);
   headerLayout->addStretch();
 
-  auto* closeButton = new QPushButton(header);
-  closeButton->setObjectName(QStringLiteral("SettingsDialogCloseButton"));
-  closeButton->setText(QStringLiteral("X"));
-  closeButton->setFlat(true);
-  closeButton->setCursor(Qt::PointingHandCursor);
-  headerLayout->addWidget(closeButton);
-  containerLayout->addWidget(header);
+  mainLayout->addWidget(header);
 
   // Main body
-  auto* body = new QWidget(container);
+  auto* body = new QWidget(this);
   body->setObjectName(QStringLiteral("SettingsDialogBody"));
   auto* bodyLayout = new QHBoxLayout(body);
   bodyLayout->setContentsMargins(0, 0, 0, 0);
   bodyLayout->setSpacing(0);
-  containerLayout->addWidget(body, 1);
+  mainLayout->addWidget(body, 1);
 
   // Left navigation
   auto* navPanel = new QWidget(body);
-  navPanel->setObjectName(QStringLiteral("SettingsNavPanel"));
+  navPanel->setObjectName(QStringLiteral("SettingsDialogNav"));
   navPanel->setMinimumWidth(220);
   auto* navLayout = new QVBoxLayout(navPanel);
   navLayout->setContentsMargins(16, 16, 16, 16);
@@ -215,8 +209,6 @@ void SettingsDialog::setupUI()
   }
 
   setActiveSection(0);
-
-  connect(closeButton, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 void SettingsDialog::buildSections()

@@ -11,5 +11,6 @@
     <file alias="icons/detect.svg">icons/detect.svg</file>
     <file alias="icons/user.svg">icons/user.svg</file>
     <file alias="styles/app.qss">styles/app.qss</file>
+    <file alias="styles/dark-theme.qss">styles/dark-theme.qss</file>
   </qresource>
 </RCC>

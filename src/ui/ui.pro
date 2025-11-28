@@ -30,6 +30,7 @@ HEADERS += \
     views/SPCView.h \
     views/StatisticsView.h \
     widgets/ImageView.h \
+    widgets/ImageViewControls.h \
     widgets/ParamPanel.h \
     widgets/ROIEditor.h \
     widgets/ResultCard.h \
@@ -49,6 +50,7 @@ SOURCES += \
     views/SPCView.cpp \
     views/StatisticsView.cpp \
     widgets/ImageView.cpp \
+    widgets/ImageViewControls.cpp \
     widgets/ParamPanel.cpp \
     widgets/ROIEditor.cpp \
     widgets/ResultCard.cpp \

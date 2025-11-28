@@ -48,7 +48,9 @@ private:
 
   // UI 组件
   QWidget* m_centralWidget;
+  QWidget* m_imageViewContainer;
   ImageView* m_imageView;
+  class ImageViewControls* m_imageViewControls;
   QWidget* m_rightPanel;
   ResultCard* m_resultCard;
   ParamPanel* m_paramPanel;

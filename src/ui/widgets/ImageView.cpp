@@ -1,12 +1,14 @@
 #include "ImageView.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsRectItem>
+#include <QGraphicsTextItem>
 #include <QGraphicsScene>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
 #include <QScrollBar>
 #include <QWheelEvent>
+#include <QFont>
 #include <algorithm>
 
 ImageView::ImageView(QWidget* parent) : QGraphicsView{parent}
@@ -22,12 +24,16 @@ ImageView::ImageView(QWidget* parent) : QGraphicsView{parent}
   m_roiItem->setVisible(false);
   m_scene->addItem(m_roiItem);
 
-  setBackgroundBrush(QColor("#0b0f19"));
+  // 设置深色背景以匹配原型设计
+  setBackgroundBrush(QColor("#0f172a"));
   setRenderHint(QPainter::Antialiasing, true);
   setDragMode(QGraphicsView::ScrollHandDrag);
   setMouseTracking(true);
   setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
   setResizeAnchor(QGraphicsView::AnchorViewCenter);
+
+  // 设置样式
+  setObjectName(QStringLiteral("ImageView"));
 }
 
 void ImageView::setImage(const cv::Mat& image)
@@ -76,6 +82,87 @@ void ImageView::clearAnnotations()
     delete item;
   }
   m_defectItems.clear();
+
+  // 同时清除标签
+  for (auto* label : m_labelItems) {
+    m_scene->removeItem(label);
+    delete label;
+  }
+  m_labelItems.clear();
+}
+
+void ImageView::drawDetectionBoxes(const QVector<DetectionBox>& boxes)
+{
+  clearDetectionBoxes();
+  m_detectionBoxes = boxes;
+
+  for (const auto& box : boxes) {
+    drawSingleDetectionBox(box);
+  }
+}
+
+void ImageView::addDetectionBox(const DetectionBox& box)
+{
+  m_detectionBoxes.append(box);
+  drawSingleDetectionBox(box);
+}
+
+void ImageView::clearDetectionBoxes()
+{
+  clearAnnotations();
+  m_detectionBoxes.clear();
+}
+
+void ImageView::drawSingleDetectionBox(const DetectionBox& box)
+{
+  // 创建检测框
+  auto* rectItem = new QGraphicsRectItem(QRectF(box.rect.x, box.rect.y,
+                                                box.rect.width, box.rect.height));
+
+  // 设置框的样式 - 根据检测结果使用不同颜色
+  QPen pen(box.color, 2.5, Qt::SolidLine);
+  pen.setCapStyle(Qt::RoundCap);
+  rectItem->setPen(pen);
+
+  // 半透明填充
+  QColor fillColor = box.color;
+  fillColor.setAlpha(30);
+  rectItem->setBrush(fillColor);
+
+  m_scene->addItem(rectItem);
+  m_defectItems.push_back(rectItem);
+
+  // 创建标签（如BOX1, BOX2等）
+  if (!box.label.isEmpty()) {
+    auto* textItem = new QGraphicsTextItem();
+
+    // 设置标签文本
+    QString labelText = box.label;
+    if (box.confidence > 0) {
+      labelText += QString(" %1%").arg(static_cast<int>(box.confidence * 100));
+    }
+    textItem->setPlainText(labelText);
+
+    // 设置标签样式
+    QFont font("Arial", 10, QFont::Bold);
+    textItem->setFont(font);
+    textItem->setDefaultTextColor(Qt::white);
+
+    // 创建标签背景
+    QRectF textRect = textItem->boundingRect();
+    auto* bgRect = new QGraphicsRectItem(textRect);
+    bgRect->setBrush(box.color);
+    bgRect->setPen(Qt::NoPen);
+
+    // 设置位置 - 标签位于框的左上角
+    bgRect->setPos(box.rect.x, box.rect.y - textRect.height() - 2);
+    textItem->setPos(box.rect.x + 2, box.rect.y - textRect.height() - 2);
+
+    m_scene->addItem(bgRect);
+    m_scene->addItem(textItem);
+    m_defectItems.push_back(bgRect);
+    m_labelItems.push_back(textItem);
+  }
 }
 
 void ImageView::setROI(const cv::Rect& roi)

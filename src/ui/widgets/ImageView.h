@@ -10,6 +10,15 @@
 class QGraphicsScene;
 class QGraphicsPixmapItem;
 class QGraphicsRectItem;
+class QGraphicsTextItem;
+
+// 检测框信息结构体
+struct DetectionBox {
+  cv::Rect rect;
+  QString label;
+  QColor color;
+  double confidence;
+};
 
 class ImageView : public QGraphicsView {
   Q_OBJECT
@@ -25,6 +34,11 @@ public:
   void drawDefectRegions(const std::vector<cv::Rect>& regions,
                          const QColor& color = Qt::red);
   void clearAnnotations();
+
+  // 检测框绘制
+  void drawDetectionBoxes(const QVector<DetectionBox>& boxes);
+  void addDetectionBox(const DetectionBox& box);
+  void clearDetectionBoxes();
 
   // ROI 编辑
   void setROI(const cv::Rect& roi);
@@ -58,6 +72,8 @@ private:
   QGraphicsPixmapItem* m_imageItem = nullptr;
   QGraphicsRectItem* m_roiItem = nullptr;
   QVector<QGraphicsRectItem*> m_defectItems;
+  QVector<QGraphicsTextItem*> m_labelItems;
+  QVector<DetectionBox> m_detectionBoxes;
 
   bool m_roiEditEnabled = false;
   bool m_isDragging = false;
@@ -67,6 +83,7 @@ private:
   QImage m_currentImage;
 
   QImage cvMatToQImage(const cv::Mat& mat);
+  void drawSingleDetectionBox(const DetectionBox& box);
 };
 
 #endif // IMAGEVIEW_H
