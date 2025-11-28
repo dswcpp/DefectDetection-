@@ -2,6 +2,7 @@
 #define IMAGESTORAGE_H
 
 #include <QString>
+#include <QByteArray>
 
 class ImageStorage {
 public:

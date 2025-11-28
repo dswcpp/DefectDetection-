@@ -20,6 +20,15 @@ signals:
   void resultReady(const DetectResult& result);
   void frameReady(const cv::Mat& frame);
   void error(const QString& module, const QString& message);
+
+  void started();
+  void stopped();
+
+private:
+  // TODO: 初始化相机/检测器
+  bool initPipeline();
+  // TODO: 释放资源
+  void teardown();
 };
 
 #endif // DETECTPIPELINE_H
