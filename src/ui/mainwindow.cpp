@@ -32,7 +32,7 @@
 #include <QDebug>
 #include <QTabWidget>
 #include <algorithm>
-#include "Logger.h"
+#include "common\Logger.h"
 MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
   setupUI();
 }
@@ -44,7 +44,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onStartClicked()
 {
-  //LOG_INFO("MainWindow::onStartClicked() - 开始选择测试图片");
+  LOG_INFO("MainWindow::onStartClicked() - 开始选择测试图片");
 
   // 调试阶段：选择图片文件并展示
   QString fileName = QFileDialog::getOpenFileName(this,

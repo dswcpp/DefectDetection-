@@ -1,26 +1,60 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <QString>
-#include <QDir>
-#include <QStandardPaths>
-#include <QSettings>
-#include <QDateTime>
+#include <QByteArray>
 #include <QCoreApplication>
-
-// 标准库头文件
+#include <QDateTime>
+#include <QDir>
+#include <QMap>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QString>
+#include <QStringList>
 #include <iostream>
-#include <string>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <vector>
 #include "common_global.h"
-#include "spdlog/spdlog.h"
 #include "spdlog/async.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
+
+// fmt 对 Qt 类型的 formatter 特化
+template <> struct fmt::formatter<QString> {
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(const QString &qstr, FormatContext &ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "{}", qstr.toUtf8().constData());
+  }
+};
+
+template <> struct fmt::formatter<QByteArray> {
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(const QByteArray &qba, FormatContext &ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "{}", std::string(qba.constData(), qba.size()));
+  }
+};
+
+template <> struct fmt::formatter<QStringList> {
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(const QStringList &qsl, FormatContext &ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "{}", qsl.join(", ").toStdString());
+  }
+};
+
+template <> struct fmt::formatter<QMap<QString, QString>> {
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(const QMap<QString, QString> &qm, FormatContext &ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "[QMap:{}]", qm.size());
+  }
+};
 
 // 轻量 spdlog 封装，支持 Qt 类型
 namespace logging {

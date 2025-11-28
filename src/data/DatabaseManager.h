@@ -4,6 +4,7 @@
 #include "data_global.h"
 #include <QObject>
 #include <QString>
+#include <QSqlDatabase>
 
 class DatabaseManager : public QObject {
   Q_OBJECT
@@ -19,8 +20,16 @@ public:
   // 健康检查
   bool isOpen() const;
 
-  // TODO: 事务封装 begin/commit/rollback
-  // TODO: 提供执行 SQL/预处理接口
+  // 事务封装
+  bool beginTransaction();
+  bool commit();
+  void rollback();
+
+  // 执行原始 SQL（无结果）
+  bool exec(const QString &sql);
+
+  // TODO: 提供预处理/绑定参数接口
+  bool executeSchema(const QString &schemaPath);
 
 signals:
   void opened();
@@ -28,6 +37,8 @@ signals:
 
 private:
   // TODO: 持有 QSqlDatabase 或封装类
+  QSqlDatabase m_db;
+  QString m_connectionName;
 };
 
 #endif // DATABASEMANAGER_H

@@ -1,11 +1,7 @@
 #include "Logger.h"
 #include <QDir>
-#include <QMap>
 #include <QStandardPaths>
 #include <QVariant>
-#include <QString>
-#include <QStringList>
-#include <QByteArray>
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -13,39 +9,9 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/fmt/bundled/format.h>
-
-// fmt formatter for Qt types
-template <> struct fmt::formatter<QString> {
-  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
-  template <typename FormatContext>
-  auto format(const QString &qstr, FormatContext &ctx) const -> decltype(ctx.out()) {
-    return fmt::format_to(ctx.out(), "{}", qstr.toStdString());
-  }
-};
-
-template <> struct fmt::formatter<QByteArray> {
-  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
-  template <typename FormatContext>
-  auto format(const QByteArray &qba, FormatContext &ctx) const -> decltype(ctx.out()) {
-    return fmt::format_to(ctx.out(), "{}", std::string(qba.constData(), qba.size()));
-  }
-};
-
-template <> struct fmt::formatter<QStringList> {
-  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
-  template <typename FormatContext>
-  auto format(const QStringList &qsl, FormatContext &ctx) const -> decltype(ctx.out()) {
-    return fmt::format_to(ctx.out(), "{}", qsl.join(", ").toStdString());
-  }
-};
-
-template <> struct fmt::formatter<QMap<QString, QString>> {
-  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) { return ctx.begin(); }
-  template <typename FormatContext>
-  auto format(const QMap<QString, QString> &qm, FormatContext &ctx) const -> decltype(ctx.out()) {
-    return fmt::format_to(ctx.out(), "[QMap:{}]", qm.size());
-  }
-};
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace logging {
 
@@ -77,6 +43,10 @@ bool Logger::init(const LoggerConfig &config) {
 
   std::vector<spdlog::sink_ptr> sinks;
   if (s_config.enableConsole) {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s:%#] %v");
     sinks.push_back(console_sink);
@@ -113,7 +83,18 @@ void Logger::shutdown() {
   s_logger.reset();
 }
 
-std::shared_ptr<spdlog::logger> Logger::instance() { return s_logger; }
+std::shared_ptr<spdlog::logger> Logger::instance() {
+  if (!s_logger) {
+    try {
+      s_logger = spdlog::stdout_color_mt("fallback_logger");
+      s_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+      spdlog::set_default_logger(s_logger);
+    } catch (...) {
+      return nullptr;
+    }
+  }
+  return s_logger;
+}
 
 void Logger::setLevel(const std::string &level) {
   auto lvl = parseLevel(level);
