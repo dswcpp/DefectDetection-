@@ -3,6 +3,7 @@
 #include "widgets/ImageViewControls.h"
 #include "widgets/ParamPanel.h"
 #include "widgets/ResultCard.h"
+#include "widgets/AnnotationPanel.h"
 #include "dialogs/SettingsDialog.h"
 #include "dialogs/StatisticsDialog.h"
 #include "dialogs/AboutDialog.h"
@@ -29,8 +30,9 @@
 #include <QFileInfo>
 #include <QImage>
 #include <QDebug>
+#include <QTabWidget>
 #include <algorithm>
-#include "fzspdlog.h"
+#include "Logger.h"
 MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
   setupUI();
 }
@@ -42,7 +44,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onStartClicked()
 {
-  QSPDLOG_INFO("MainWindow::onStartClicked() - 开始选择测试图片");
+  //LOG_INFO("MainWindow::onStartClicked() - 开始选择测试图片");
 
   // 调试阶段：选择图片文件并展示
   QString fileName = QFileDialog::getOpenFileName(this,
@@ -483,9 +485,20 @@ void MainWindow::setupUI()
   m_resultCard->setMaximumHeight(280);
   rightLayout->addWidget(m_resultCard);
 
-  // 参数面板 - 不再使用QGroupBox，直接使用改进后的ParamPanel
+  // 创建选项卡控件来容纳参数面板和标注面板
+  auto* tabWidget = new QTabWidget(this);
+  tabWidget->setObjectName(QStringLiteral("rightTabWidget"));
+
+  // 参数面板
   m_paramPanel = new ParamPanel(this);
-  rightLayout->addWidget(m_paramPanel, 1);
+  tabWidget->addTab(m_paramPanel, tr("检测参数"));
+
+  // 标注面板
+  m_annotationPanel = new AnnotationPanel(this);
+  m_annotationPanel->setImageView(m_imageView);
+  tabWidget->addTab(m_annotationPanel, tr("缺陷标注"));
+
+  rightLayout->addWidget(tabWidget, 1);
 
   m_rightPanel->setMinimumWidth(350);
   m_rightPanel->setMaximumWidth(400);

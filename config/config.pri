@@ -80,10 +80,6 @@ INCLUDEPATH += $$THIRD_PARTY_DIR
 
 # nlohmann/json (header-only)
 INCLUDEPATH += $$THIRD_PARTY_DIR/json/include
-
-# 1. Log模块 - 日志记录（暂时不使用，改用 Qt 标准消息系统）
-include($$THIRD_PARTY_DIR/spdlog/spdlog.pri)
-
 # libmodbus
 # unix {
 #     LIBS += -lmodbus
@@ -98,5 +94,3 @@ include($$THIRD_PARTY_DIR/spdlog/spdlog.pri)
 INCLUDEPATH += $$SRC_DIR
 INCLUDEPATH += $$INCLUDE_DIR
 
-HEADERS += \
-    $$PWD/fzspdlog.h

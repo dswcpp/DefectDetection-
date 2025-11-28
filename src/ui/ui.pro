@@ -30,6 +30,7 @@ HEADERS += \
     views/HistoryView.h \
     views/SPCView.h \
     views/StatisticsView.h \
+    widgets/AnnotationPanel.h \
     widgets/ImageView.h \
     widgets/ImageViewControls.h \
     widgets/ParamPanel.h \
@@ -51,6 +52,7 @@ SOURCES += \
     views/HistoryView.cpp \
     views/SPCView.cpp \
     views/StatisticsView.cpp \
+    widgets/AnnotationPanel.cpp \
     widgets/ImageView.cpp \
     widgets/ImageViewControls.cpp \
     widgets/ParamPanel.cpp \

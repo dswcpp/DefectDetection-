@@ -11,6 +11,7 @@ class ImageView;
 class ResultCard;
 class ParamPanel;
 class DetectResult;
+class AnnotationPanel;
 
 class UI_LIBRARY MainWindow : public QMainWindow {
   Q_OBJECT
@@ -54,6 +55,7 @@ private:
   QWidget* m_rightPanel;
   ResultCard* m_resultCard;
   ParamPanel* m_paramPanel;
+  AnnotationPanel* m_annotationPanel;
 
   // 动作
   QAction* m_actionStart;
