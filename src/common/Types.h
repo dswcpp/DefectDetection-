@@ -19,6 +19,13 @@ enum class SeverityLevel {
   Critical
 };
 
+enum class AlarmLevel {
+  Info,       // 信息
+  Warning,    // 警告
+  Error,      // 错误
+  Critical    // 严重
+};
+
 struct DetectResult {
   QString defectType;                    // 缺陷类型
   std::vector<cv::Rect> regions;         // 检测到的缺陷框列表

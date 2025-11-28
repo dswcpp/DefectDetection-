@@ -1,14 +1,22 @@
 #ifndef ABOUTDIALOG_H
 #define ABOUTDIALOG_H
 
-#include <QWidget>
+#include <QDialog>
 
-class AboutDialog : public QWidget {
-  Q_OBJECT
+QT_BEGIN_NAMESPACE
+class QLabel;
+class QPushButton;
+QT_END_NAMESPACE
+
+class AboutDialog : public QDialog {
+    Q_OBJECT
+
 public:
-  explicit AboutDialog(QWidget *parent = nullptr);
+    explicit AboutDialog(QWidget* parent = nullptr);
+    ~AboutDialog() = default;
 
-signals:
+private:
+    void setupUI();
 };
 
 #endif // ABOUTDIALOG_H

@@ -21,6 +21,7 @@ HEADERS += \
     dialogs/CalibrationDialog.h \
     dialogs/LoginDialog.h \
     dialogs/SettingsDialog.h \
+    dialogs/StatisticsDialog.h \
     mainwindow.h \
     models/DefectTableModel.h \
     models/HistoryTableModel.h \
@@ -42,6 +43,7 @@ SOURCES += \
     dialogs/CalibrationDialog.cpp \
     dialogs/LoginDialog.cpp \
     dialogs/SettingsDialog.cpp \
+    dialogs/StatisticsDialog.cpp \
     mainwindow.cpp \
     models/DefectTableModel.cpp \
     models/HistoryTableModel.cpp \
