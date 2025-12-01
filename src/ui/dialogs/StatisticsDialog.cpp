@@ -1,6 +1,5 @@
 #include "StatisticsDialog.h"
 #include "data/DatabaseManager.h"
-#include "data/repositories/DefectRepository.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>

@@ -2,7 +2,9 @@
 #define HISTORYVIEW_H
 
 #include <QWidget>
+#include <QVector>
 #include "ui_global.h"
+#include "data/repositories/DefectRepository.h"
 
 class QTableView;
 class QDateTimeEdit;
@@ -13,8 +15,6 @@ class QSpinBox;
 class HistoryTableModel;
 class DatabaseManager;
 class ImageView;
-struct InspectionRecord;
-struct DefectRecord;
 
 class UI_LIBRARY HistoryView : public QWidget {
   Q_OBJECT

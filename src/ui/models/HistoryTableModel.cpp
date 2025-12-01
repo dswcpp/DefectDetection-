@@ -1,5 +1,4 @@
 #include "HistoryTableModel.h"
-#include "data/repositories/DefectRepository.h"
 #include <QColor>
 #include <QBrush>
 

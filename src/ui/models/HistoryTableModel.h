@@ -4,10 +4,7 @@
 #include <QAbstractTableModel>
 #include <QVector>
 #include "ui_global.h"
-
-struct InspectionRecord;
-struct InspectionFilter;
-class DefectRepository;
+#include "data/repositories/DefectRepository.h"
 
 class UI_LIBRARY HistoryTableModel : public QAbstractTableModel {
   Q_OBJECT

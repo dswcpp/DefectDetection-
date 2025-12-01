@@ -2,7 +2,6 @@
 #include "models/HistoryTableModel.h"
 #include "widgets/ImageView.h"
 #include "data/DatabaseManager.h"
-#include "data/repositories/DefectRepository.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>

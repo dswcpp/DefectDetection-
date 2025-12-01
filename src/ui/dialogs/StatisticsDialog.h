@@ -6,6 +6,7 @@
 #include <QString>
 #include <QVector>
 #include "ui_global.h"
+#include "data/repositories/DefectRepository.h"
 
 class QTableWidget;
 class QLabel;
@@ -15,7 +16,6 @@ class QLineEdit;
 class QPushButton;
 class QGroupBox;
 class DatabaseManager;
-struct InspectionRecord;
 
 class UI_LIBRARY StatisticsDialog : public QDialog {
   Q_OBJECT
