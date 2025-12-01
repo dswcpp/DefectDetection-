@@ -136,7 +136,7 @@ void MainWindow::onSettingsClicked()
 
 void MainWindow::onStatisticsClicked()
 {
-    StatisticsDialog dialog(this);
+    StatisticsDialog dialog(m_dbManager, this);
     dialog.exec();
 }
 

@@ -2,7 +2,7 @@
 #define DEFECTREPOSITORY_H
 
 #include "IRepository.h"
-#include "..\data_global.h"
+#include "../data_global.h"
 #include <QObject>
 #include <QDateTime>
 #include <QVector>

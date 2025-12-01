@@ -636,7 +636,7 @@ void StatisticsDialog::updateTable() {
   updatePagination();
 }
 
-void StatisticsDialog::updateDetailPanel(const DetectionRecord* record) {
+void StatisticsDialog::updateDetailPanel(const InspectionRecord* record) {
   if (!record) {
     m_recordIdLabel->setText("-");
     m_productIdLabel->setText("-");
@@ -652,12 +652,13 @@ void StatisticsDialog::updateDetailPanel(const DetectionRecord* record) {
     return;
   }
 
-  m_recordIdLabel->setText(record->recordId);
-  m_productIdLabel->setText(record->productId);
-  m_timestampLabel->setText(record->timestamp.toString("yyyy/MM/dd hh:mm:ss"));
+  m_recordIdLabel->setText(QString::number(record->id));
+  m_productIdLabel->setText(record->productId > 0 ? QString::number(record->productId) : "-");
+  m_timestampLabel->setText(record->inspectTime.toString("yyyy/MM/dd hh:mm:ss"));
 
   // 结果标签
-  if (record->isOK) {
+  bool isOK = (record->result == "OK");
+  if (isOK) {
     m_resultLabel->setText("OK");
     m_resultLabel->setStyleSheet("color: #0f5132; background-color: #d1f2eb; padding: 2px 8px; border-radius: 3px;");
   } else {
@@ -665,41 +666,40 @@ void StatisticsDialog::updateDetailPanel(const DetectionRecord* record) {
     m_resultLabel->setStyleSheet("color: #842029; background-color: #f8d7da; padding: 2px 8px; border-radius: 3px;");
   }
 
-  m_defectTypeLabel->setText(record->defectType);
+  m_defectTypeLabel->setText(QString::number(record->defectCount) + tr(" 个缺陷"));
 
   // 严重度标签
-  if (record->severity == tr("轻微")) {
+  if (record->severityLevel == "Minor") {
     m_severityLabel->setStyleSheet("color: #856404; background-color: #fff3cd; padding: 2px 8px; border-radius: 3px;");
-  } else if (record->severity == tr("中等")) {
+  } else if (record->severityLevel == "Major") {
     m_severityLabel->setStyleSheet("color: #856404; background-color: #ffeaa7; padding: 2px 8px; border-radius: 3px;");
-  } else if (record->severity == tr("严重")) {
+  } else if (record->severityLevel == "Critical") {
     m_severityLabel->setStyleSheet("color: #842029; background-color: #f8d7da; padding: 2px 8px; border-radius: 3px;");
   } else {
     m_severityLabel->setStyleSheet("font-size: 14px; color: #212529;");
   }
-  m_severityLabel->setText(record->severity);
+  m_severityLabel->setText(record->severityLevel);
 
-  m_locationLabel->setText(record->location);
+  m_locationLabel->setText("-");
+  m_confidenceLabel->setText(QString("%1").arg(record->maxSeverity, 0, 'f', 2));
+  m_sizeLabel->setText(QString("%1 ms").arg(record->cycleTimeMs));
+  m_operatorLabel->setText("-");
 
-  if (record->confidence > 0) {
-    m_confidenceLabel->setText(QString("%1%").arg(record->confidence * 100, 0, 'f', 1));
-  } else {
-    m_confidenceLabel->setText("-");
-  }
-
-  m_sizeLabel->setText(record->size);
-  m_operatorLabel->setText(record->operatorName);
-
-  // 这里应该加载实际图片
+  // 加载图片
   if (!record->imagePath.isEmpty()) {
-    // QPixmap pixmap(record->imagePath);
-    // m_imagePreview->setPixmap(pixmap.scaled(m_imagePreview->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    QPixmap pixmap(record->imagePath);
+    if (!pixmap.isNull()) {
+      m_imagePreview->setPixmap(pixmap.scaled(m_imagePreview->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    } else {
+      m_imagePreview->setText(tr("图像加载失败"));
+    }
   } else {
     m_imagePreview->setText(tr("暂无图像"));
   }
 }
 
 void StatisticsDialog::onSearchClicked() {
+  loadFromDatabase();
   applyFilters();
   updateTable();
 }
@@ -722,8 +722,8 @@ void StatisticsDialog::onRecordSelected() {
     int row = selectedItems.first()->row();
     int recordIndex = (m_currentPage - 1) * m_recordsPerPage + row;
     if (recordIndex < m_filteredRecords.size()) {
-      m_selectedRecord = &m_filteredRecords[recordIndex];
-      updateDetailPanel(m_selectedRecord);
+      m_selectedIndex = recordIndex;
+      updateDetailPanel(&m_filteredRecords[recordIndex]);
     }
   }
 }
@@ -752,41 +752,32 @@ void StatisticsDialog::applyFilters() {
   m_filteredRecords.clear();
 
   QString resultFilter = m_resultCombo->currentText();
-  QString defectFilter = m_defectTypeCombo->currentText();
   QString severityFilter = m_severityCombo->currentText();
   QString keyword = m_keywordEdit->text().toLower();
-  QDate startDate = m_startDateEdit->date();
-  QDate endDate = m_endDateEdit->date();
 
   for (const auto& record : m_allRecords) {
-    // 日期筛选
-    if (record.timestamp.date() < startDate || record.timestamp.date() > endDate) {
-      continue;
-    }
-
     // 结果筛选
     if (resultFilter != tr("全部")) {
-      if ((resultFilter == "OK" && !record.isOK) ||
-          (resultFilter == "NG" && record.isOK)) {
+      if ((resultFilter == "OK" && record.result != "OK") ||
+          (resultFilter == "NG" && record.result != "NG")) {
         continue;
       }
     }
 
-    // 缺陷类型筛选
-    if (defectFilter != tr("全部") && record.defectType != defectFilter) {
-      continue;
-    }
-
     // 严重度筛选
-    if (severityFilter != tr("全部") && record.severity != severityFilter) {
-      continue;
+    if (severityFilter != tr("全部")) {
+      QString level = record.severityLevel;
+      if ((severityFilter == tr("轻微") && level != "Minor") ||
+          (severityFilter == tr("中等") && level != "Major") ||
+          (severityFilter == tr("严重") && level != "Critical")) {
+        continue;
+      }
     }
 
-    // 关键词筛选
+    // 关键词筛选 (搜索 ID 或图像路径)
     if (!keyword.isEmpty()) {
-      if (!record.recordId.toLower().contains(keyword) &&
-          !record.productId.toLower().contains(keyword) &&
-          !record.operatorName.toLower().contains(keyword)) {
+      if (!QString::number(record.id).contains(keyword) &&
+          !record.imagePath.toLower().contains(keyword)) {
         continue;
       }
     }
