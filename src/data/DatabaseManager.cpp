@@ -1,6 +1,8 @@
 #include "DatabaseManager.h"
 #include "repositories/ConfigRepository.h"
 #include "repositories/DefectRepository.h"
+#include "repositories/ImageRepository.h"
+#include "repositories/AnnotationRepository.h"
 #include "Logger.h"
 #include <QDir>
 #include <QFile>
@@ -15,8 +17,10 @@ DatabaseManager::DatabaseManager(QObject* parent)
     , m_configRepo(std::make_unique<ConfigRepository>(this)) {
   m_connectionName = QUuid::createUuid().toString(QUuid::Id128);
 
-  // 创建缺陷仓库
+  // 创建仓库
   m_defectRepo = std::make_unique<DefectRepository>(m_connectionName, this);
+  m_imageRepo = std::make_unique<ImageRepository>(m_connectionName, this);
+  m_annotationRepo = std::make_unique<AnnotationRepository>(m_connectionName, this);
 
   // 监听配置变更
   connect(m_configRepo.get(), &ConfigRepository::databaseConfigChanged,

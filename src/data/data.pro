@@ -22,9 +22,11 @@ HEADERS += \
     export/CSVExporter.h \
     export/ExcelExporter.h \
     export/ReportGenerator.h \
+    repositories/AnnotationRepository.h \
     repositories/ConfigRepository.h \
     repositories/DefectRepository.h \
     repositories/IRepository.h \
+    repositories/ImageRepository.h \
     repositories/InspectionRepository.h \
     storage/BackupManager.h \
     storage/ImageStorage.h
@@ -35,8 +37,10 @@ SOURCES += \
     export/CSVExporter.cpp \
     export/ExcelExporter.cpp \
     export/ReportGenerator.cpp \
+    repositories/AnnotationRepository.cpp \
     repositories/ConfigRepository.cpp \
     repositories/DefectRepository.cpp \
+    repositories/ImageRepository.cpp \
     repositories/InspectionRepository.cpp \
     storage/BackupManager.cpp \
     storage/ImageStorage.cpp

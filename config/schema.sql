@@ -116,6 +116,60 @@ CREATE TABLE IF NOT EXISTS defects (
 CREATE INDEX IF NOT EXISTS idx_defects_inspection_id ON defects(inspection_id);
 CREATE INDEX IF NOT EXISTS idx_defects_type ON defects(defect_type);
 
+-- 人工标注表（ground truth，用于模型训练）
+CREATE TABLE IF NOT EXISTS annotations (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    image_id        INTEGER NOT NULL,            -- 关联图片
+    class_name      TEXT NOT NULL,               -- 缺陷类别名称 scratch/crack/bubble...
+    class_id        INTEGER,                     -- 缺陷类别ID（用于YOLO导出）
+    shape           TEXT NOT NULL DEFAULT 'rectangle',  -- rectangle/polygon/circle
+    bbox_x          INTEGER,                     -- 边界框
+    bbox_y          INTEGER,
+    bbox_width      INTEGER,
+    bbox_height     INTEGER,
+    polygon_points  TEXT,                        -- JSON [[x1,y1],[x2,y2],...] 多边形点
+    confidence      REAL,                        -- 置信度（如果来自模型预标注）
+    severity        TEXT,                        -- critical/major/minor/info
+    description     TEXT,                        -- 备注说明
+    annotator_id    INTEGER,                     -- 标注人
+    status          TEXT DEFAULT 'pending',      -- pending/approved/rejected
+    reviewer_id     INTEGER,                     -- 审核人
+    reviewed_at     DATETIME,                    -- 审核时间
+    review_comment  TEXT,                        -- 审核意见
+    is_manual       INTEGER DEFAULT 1,           -- 是否手动标注 1=手动 0=自动预标注
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (image_id) REFERENCES images(id),
+    FOREIGN KEY (annotator_id) REFERENCES users(id),
+    FOREIGN KEY (reviewer_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_annotations_image_id ON annotations(image_id);
+CREATE INDEX IF NOT EXISTS idx_annotations_class_name ON annotations(class_name);
+CREATE INDEX IF NOT EXISTS idx_annotations_status ON annotations(status);
+
+-- 缺陷类别定义表（用于标注和导出）
+CREATE TABLE IF NOT EXISTS defect_classes (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_id        INTEGER NOT NULL UNIQUE,     -- YOLO 类别ID (0, 1, 2...)
+    class_name      TEXT NOT NULL UNIQUE,        -- 类别名称
+    display_name    TEXT,                        -- 显示名称（中文）
+    color           TEXT,                        -- 显示颜色 #RRGGBB
+    description     TEXT,
+    is_active       INTEGER DEFAULT 1,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 插入默认缺陷类别
+INSERT OR IGNORE INTO defect_classes (class_id, class_name, display_name, color) VALUES
+    (0, 'scratch', '划痕', '#FF5722'),
+    (1, 'crack', '裂纹', '#E91E63'),
+    (2, 'bubble', '气泡', '#9C27B0'),
+    (3, 'foreign', '异物', '#673AB7'),
+    (4, 'deformation', '变形', '#3F51B5'),
+    (5, 'stain', '污渍', '#2196F3'),
+    (6, 'missing', '缺失', '#00BCD4'),
+    (7, 'other', '其他', '#607D8B');
+
 CREATE TABLE IF NOT EXISTS audit_logs (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp       DATETIME DEFAULT CURRENT_TIMESTAMP,
