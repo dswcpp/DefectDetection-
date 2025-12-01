@@ -6,6 +6,7 @@
 #include "widgets/AnnotationPanel.h"
 #include "dialogs/SettingsDialog.h"
 #include "dialogs/StatisticsDialog.h"
+#include "dialogs/HistoryDialog.h"
 #include "dialogs/AboutDialog.h"
 #include "DetectPipeline.h"
 #include "Types.h"
@@ -136,6 +137,12 @@ void MainWindow::onSettingsClicked()
 void MainWindow::onStatisticsClicked()
 {
     StatisticsDialog dialog(this);
+    dialog.exec();
+}
+
+void MainWindow::onHistoryClicked()
+{
+    HistoryDialog dialog(m_dbManager, this);
     dialog.exec();
 }
 
@@ -337,6 +344,7 @@ void MainWindow::createActions()
   m_actionSingleShot->setShortcut(QKeySequence(QStringLiteral("F7")));
   m_actionSettings = new QAction(QIcon(":/icons/settings.svg"), tr("参数"), this);
   m_actionStatistics = new QAction(QIcon(":/icons/chart.svg"), tr("统计"), this);
+  m_actionHistory = new QAction(QIcon(":/icons/history.svg"), tr("历史"), this);
   m_actionExit = new QAction(tr("退出"), this);
   m_actionExit->setShortcut(QKeySequence::Quit);
   m_actionAbout = new QAction(tr("关于"), this);
@@ -357,6 +365,7 @@ void MainWindow::setupMenuBar()
   auto* settingsMenu = bar->addMenu(tr("设置"));
   settingsMenu->addAction(m_actionSettings);
   settingsMenu->addAction(m_actionStatistics);
+  settingsMenu->addAction(m_actionHistory);
   auto* helpMenu = bar->addMenu(tr("帮助"));
   helpMenu->addAction(m_actionAbout);
 }
@@ -409,6 +418,13 @@ void MainWindow::setupToolBar()
   if (statsBtn) {
     statsBtn->setObjectName(QStringLiteral("statisticsButton"));
   }
+
+  toolBar->addAction(m_actionHistory);
+  QToolButton* historyBtn = qobject_cast<QToolButton*>(
+      toolBar->widgetForAction(m_actionHistory));
+  if (historyBtn) {
+    historyBtn->setObjectName(QStringLiteral("historyButton"));
+  }
 }
 
 void MainWindow::setupStatusBar()
@@ -452,6 +468,7 @@ void MainWindow::setupConnections()
     connect(m_actionSingleShot, &QAction::triggered, this, &MainWindow::onSingleShotClicked);
     connect(m_actionSettings, &QAction::triggered, this, &MainWindow::onSettingsClicked);
     connect(m_actionStatistics, &QAction::triggered, this, &MainWindow::onStatisticsClicked);
+    connect(m_actionHistory, &QAction::triggered, this, &MainWindow::onHistoryClicked);
     connect(m_actionExit, &QAction::triggered, this, &QWidget::close);
     connect(m_actionAbout, &QAction::triggered, this, [this]() {
         AboutDialog dialog(this);

@@ -1,4 +1,6 @@
 #include "StatisticsDialog.h"
+#include "data/DatabaseManager.h"
+#include "data/repositories/DefectRepository.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -19,11 +21,12 @@
 #include <QPixmap>
 #include <QDate>
 
-StatisticsDialog::StatisticsDialog(QWidget* parent) : QDialog{parent} {
+StatisticsDialog::StatisticsDialog(DatabaseManager* dbManager, QWidget* parent)
+    : QDialog{parent}, m_dbManager(dbManager) {
   setModal(true);
   setWindowTitle(tr("检测记录统计"));
   setupUI();
-  loadMockData();
+  loadFromDatabase();
   updateTable();
 }
 
@@ -365,8 +368,8 @@ void StatisticsDialog::setupUI() {
   m_recordTable = new QTableWidget();
   m_recordTable->setColumnCount(6);
   m_recordTable->setHorizontalHeaderLabels({
-    tr("记录ID"), tr("时间"), tr("产品ID"),
-    tr("结果"), tr("缺陷类型"), tr("严重度")
+    tr("ID"), tr("检测时间"), tr("缺陷数"),
+    tr("结果"), tr("耗时"), tr("严重度")
   });
 
   m_recordTable->setAlternatingRowColors(true);
@@ -559,39 +562,20 @@ void StatisticsDialog::setupUI() {
   mainLayout->addWidget(contentWidget, 1);
 }
 
-void StatisticsDialog::loadMockData() {
-  // 生成模拟数据
+void StatisticsDialog::loadFromDatabase() {
   m_allRecords.clear();
-  QStringList defectTypes = {tr("划痕"), tr("裂纹"), tr("异物"), tr("尺寸偏差")};
-  QStringList severities = {tr("轻微"), tr("中等"), tr("严重")};
 
-  for (int i = 0; i < 100; ++i) {
-    DetectionRecord record;
-    record.recordId = QString("REC%1").arg(i + 1, 6, 10, QChar('0'));
-    record.timestamp = QDateTime::currentDateTime().addDays(-rand() % 30).addSecs(-rand() % 86400);
-    record.productId = QString("PRD%1").arg(rand() % 10000, 6, 10, QChar('0'));
-    record.isOK = (rand() % 10) > 3;  // 70% OK率
-
-    if (!record.isOK) {
-      record.defectType = defectTypes[rand() % defectTypes.size()];
-      record.severity = severities[rand() % severities.size()];
-      record.location = QString("(%1, %2)").arg(rand() % 1000).arg(rand() % 1000);
-      record.confidence = 0.75 + (rand() % 25) / 100.0;
-      record.size = QString("%1px").arg(10 + rand() % 50);
-    } else {
-      record.defectType = "-";
-      record.severity = "-";
-      record.location = "-";
-      record.confidence = 0.0;
-      record.size = "-";
-    }
-
-    record.operatorName = "admin";
-    record.imagePath = "";  // 实际应用中应设置实际图片路径
-
-    m_allRecords.append(record);
+  if (!m_dbManager || !m_dbManager->isOpen()) {
+    return;
   }
 
+  InspectionFilter filter;
+  filter.startTime = QDateTime(m_startDateEdit->date(), QTime(0, 0, 0));
+  filter.endTime = QDateTime(m_endDateEdit->date(), QTime(23, 59, 59));
+  filter.limit = 1000;
+  filter.offset = 0;
+
+  m_allRecords = m_dbManager->defectRepository()->queryInspections(filter);
   m_filteredRecords = m_allRecords;
 }
 
@@ -607,20 +591,21 @@ void StatisticsDialog::updateTable() {
     m_recordTable->insertRow(row);
 
     // 记录ID
-    auto* idItem = new QTableWidgetItem(record.recordId);
+    auto* idItem = new QTableWidgetItem(QString::number(record.id));
     m_recordTable->setItem(row, 0, idItem);
 
     // 时间
-    auto* timeItem = new QTableWidgetItem(record.timestamp.toString("yyyy/MM/dd hh:mm:ss"));
+    auto* timeItem = new QTableWidgetItem(record.inspectTime.toString("yyyy/MM/dd hh:mm:ss"));
     m_recordTable->setItem(row, 1, timeItem);
 
-    // 产品ID
-    auto* productItem = new QTableWidgetItem(record.productId);
-    m_recordTable->setItem(row, 2, productItem);
+    // 缺陷数
+    auto* defectCountItem = new QTableWidgetItem(QString::number(record.defectCount));
+    m_recordTable->setItem(row, 2, defectCountItem);
 
     // 结果
-    auto* resultItem = new QTableWidgetItem(record.isOK ? "OK" : "NG");
-    if (record.isOK) {
+    bool isOK = (record.result == "OK");
+    auto* resultItem = new QTableWidgetItem(record.result);
+    if (isOK) {
       resultItem->setBackground(QBrush(QColor("#d1f2eb")));
       resultItem->setForeground(QBrush(QColor("#0f5132")));
     } else {
@@ -629,19 +614,19 @@ void StatisticsDialog::updateTable() {
     }
     m_recordTable->setItem(row, 3, resultItem);
 
-    // 缺陷类型
-    auto* defectItem = new QTableWidgetItem(record.defectType);
-    m_recordTable->setItem(row, 4, defectItem);
+    // 耗时
+    auto* cycleItem = new QTableWidgetItem(QString("%1 ms").arg(record.cycleTimeMs));
+    m_recordTable->setItem(row, 4, cycleItem);
 
     // 严重度
-    auto* severityItem = new QTableWidgetItem(record.severity);
-    if (record.severity == tr("轻微")) {
+    auto* severityItem = new QTableWidgetItem(record.severityLevel);
+    if (record.severityLevel == "Minor") {
       severityItem->setBackground(QBrush(QColor("#fff3cd")));
       severityItem->setForeground(QBrush(QColor("#856404")));
-    } else if (record.severity == tr("中等")) {
+    } else if (record.severityLevel == "Major") {
       severityItem->setBackground(QBrush(QColor("#ffeaa7")));
       severityItem->setForeground(QBrush(QColor("#856404")));
-    } else if (record.severity == tr("严重")) {
+    } else if (record.severityLevel == "Critical") {
       severityItem->setBackground(QBrush(QColor("#f8d7da")));
       severityItem->setForeground(QBrush(QColor("#842029")));
     }

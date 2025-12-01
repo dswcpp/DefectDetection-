@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QString>
 #include <QVector>
+#include "ui_global.h"
 
 class QTableWidget;
 class QLabel;
@@ -13,26 +14,13 @@ class QDateEdit;
 class QLineEdit;
 class QPushButton;
 class QGroupBox;
+class DatabaseManager;
+struct InspectionRecord;
 
-// 检测记录数据结构
-struct DetectionRecord {
-  QString recordId;
-  QDateTime timestamp;
-  QString productId;
-  bool isOK;
-  QString defectType;
-  QString severity;
-  QString imagePath;
-  QString location;
-  double confidence;
-  QString size;
-  QString operatorName;
-};
-
-class StatisticsDialog : public QDialog {
+class UI_LIBRARY StatisticsDialog : public QDialog {
   Q_OBJECT
 public:
-  explicit StatisticsDialog(QWidget* parent = nullptr);
+  explicit StatisticsDialog(DatabaseManager* dbManager = nullptr, QWidget* parent = nullptr);
 
 private slots:
   void onSearchClicked();
@@ -43,9 +31,9 @@ private slots:
 
 private:
   void setupUI();
-  void loadMockData();
+  void loadFromDatabase();
   void updateTable();
-  void updateDetailPanel(const DetectionRecord* record);
+  void updateDetailPanel(const InspectionRecord* record);
   void applyFilters();
 
   // UI Elements - Filter Section
@@ -80,11 +68,12 @@ private:
   QLabel* m_operatorLabel;
 
   // Data
-  QVector<DetectionRecord> m_allRecords;
-  QVector<DetectionRecord> m_filteredRecords;
+  DatabaseManager* m_dbManager = nullptr;
+  QVector<InspectionRecord> m_allRecords;
+  QVector<InspectionRecord> m_filteredRecords;
   int m_currentPage = 1;
   int m_recordsPerPage = 15;
-  DetectionRecord* m_selectedRecord = nullptr;
+  int m_selectedIndex = -1;
 };
 
 #endif // STATISTICSDIALOG_H

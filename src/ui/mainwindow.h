@@ -36,6 +36,7 @@ private slots:
   void onSingleShotClicked();
   void onSettingsClicked();
   void onStatisticsClicked();
+  void onHistoryClicked();
 public slots:
   void onResultReady(const DetectResult& result);
   void onFrameReady(const cv::Mat& frame);
@@ -69,6 +70,7 @@ private:
   QAction* m_actionSingleShot;
   QAction* m_actionSettings;
   QAction* m_actionStatistics;
+  QAction* m_actionHistory;
   QAction* m_actionOpenConfig;
   QAction* m_actionSaveConfig;
   QAction* m_actionExit;

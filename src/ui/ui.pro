@@ -9,7 +9,7 @@ include($$PWD/../../config/config.pri)
 TEMPLATE = lib
 TARGET = ui
 
-QT += core gui widgets charts
+QT += core gui widgets charts sql
 
 DEFINES += UI_LIBRARY_BUILD
 
@@ -20,6 +20,7 @@ HEADERS += \
     DetectPipeline.h \
     dialogs/AboutDialog.h \
     dialogs/CalibrationDialog.h \
+    dialogs/HistoryDialog.h \
     dialogs/LoginDialog.h \
     dialogs/SettingsDialog.h \
     dialogs/StatisticsDialog.h \
@@ -44,6 +45,7 @@ SOURCES += \
     DetectPipeline.cpp \
     dialogs/AboutDialog.cpp \
     dialogs/CalibrationDialog.cpp \
+    dialogs/HistoryDialog.cpp \
     dialogs/LoginDialog.cpp \
     dialogs/SettingsDialog.cpp \
     dialogs/StatisticsDialog.cpp \
@@ -111,6 +113,14 @@ LIBS += -L$$OUT_PWD/../hal -lhal
 win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
 else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
+
+# data 模块 (DatabaseManager, Repositories)
+INCLUDEPATH += $$PWD/../data
+LIBS += -L$$OUT_PWD/../data -ldata
+
+win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
+else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/data.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
 
 RESOURCES += \
     resource.qrc
