@@ -2,6 +2,8 @@
 #define FILECAMERA_H
 
 #include "ICamera.h"
+#include <QStringList>
+#include <atomic>
 
 class FileCamera : public ICamera {
 public:
@@ -10,6 +12,18 @@ public:
   bool open(const CameraConfig &cfg) override;
   bool grab(cv::Mat &frame) override;
   void close() override;
+
+  void setImageDir(const QString &dir);
+  void setLoop(bool loop);
+  int imageCount() const;
+
+private:
+  bool scanImages(const QString &dir);
+
+  QStringList m_imagePaths;
+  std::atomic<int> m_currentIndex{0};
+  bool m_loop = true;
+  bool m_opened = false;
 };
 
 #endif // FILECAMERA_H

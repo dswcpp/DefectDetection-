@@ -4,7 +4,9 @@
 #include <QMainWindow>
 #include "Types.h"
 #include "ui_global.h"
+#include "Timer.h"
 #include "opencv2/opencv.hpp"
+
 class QLabel;
 class QAction;
 class ImageView;
@@ -12,12 +14,15 @@ class ResultCard;
 class ParamPanel;
 class DetectResult;
 class AnnotationPanel;
+class DetectPipeline;
 
 class UI_LIBRARY MainWindow : public QMainWindow {
   Q_OBJECT
 public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
+
+  void setPipeline(DetectPipeline* pipeline);
 
 signals:
   void startRequested();
@@ -74,11 +79,21 @@ private:
   QLabel* m_okCountLabel;
   QLabel* m_ngCountLabel;
   QLabel* m_yieldLabel;
+  QLabel* m_fpsLabel;
 
   // 统计
   int m_totalCount = 0;
   int m_okCount = 0;
   int m_ngCount = 0;
   int m_lastCycleTimeMs = 0;
+
+  // 性能监控
+  FPSCounter m_fpsCounter;
+  PerfStats m_detectStats{"Detection"};
+  Throttle m_statusThrottle{100};  // 限制状态栏更新频率 100ms
+
+  // 检测流水线
+  DetectPipeline* m_pipeline = nullptr;
+  void drawDetectionResult(const cv::Mat& frame, const DetectResult& result);
 };
 #endif // MAINWINDOW_H

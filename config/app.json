@@ -1,0 +1,39 @@
+{
+    "camera": {
+        "type": "file",
+        "imageDir": "./images",
+        "ip": "",
+        "serial": "",
+        "captureIntervalMs": 1000,
+        "loop": true,
+        "width": 0,
+        "height": 0,
+        "exposureUs": 10000.0,
+        "gainDb": 0.0
+    },
+    "detection": {
+        "enabled": true,
+        "confidenceThreshold": 0.75,
+        "modelPath": "./models/yolo.onnx",
+        "batchSize": 1,
+        "useGPU": false
+    },
+    "ui": {
+        "theme": "dark",
+        "language": "zh_CN",
+        "showFPS": true,
+        "fullscreen": false
+    },
+    "database": {
+        "path": "./data/defects.db",
+        "maxRecords": 100000,
+        "autoCleanup": true
+    },
+    "log": {
+        "level": "info",
+        "dir": "./logs",
+        "maxFileSizeMB": 50,
+        "maxFileCount": 10,
+        "enableConsole": true
+    }
+}

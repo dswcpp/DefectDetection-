@@ -25,18 +25,14 @@ INCLUDEPATH += $$PWD/../../third_party
 INCLUDEPATH += $$PWD/../../third_party/opencv/include
 # ------------------ 头文件 ------------------
 HEADERS += \
-    DetectPipeline.h \
     FlowController.h \
-    ConfigManager.h \
     SystemWatchdog.h \
     ResultAggregator.h
 
 # ------------------ 源文件 ------------------
 SOURCES += \
     main.cpp \
-    DetectPipeline.cpp \
     FlowController.cpp \
-    ConfigManager.cpp \
     SystemWatchdog.cpp \
     ResultAggregator.cpp \
     $$PWD/crt_shim.cpp
@@ -104,6 +100,15 @@ DEPENDPATH += $$PWD/../algorithm
 win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
 else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/algorithm.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
+
+LIBS += -L$$OUT_PWD/../hal -lhal
+
+INCLUDEPATH += $$PWD/../hal
+DEPENDPATH += $$PWD/../hal
+
+win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
+else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
 
 # OpenCV 链接（MinGW）
 win32-g++ {

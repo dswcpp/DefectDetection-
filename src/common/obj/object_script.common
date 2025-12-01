@@ -1,0 +1,16 @@
+obj/CircularBuffer.o
+obj/Logger.o
+obj/SPSCQueue.o
+obj/ThreadPool.o
+obj/Timer.o
+obj/Utils.o
+obj/ConfigManager.o
+obj/async.o
+obj/bundled_fmtlib_format.o
+obj/cfg.o
+obj/color_sinks.o
+obj/file_sinks.o
+obj/spdlog.o
+obj/stdout_sinks.o
+obj/moc_AppConfig.o
+obj/moc_ConfigManager.o

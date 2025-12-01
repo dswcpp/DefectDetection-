@@ -7,7 +7,10 @@
 #include "dialogs/SettingsDialog.h"
 #include "dialogs/StatisticsDialog.h"
 #include "dialogs/AboutDialog.h"
+#include "DetectPipeline.h"
 #include "Types.h"
+#include "config/ConfigManager.h"
+#include "Logger.h"
 #include <spdlog/spdlog.h>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -32,352 +35,87 @@
 #include <QDebug>
 #include <QTabWidget>
 #include <algorithm>
-#include "common\Logger.h"
+#include "common/Logger.h"
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
   setupUI();
 }
 
 MainWindow::~MainWindow()
 {
+}
 
+void MainWindow::setPipeline(DetectPipeline* pipeline)
+{
+  m_pipeline = pipeline;
+  if (!m_pipeline) return;
+
+  // 连接流水线信号
+  connect(m_pipeline, &DetectPipeline::frameReady, this, &MainWindow::onFrameReady);
+  connect(m_pipeline, &DetectPipeline::resultReady, this, &MainWindow::onResultReady);
+  connect(m_pipeline, &DetectPipeline::error, this, &MainWindow::onError);
+  connect(m_pipeline, &DetectPipeline::started, this, [this]() {
+    m_actionStart->setEnabled(false);
+    m_actionStop->setEnabled(true);
+    m_actionSingleShot->setEnabled(false);
+    statusBar()->showMessage(tr("检测已启动"), 2000);
+  });
+  connect(m_pipeline, &DetectPipeline::stopped, this, [this]() {
+    m_actionStart->setEnabled(true);
+    m_actionStop->setEnabled(false);
+    m_actionSingleShot->setEnabled(true);
+    statusBar()->showMessage(tr("检测已停止"), 2000);
+  });
 }
 
 void MainWindow::onStartClicked()
 {
-  LOG_INFO("MainWindow::onStartClicked() - 开始选择测试图片");
+  LOG_INFO("MainWindow::onStartClicked() - 启动连续检测");
 
-  // 调试阶段：选择图片文件并展示
-  QString fileName = QFileDialog::getOpenFileName(this,
-    tr("选择测试图片"),
-    QString(),
-    tr("图片文件 (*.png *.jpg *.jpeg *.bmp *.tiff);;所有文件 (*.*)"));
-
-  if (!fileName.isEmpty()) {
-    qDebug() << "选择的文件:" << fileName;
-
-    // 检查文件是否存在
-    QFileInfo fileInfo(fileName);
-    if (!fileInfo.exists()) {
-      qCritical() << "文件不存在:" << fileName;
-      QMessageBox::warning(this, tr("错误"), tr("文件不存在"));
-      return;
-    }
-
-    qDebug() << "文件大小:" << fileInfo.size() << "bytes";
-    qDebug() << "文件路径:" << fileInfo.absoluteFilePath();
-
-    // 加载图片到OpenCV Mat
-    qDebug() << "开始使用OpenCV加载图片";
-
-    // 尝试不同的路径格式
-    std::string stdPath = fileName.toStdString();
-    std::string localPath = fileName.toLocal8Bit().constData();
-
-    qDebug() << "std::string path:" << QString::fromStdString(stdPath);
-    qDebug() << "local8bit path:" << QString::fromStdString(localPath);
-
-    cv::Mat image = cv::imread(stdPath);
-
-    // 如果失败，尝试用本地编码路径
-    if (image.empty()) {
-      qDebug() << "尝试使用本地编码路径";
-      image = cv::imread(localPath);
-    }
-
-    // 如果还失败，尝试替换路径分隔符
-    if (image.empty()) {
-      std::string winPath = stdPath;
-      std::replace(winPath.begin(), winPath.end(), '/', '\\');
-      qDebug() << "尝试Windows路径格式:" << QString::fromStdString(winPath);
-      image = cv::imread(winPath);
-    }
-
-    if (!image.empty()) {
-      qDebug() << "图片加载成功 - 宽度:" << image.cols
-               << "高度:" << image.rows
-               << "通道数:" << image.channels();
-
-      // 显示图片
-      if (m_imageView) {
-        qDebug() << "设置图片到ImageView";
-        m_imageView->setImage(image);
-      } else {
-        qCritical() << "m_imageView为空指针";
-      }
-
-      // 更新状态栏
-      statusBar()->showMessage(tr("已加载图片: %1").arg(fileName), 3000);
-
-      // 模拟检测过程（延迟后显示结果）
-      qDebug() << "启动500ms延迟定时器模拟检测";
-      QTimer::singleShot(500, this, [this, image, fileName]() {
-        qDebug() << "定时器触发 - 开始生成模拟检测结果";
-        // 生成模拟检测结果
-        DetectResult result;
-        result.isOK = (rand() % 10) > 3; // 70% OK率
-        result.timestamp = QDateTime::currentDateTime().toMSecsSinceEpoch();
-
-        if (!result.isOK) {
-          // 生成随机缺陷类型
-          QStringList defectTypes = {tr("划痕"), tr("裂纹"), tr("异物"), tr("尺寸偏差")};
-          result.defectType = defectTypes[rand() % defectTypes.size()];
-
-          // 设置严重度
-          int severityIdx = rand() % 3;
-          if (severityIdx == 0) {
-            result.level = SeverityLevel::Minor;
-            result.severity = 0.3;
-          } else if (severityIdx == 1) {
-            result.level = SeverityLevel::Major;
-            result.severity = 0.6;
-          } else {
-            result.level = SeverityLevel::Critical;
-            result.severity = 0.9;
-          }
-
-          // 生成随机缺陷区域
-          int numDefects = 1 + rand() % 3; // 1-3个缺陷
-          for (int i = 0; i < numDefects; ++i) {
-            DefectRegion defect;
-            defect.bbox = cv::Rect(
-              rand() % (image.cols - 100),
-              rand() % (image.rows - 100),
-              50 + rand() % 100,
-              50 + rand() % 100
-            );
-            defect.confidence = 0.75 + (rand() % 25) / 100.0;
-            defect.classId = rand() % 4; // 0-3对应不同缺陷类型
-
-            result.defects.push_back(defect);
-            result.regions.push_back(defect.bbox);
-          }
-
-          result.confidence = 0.75 + (rand() % 25) / 100.0;
-        } else {
-          result.level = SeverityLevel::OK;
-          result.severity = 0.0;
-          result.confidence = 1.0;
-        }
-
-        // 更新结果显示
-        if (m_resultCard) {
-          m_resultCard->setResult(result);
-        }
-
-        // 如果有缺陷，在图像上绘制标注
-        if (!result.isOK && m_imageView) {
-          QVector<DetectionBox> boxes;
-          for (const auto& defect : result.defects) {
-            DetectionBox box;
-            box.rect = defect.bbox;
-            box.label = result.defectType;
-            box.confidence = defect.confidence;
-
-            // 根据严重度设置颜色
-            if (result.level == SeverityLevel::Minor) {
-              box.color = QColor(255, 193, 7); // 黄色
-            } else if (result.level == SeverityLevel::Major) {
-              box.color = QColor(255, 152, 0); // 橙色
-            } else {
-              box.color = QColor(244, 67, 54); // 红色
-            }
-
-            boxes.append(box);
-          }
-          m_imageView->drawDetectionBoxes(boxes);
-        } else if (m_imageView) {
-          // 清除标注框
-          m_imageView->clearDetectionBoxes();
-        }
-
-        // 更新统计
-        onResultReady(result);
-      });
-
-      // 启用停止按钮，禁用启动按钮
-      m_actionStart->setEnabled(false);
-      m_actionStop->setEnabled(true);
-
-    } else {
-      qCritical() << "OpenCV无法加载图片:" << fileName;
-      qDebug() << "尝试使用不同的标志位重新加载";
-
-      // 尝试用不同的标志位加载
-      image = cv::imread(fileName.toStdString(), cv::IMREAD_UNCHANGED);
-      if (!image.empty()) {
-        qDebug() << "使用IMREAD_UNCHANGED成功加载";
-        qDebug() << "图片尺寸:" << image.cols << "x" << image.rows
-                 << "通道数:" << image.channels();
-
-        // 显示图片
-        if (m_imageView) {
-          m_imageView->setImage(image);
-          statusBar()->showMessage(tr("已加载图片: %1").arg(fileName), 3000);
-        }
-      } else {
-        image = cv::imread(fileName.toStdString(), cv::IMREAD_ANYDEPTH | cv::IMREAD_ANYCOLOR);
-        if (!image.empty()) {
-          qDebug() << "使用IMREAD_ANYDEPTH|IMREAD_ANYCOLOR成功加载";
-          qDebug() << "图片尺寸:" << image.cols << "x" << image.rows
-                   << "通道数:" << image.channels();
-
-          // 显示图片
-          if (m_imageView) {
-            m_imageView->setImage(image);
-            statusBar()->showMessage(tr("已加载图片: %1").arg(fileName), 3000);
-          }
-        } else {
-          qCritical() << "所有尝试均失败";
-
-          // 尝试使用 QImage 加载
-          QImage qimg(fileName);
-          if (!qimg.isNull()) {
-            qDebug() << "使用QImage成功加载，尺寸:" << qimg.width() << "x" << qimg.height();
-            if (m_imageView) {
-              m_imageView->setImage(qimg);
-              statusBar()->showMessage(tr("已加载图片: %1").arg(fileName), 3000);
-            }
-          } else {
-            qCritical() << "QImage也无法加载文件";
-            QMessageBox::warning(this, tr("错误"), tr("无法加载图片文件"));
-          }
-        }
-      }
-    }
-  } else {
-    qDebug() << "用户取消了文件选择";
+  if (!m_pipeline) {
+    LOG_WARN("Pipeline not set");
+    return;
   }
+
+  m_pipeline->start();
 }
 
 void MainWindow::onStopClicked()
 {
-  emit stopRequested();
-  m_actionStart->setEnabled(true);
-  m_actionStop->setEnabled(false);
+  if (m_pipeline) {
+    m_pipeline->stop();
+  }
 }
 
 void MainWindow::onSingleShotClicked()
 {
-  qDebug() << "MainWindow::onSingleShotClicked() - 开始单拍模式";
+  LOG_INFO("MainWindow::onSingleShotClicked() - 单拍模式");
 
-  // 调试阶段：选择单张图片进行检测
-  QString fileName = QFileDialog::getOpenFileName(this,
-    tr("选择图片进行单次检测"),
-    QString(),
-    tr("图片文件 (*.png *.jpg *.jpeg *.bmp *.tiff);;所有文件 (*.*)"));
-
-  if (!fileName.isEmpty()) {
-    qDebug() << "单拍模式 - 选择的文件:" << fileName;
-
-    // 加载图片到OpenCV Mat
-    cv::Mat image = cv::imread(fileName.toStdString());
-
-    if (!image.empty()) {
-      qDebug() << "单拍模式 - 图片加载成功，尺寸:" << image.cols << "x" << image.rows;
-      // 显示图片
-      if (m_imageView) {
-        m_imageView->setImage(image);
-      }
-
-      // 更新状态栏
-      statusBar()->showMessage(tr("单拍模式 - 已加载: %1").arg(fileName), 3000);
-
-      // 立即显示检测结果（单拍模式）
-      DetectResult result;
-      result.isOK = (rand() % 10) > 3; // 70% OK率
-      result.timestamp = QDateTime::currentDateTime().toMSecsSinceEpoch();
-
-      if (!result.isOK) {
-        // 生成随机缺陷类型
-        QStringList defectTypes = {tr("划痕"), tr("裂纹"), tr("异物"), tr("尺寸偏差")};
-        result.defectType = defectTypes[rand() % defectTypes.size()];
-
-        // 设置严重度
-        int severityIdx = rand() % 3;
-        if (severityIdx == 0) {
-          result.level = SeverityLevel::Minor;
-          result.severity = 0.3;
-        } else if (severityIdx == 1) {
-          result.level = SeverityLevel::Major;
-          result.severity = 0.6;
-        } else {
-          result.level = SeverityLevel::Critical;
-          result.severity = 0.9;
-        }
-
-        // 生成随机缺陷区域
-        int numDefects = 1 + rand() % 2; // 1-2个缺陷
-        for (int i = 0; i < numDefects; ++i) {
-          DefectRegion defect;
-          defect.bbox = cv::Rect(
-            rand() % (image.cols - 100),
-            rand() % (image.rows - 100),
-            50 + rand() % 100,
-            50 + rand() % 100
-          );
-          defect.confidence = 0.75 + (rand() % 25) / 100.0;
-          defect.classId = rand() % 4; // 0-3对应不同缺陷类型
-
-          result.defects.push_back(defect);
-          result.regions.push_back(defect.bbox);
-        }
-
-        result.confidence = 0.75 + (rand() % 25) / 100.0;
-      } else {
-        result.level = SeverityLevel::OK;
-        result.severity = 0.0;
-        result.confidence = 1.0;
-      }
-
-      // 更新结果显示
-      if (m_resultCard) {
-        m_resultCard->setResult(result);
-      }
-
-      // 如果有缺陷，在图像上绘制标注
-      if (!result.isOK && m_imageView) {
-        QVector<DetectionBox> boxes;
-        for (const auto& defect : result.defects) {
-          DetectionBox box;
-          box.rect = defect.bbox;
-          box.label = result.defectType;
-          box.confidence = defect.confidence;
-
-          // 根据严重度设置颜色
-          if (result.level == SeverityLevel::Minor) {
-            box.color = QColor(255, 193, 7); // 黄色
-          } else if (result.level == SeverityLevel::Major) {
-            box.color = QColor(255, 152, 0); // 橙色
-          } else {
-            box.color = QColor(244, 67, 54); // 红色
-          }
-
-          boxes.append(box);
-        }
-        m_imageView->drawDetectionBoxes(boxes);
-      } else if (m_imageView) {
-        // 清除标注框
-        m_imageView->clearDetectionBoxes();
-      }
-
-      // 更新统计
-      onResultReady(result);
-
-    } else {
-      QMessageBox::warning(this, tr("错误"), tr("无法加载图片文件"));
-    }
+  if (!m_pipeline) {
+    LOG_WARN("Pipeline not set");
+    return;
   }
+
+  m_pipeline->singleShot();
 }
 
 void MainWindow::onSettingsClicked()
 {
     SettingsDialog dialog(this);
-    dialog.exec();
 
-    // 如果设置有更改，可以在这里重新加载配置
-    // if (dialog.result() == QDialog::Accepted) {
-    //     // 重新加载配置
-    // }
+    // 监听配置变更信号，动态更新 Pipeline
+    connect(&dialog, &SettingsDialog::settingsChanged, this, [this]() {
+        if (m_pipeline) {
+            auto camCfg = gConfig.cameraConfig();
+            m_pipeline->setImageDir(camCfg.imageDir);
+            m_pipeline->setCaptureInterval(camCfg.captureIntervalMs);
+            LOG_INFO("Pipeline updated: imageDir={}, interval={}ms",
+                     camCfg.imageDir, camCfg.captureIntervalMs);
+            statusBar()->showMessage(tr("配置已更新"), 2000);
+        }
+    });
+
+    dialog.exec();
 }
 
 void MainWindow::onStatisticsClicked()
@@ -395,6 +133,37 @@ void MainWindow::onResultReady(const DetectResult &result)
         ++m_ngCount;
     }
     updateStatistics();
+
+    // 更新结果卡片
+    if (m_resultCard) {
+      m_resultCard->setResult(result);
+    }
+
+    // 绘制检测框
+    if (m_imageView) {
+      if (!result.isOK && !result.defects.empty()) {
+        QVector<DetectionBox> boxes;
+        for (const auto& defect : result.defects) {
+          DetectionBox box;
+          box.rect = defect.bbox;
+          box.label = result.defectType;
+          box.confidence = defect.confidence;
+
+          if (result.level == SeverityLevel::Minor) {
+            box.color = QColor(255, 193, 7);  // 黄色
+          } else if (result.level == SeverityLevel::Major) {
+            box.color = QColor(255, 152, 0);  // 橙色
+          } else {
+            box.color = QColor(244, 67, 54);  // 红色
+          }
+          boxes.append(box);
+        }
+        m_imageView->drawDetectionBoxes(boxes);
+      } else {
+        m_imageView->clearDetectionBoxes();
+      }
+    }
+
     statusBar()->showMessage(result.isOK ? tr("最近一次结果: OK") : tr("最近一次结果: NG"), 2000);
 }
 

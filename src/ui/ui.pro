@@ -17,6 +17,7 @@ INCLUDEPATH += $$PWD/../../config
 INCLUDEPATH += $$PWD/../../third_party/opencv/include
 # ------------------ 头文件 ------------------
 HEADERS += \
+    DetectPipeline.h \
     dialogs/AboutDialog.h \
     dialogs/CalibrationDialog.h \
     dialogs/LoginDialog.h \
@@ -40,6 +41,7 @@ HEADERS += \
 
 # ------------------ 源文件 ------------------
 SOURCES += \
+    DetectPipeline.cpp \
     dialogs/AboutDialog.cpp \
     dialogs/CalibrationDialog.cpp \
     dialogs/LoginDialog.cpp \
@@ -101,6 +103,14 @@ LIBS += -L$$OUT_PWD/../algorithm/ -lalgorithm
 
 INCLUDEPATH += $$PWD/../algorithm
 DEPENDPATH += $$PWD/../algorithm
+
+# hal 模块 (FileCamera)
+INCLUDEPATH += $$PWD/../hal
+LIBS += -L$$OUT_PWD/../hal -lhal
+
+win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
+else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
 
 RESOURCES += \
     resource.qrc

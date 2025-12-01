@@ -63,6 +63,7 @@ HEADERS += \
 SOURCES += \
     camera/CameraFactory.cpp \
     camera/DahengCamera.cpp \
+    camera/FileCamera.cpp \
     camera/GigECamera.cpp \
     camera/HikCamera.cpp \
     camera/USBCamera.cpp \

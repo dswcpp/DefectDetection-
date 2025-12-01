@@ -2,30 +2,41 @@
 #include <QObject>
 #include <QFile>
 #include <QDebug>
-#include "DetectPipeline.h"
-#include "mainwindow.h"
+#include "config/ConfigManager.h"
+#include "Logger.h"
+#include "ui/DetectPipeline.h"
+#include "ui/mainwindow.h"
 
-#ifdef connect
-#undef connect
+#ifdef _WIN32
+#include <windows.h>
 #endif
-
-void InitConnectFunc(MainWindow* desktop, DetectPipeline& pipeline) {
-  const auto sigStart = &MainWindow::startRequested;
-  const auto sigStop = &MainWindow::stopRequested;
-  const auto sigSingle = &MainWindow::singleShotRequested;
-
-  QObject::connect(desktop, sigStart, &pipeline, &DetectPipeline::start);
-  QObject::connect(desktop, sigStop, &pipeline, &DetectPipeline::stop);
-  QObject::connect(desktop, sigSingle, &pipeline, &DetectPipeline::singleShot);
-
-  QObject::connect(&pipeline, &DetectPipeline::resultReady, desktop, &MainWindow::onResultReady);
-  QObject::connect(&pipeline, &DetectPipeline::frameReady, desktop, &MainWindow::onFrameReady);
-  QObject::connect(&pipeline, &DetectPipeline::error, desktop, &MainWindow::onError);
-}
 
 int main(int argc, char* argv[]) {
   QApplication a(argc, argv);
 
+#ifdef _WIN32
+  SetConsoleOutputCP(CP_UTF8);
+  SetConsoleCP(CP_UTF8);
+#endif
+
+  // 加载配置
+  if (!gConfig.load()) {
+    qWarning() << "Failed to load config, using defaults";
+  }
+
+  // 初始化日志（使用配置）
+  auto logCfg = gConfig.logConfig();
+  logging::LoggerConfig loggerConfig;
+  loggerConfig.logDir = logCfg.dir.toStdString();
+  loggerConfig.level = logCfg.level.toStdString();
+  loggerConfig.maxFileSizeMB = logCfg.maxFileSizeMB;
+  loggerConfig.maxFileCount = logCfg.maxFileCount;
+  loggerConfig.enableConsole = logCfg.enableConsole;
+  logging::Logger::init(loggerConfig);
+
+  LOG_INFO("Application started, config loaded from: {}", gConfig.configPath());
+
+  // 加载样式表
   auto loadStyleSheet = []() -> QString {
     QFile resourceFile(QStringLiteral(":/styles/app.qss"));
     if (resourceFile.open(QIODevice::ReadOnly)) {
@@ -47,16 +58,22 @@ int main(int argc, char* argv[]) {
     a.setStyleSheet(styleSheet);
   }
 
-  MainWindow* desktop = new MainWindow();
+  // 创建流水线（使用配置）
+  auto camCfg = gConfig.cameraConfig();
   DetectPipeline pipeline;
+  pipeline.setImageDir(camCfg.imageDir);
+  pipeline.setCaptureInterval(camCfg.captureIntervalMs);
 
-  InitConnectFunc(desktop, pipeline);
-
+  // 创建主窗口
+  MainWindow* desktop = new MainWindow();
+  desktop->setPipeline(&pipeline);
   desktop->show();
 
   int result = a.exec();
 
+  LOG_INFO("Application exiting");
+  logging::Logger::shutdown();
+
   delete desktop;
-  desktop = nullptr;
   return result;
 }

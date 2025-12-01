@@ -31,6 +31,8 @@ HEADERS += \
     Types.h \
     Utils.h \
     common_global.h \
+    config/AppConfig.h \
+    config/ConfigManager.h
 
 # ------------------ 源文件 ------------------
 SOURCES += \
@@ -39,7 +41,8 @@ SOURCES += \
     SPSCQueue.cpp \
     ThreadPool.cpp \
     Timer.cpp \
-    Utils.cpp
+    Utils.cpp \
+    config/ConfigManager.cpp
 
 # 1. Log 模块 - 使用 spdlog（header-only + sinks）
 include($$PWD/../../third_party/spdlog/spdlog.pri)

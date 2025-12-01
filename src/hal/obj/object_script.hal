@@ -1,0 +1,12 @@
+obj/CameraFactory.o
+obj/DahengCamera.o
+obj/FileCamera.o
+obj/GigECamera.o
+obj/HikCamera.o
+obj/USBCamera.o
+obj/GPIOController.o
+obj/SerialIO.o
+obj/MitsubishiMCClient.o
+obj/ModbusRTUClient.o
+obj/ModbusTCPClient.o
+obj/SiemensS7Client.o
