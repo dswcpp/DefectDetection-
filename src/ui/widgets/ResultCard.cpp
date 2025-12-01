@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QScrollArea>
 #include <QStyle>
 #include <QVBoxLayout>
 #include <QtGlobal>
@@ -45,12 +46,22 @@ void ResultCard::setupUI()
 
   rootLayout->addLayout(statusLayout);
 
-  m_defectList = new QWidget(this);
+  // 使用 QScrollArea 包装缺陷列表以支持滚动
+  m_scrollArea = new QScrollArea(this);
+  m_scrollArea->setObjectName(QStringLiteral("ResultsScrollArea"));
+  m_scrollArea->setWidgetResizable(true);
+  m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_scrollArea->setFrameShape(QFrame::NoFrame);
+
+  m_defectList = new QWidget();
   m_defectList->setObjectName(QStringLiteral("ResultsDefectList"));
   m_defectListLayout = new QVBoxLayout(m_defectList);
   m_defectListLayout->setContentsMargins(0, 0, 0, 0);
   m_defectListLayout->setSpacing(8);
-  rootLayout->addWidget(m_defectList);
+
+  m_scrollArea->setWidget(m_defectList);
+  rootLayout->addWidget(m_scrollArea, 1);
 
   m_emptyHintLabel = new QLabel(tr("暂无缺陷"), this);
   m_emptyHintLabel->setObjectName(QStringLiteral("ResultsEmptyHint"));
@@ -83,7 +94,7 @@ void ResultCard::clear()
   m_statusText->setText(QStringLiteral("--"));
   m_timestampLabel->setText(tr("更新时间: --"));
   clearDefectList();
-  m_defectList->setVisible(false);
+  m_scrollArea->setVisible(false);
   m_emptyHintLabel->setVisible(true);
 }
 
@@ -131,12 +142,12 @@ void ResultCard::rebuildDefectList(const QString& typeName, const std::vector<De
   clearDefectList();
 
   if (defects.empty()) {
-    m_defectList->setVisible(false);
+    m_scrollArea->setVisible(false);
     m_emptyHintLabel->setVisible(true);
     return;
   }
 
-  m_defectList->setVisible(true);
+  m_scrollArea->setVisible(true);
   m_emptyHintLabel->setVisible(false);
 
   for (int i = 0; i < static_cast<int>(defects.size()); ++i) {

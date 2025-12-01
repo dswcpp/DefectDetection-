@@ -49,9 +49,29 @@ CREATE TABLE IF NOT EXISTS products (
 );
 CREATE INDEX IF NOT EXISTS idx_products_batch_id ON products(batch_id);
 
+-- 图片库（核心表，长期保存）
+CREATE TABLE IF NOT EXISTS images (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path       TEXT NOT NULL UNIQUE,        -- 系统保存路径 data/images/2025/01/15/xxx.png
+    thumbnail_path  TEXT,                        -- 缩略图路径
+    original_path   TEXT,                        -- 原始来源路径
+    source_type     TEXT NOT NULL,               -- file/hik/daheng/usb
+    width           INTEGER,
+    height          INTEGER,
+    file_size       INTEGER,                     -- 文件大小(字节)
+    hash            TEXT,                        -- 文件哈希，用于去重
+    capture_time    DATETIME,                    -- 采集时间
+    batch_id        INTEGER,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (batch_id) REFERENCES batches(id)
+);
+CREATE INDEX IF NOT EXISTS idx_images_capture_time ON images(capture_time);
+CREATE INDEX IF NOT EXISTS idx_images_source_type ON images(source_type);
+
 CREATE TABLE IF NOT EXISTS inspections (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id      INTEGER NOT NULL,
+    image_id        INTEGER,                     -- 关联图片
+    product_id      INTEGER,
     station_id      INTEGER,
     inspect_time    DATETIME NOT NULL,
     result          TEXT NOT NULL,               -- OK/NG/ERROR
@@ -69,9 +89,11 @@ CREATE TABLE IF NOT EXISTS inspections (
     brightness_avg  REAL,
     temperature_c   REAL,
     model_version   TEXT,
+    FOREIGN KEY (image_id) REFERENCES images(id),
     FOREIGN KEY (product_id) REFERENCES products(id),
     FOREIGN KEY (station_id) REFERENCES stations(id)
 );
+CREATE INDEX IF NOT EXISTS idx_inspections_image_id ON inspections(image_id);
 CREATE INDEX IF NOT EXISTS idx_inspections_product_id ON inspections(product_id);
 CREATE INDEX IF NOT EXISTS idx_inspections_time ON inspections(inspect_time);
 CREATE INDEX IF NOT EXISTS idx_inspections_result ON inspections(result);

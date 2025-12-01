@@ -24,6 +24,9 @@ public:
   virtual bool grab(cv::Mat &frame) = 0;
   virtual void close() = 0;
 
+  // 获取当前图片路径（主要用于 FileCamera）
+  virtual QString currentImagePath() const { return QString(); }
+
   // TODO: 参数设置/心跳/事件回调接口
 };
 

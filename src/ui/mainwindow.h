@@ -15,6 +15,7 @@ class ParamPanel;
 class DetectResult;
 class AnnotationPanel;
 class DetectPipeline;
+class DatabaseManager;
 
 class UI_LIBRARY MainWindow : public QMainWindow {
   Q_OBJECT
@@ -95,5 +96,8 @@ private:
   // 检测流水线
   DetectPipeline* m_pipeline = nullptr;
   void drawDetectionResult(const cv::Mat& frame, const DetectResult& result);
+
+  // 数据库管理器
+  DatabaseManager* m_dbManager = nullptr;
 };
 #endif // MAINWINDOW_H

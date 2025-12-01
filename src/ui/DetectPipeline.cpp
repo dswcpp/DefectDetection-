@@ -6,6 +6,7 @@
 #include <QMetaType>
 #include <QTimer>
 #include <QDateTime>
+#include <QFileInfo>
 
 DetectPipeline::DetectPipeline(QObject* parent) : QObject(parent) {
   qRegisterMetaType<DetectResult>("DetectResult");
@@ -78,6 +79,7 @@ void DetectPipeline::singleShot() {
 
   cv::Mat frame;
   if (m_camera->grab(frame) && !frame.empty()) {
+    m_currentImagePath = m_camera->currentImagePath();
     emit frameReady(frame);
     DetectResult result = runDetection(frame);
     emit resultReady(result);
@@ -93,6 +95,7 @@ void DetectPipeline::onCaptureTimeout() {
 
   cv::Mat frame;
   if (m_camera->grab(frame) && !frame.empty()) {
+    m_currentImagePath = m_camera->currentImagePath();
     emit frameReady(frame);
     DetectResult result = runDetection(frame);
     emit resultReady(result);
@@ -114,7 +117,7 @@ bool DetectPipeline::initCamera() {
   config.ip = m_imageDir;  // 复用 ip 字段存储图片目录
 
   if (!m_camera->open(config)) {
-    LOG_ERROR("Failed to open camera with dir: {}", m_imageDir);
+    LOG_ERROR("Failed to open camera with dir: {}", QFileInfo(m_imageDir).absoluteFilePath().toStdString());
     m_camera.reset();
     return false;
   }

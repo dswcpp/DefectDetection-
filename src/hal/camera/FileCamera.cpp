@@ -1,7 +1,9 @@
 #include "FileCamera.h"
 #include "common/Logger.h"
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QCoreApplication>
 
 bool FileCamera::open(const CameraConfig &cfg) {
   if (m_opened) {
@@ -11,8 +13,14 @@ bool FileCamera::open(const CameraConfig &cfg) {
 
   QString imageDir = cfg.ip; // 复用 ip 字段作为图片目录路径
   if (imageDir.isEmpty()) {
-    imageDir = QDir::currentPath() + "/images";
+    imageDir = "./images";
   }
+
+  // 将相对路径转换为相对于应用程序目录的绝对路径
+  if (QDir::isRelativePath(imageDir)) {
+    imageDir = QCoreApplication::applicationDirPath() + "/" + imageDir;
+  }
+  imageDir = QDir::cleanPath(imageDir);
 
   if (!scanImages(imageDir)) {
     LOG_ERROR("FileCamera: No images found in {}", imageDir);
@@ -42,9 +50,55 @@ bool FileCamera::grab(cv::Mat &frame) {
   }
 
   const QString &path = m_imagePaths.at(idx);
-  frame = cv::imread(path.toStdString(), cv::IMREAD_COLOR);
+  m_lastImagePath = path;
+
+  // 使用 Qt 读取文件，避免 OpenCV 对特殊字符路径的兼容性问题
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    LOG_WARN("FileCamera: Failed to open image {}", path);
+    m_currentIndex.fetch_add(1);
+    return false;
+  }
+  QByteArray data = file.readAll();
+  file.close();
+
+  if (data.isEmpty()) {
+    LOG_WARN("FileCamera: Empty file {}", path);
+    m_currentIndex.fetch_add(1);
+    return false;
+  }
+
+  // 检查文件头 (PNG: 89 50 4E 47, JPEG: FF D8 FF)
+  QString header;
+  for (int i = 0; i < qMin(8, data.size()); ++i) {
+    header += QString("%1 ").arg(static_cast<uchar>(data[i]), 2, 16, QChar('0')).toUpper();
+  }
+  LOG_INFO("FileCamera: File header: {}", header);
+
+  std::vector<uchar> buffer(data.begin(), data.end());
+  LOG_INFO("FileCamera: Buffer size={}, first bytes: {:02X} {:02X} {:02X} {:02X}",
+            buffer.size(),
+            buffer.size() > 0 ? buffer[0] : 0,
+            buffer.size() > 1 ? buffer[1] : 0,
+            buffer.size() > 2 ? buffer[2] : 0,
+            buffer.size() > 3 ? buffer[3] : 0);
+
+  frame = cv::imdecode(buffer, cv::IMREAD_COLOR);
   if (frame.empty()) {
-    LOG_WARN("FileCamera: Failed to read image {}", path);
+    // 尝试其他解码标志
+    frame = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
+    if (!frame.empty()) {
+      LOG_INFO("FileCamera: Decoded with IMREAD_UNCHANGED, channels={}", frame.channels());
+      if (frame.channels() == 4) {
+        cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
+      } else if (frame.channels() == 1) {
+        cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
+      }
+    }
+  }
+
+  if (frame.empty()) {
+    LOG_WARN("FileCamera: Failed to decode image {} (size={}bytes, header={})", path, data.size(), header);
     m_currentIndex.fetch_add(1);
     return false;
   }

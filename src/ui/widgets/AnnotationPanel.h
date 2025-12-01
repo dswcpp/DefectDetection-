@@ -9,6 +9,7 @@ class QPushButton;
 class QComboBox;
 class QRadioButton;
 class QListWidget;
+class QScrollArea;
 
 class UI_LIBRARY AnnotationPanel : public QWidget {
     Q_OBJECT

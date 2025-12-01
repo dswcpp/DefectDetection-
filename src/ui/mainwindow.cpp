@@ -10,6 +10,8 @@
 #include "DetectPipeline.h"
 #include "Types.h"
 #include "config/ConfigManager.h"
+#include "data/DatabaseManager.h"
+#include "data/repositories/DefectRepository.h"
 #include "Logger.h"
 #include <spdlog/spdlog.h>
 #include <QHBoxLayout>
@@ -39,6 +41,19 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
   setupUI();
+
+  // 初始化数据库
+  m_dbManager = new DatabaseManager(this);
+  if (m_dbManager->initFromConfig()) {
+    // 执行 schema 初始化表结构
+    QString schemaPath = QCoreApplication::applicationDirPath() + "/config/schema.sql";
+    if (QFile::exists(schemaPath)) {
+      m_dbManager->executeSchema(schemaPath);
+    }
+    LOG_INFO("Database initialized successfully");
+  } else {
+    LOG_WARN("Failed to initialize database");
+  }
 }
 
 MainWindow::~MainWindow()
@@ -168,6 +183,20 @@ void MainWindow::onResultReady(const DetectResult &result)
         m_imageView->drawDetectionBoxes(boxes);
       } else {
         m_imageView->clearDetectionBoxes();
+      }
+    }
+
+    // 保存检测结果到数据库
+    if (m_dbManager && m_dbManager->isOpen()) {
+      auto* repo = m_dbManager->defectRepository();
+      if (repo) {
+        QString imagePath = m_pipeline ? m_pipeline->currentImagePath() : QString();
+        qint64 id = repo->insertFromResult(result, imagePath);
+        if (id > 0) {
+          LOG_DEBUG("Inspection saved to database, id={}", id);
+        } else {
+          LOG_WARN("Failed to save inspection to database");
+        }
       }
     }
 

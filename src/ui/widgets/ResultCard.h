@@ -8,6 +8,7 @@
 class QLabel;
 class QVBoxLayout;
 class QWidget;
+class QScrollArea;
 
 class ResultCard : public QFrame {
   Q_OBJECT
@@ -26,6 +27,7 @@ private:
   QLabel* m_titleLabel = nullptr;
   QLabel* m_statusIcon = nullptr;
   QLabel* m_statusText = nullptr;
+  QScrollArea* m_scrollArea = nullptr;
   QWidget* m_defectList = nullptr;
   QVBoxLayout* m_defectListLayout = nullptr;
   QLabel* m_emptyHintLabel = nullptr;

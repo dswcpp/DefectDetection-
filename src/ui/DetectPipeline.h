@@ -21,6 +21,7 @@ public:
   void setImageDir(const QString& dir);
   void setCaptureInterval(int ms);
   bool isRunning() const;
+  QString currentImagePath() const { return m_currentImagePath; }
 
   // 性能统计
   const PerfStats& detectStats() const { return m_detectStats; }
@@ -51,6 +52,7 @@ private:
   std::unique_ptr<ICamera> m_camera;
   QTimer* m_captureTimer = nullptr;
   QString m_imageDir;
+  QString m_currentImagePath;
   int m_captureIntervalMs = 500;
   bool m_running = false;
 

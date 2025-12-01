@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QButtonGroup>
+#include <QScrollArea>
 
 AnnotationPanel::AnnotationPanel(QWidget* parent) : QWidget(parent) {
     setupUI();
@@ -48,7 +49,21 @@ void AnnotationPanel::setImageView(ImageView* view) {
 }
 
 void AnnotationPanel::setupUI() {
-    auto* mainLayout = new QVBoxLayout(this);
+    // 创建根布局
+    auto* rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
+
+    // 创建滚动区域
+    auto* scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+
+    // 创建内容容器
+    auto* contentWidget = new QWidget();
+    auto* mainLayout = new QVBoxLayout(contentWidget);
     mainLayout->setSpacing(10);
     mainLayout->setContentsMargins(10, 10, 10, 10);
 
@@ -290,12 +305,22 @@ void AnnotationPanel::setupUI() {
 
     mainLayout->addStretch();
 
+    // 将内容容器设置到滚动区域
+    scrollArea->setWidget(contentWidget);
+    rootLayout->addWidget(scrollArea);
+
     // 设置整体样式
     setStyleSheet(R"(
         AnnotationPanel {
             background-color: #f9fafb;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
+        }
+        QScrollArea {
+            background: transparent;
+        }
+        QScrollArea > QWidget > QWidget {
+            background: transparent;
         }
     )");
 }

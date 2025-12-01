@@ -8,6 +8,7 @@
 #include <memory>
 
 class ConfigRepository;
+class DefectRepository;
 
 class DATA_EXPORT DatabaseManager : public QObject {
   Q_OBJECT
@@ -41,8 +42,14 @@ public:
   // 获取配置仓库
   ConfigRepository* configRepository() const { return m_configRepo.get(); }
 
+  // 获取缺陷仓库
+  DefectRepository* defectRepository() const { return m_defectRepo.get(); }
+
   // 当前数据库路径
   QString databasePath() const { return m_dbPath; }
+
+  // 获取连接名（供仓库使用）
+  QString connectionName() const { return m_connectionName; }
 
 signals:
   void opened();
@@ -56,6 +63,7 @@ private:
   QString m_connectionName;
   QString m_dbPath;
   std::unique_ptr<ConfigRepository> m_configRepo;
+  std::unique_ptr<DefectRepository> m_defectRepo;
 };
 
 #endif // DATABASEMANAGER_H
