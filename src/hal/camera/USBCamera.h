@@ -2,8 +2,9 @@
 #define USBCAMERA_H
 
 #include "ICamera.h"
+#include "hal_global.h"
 
-class USBCamera : public ICamera {
+class HAL_EXPORT USBCamera : public ICamera {
 public:
   USBCamera() = default;
 

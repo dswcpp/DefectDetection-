@@ -3,7 +3,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(NETWORK_LIBRARY)
+#if defined(NETWORK_LIBRARY_BUILD)
 #  define NETWORK_LIBRARY Q_DECL_EXPORT
 #else
 #  define NETWORK_LIBRARY Q_DECL_IMPORT

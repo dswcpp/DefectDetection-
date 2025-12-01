@@ -2,8 +2,9 @@
 #define HIKCAMERA_H
 
 #include "ICamera.h"
+#include "hal_global.h"
 
-class HikCamera : public ICamera {
+class HAL_EXPORT HikCamera : public ICamera {
 public:
   HikCamera() = default;
 

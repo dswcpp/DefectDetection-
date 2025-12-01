@@ -12,7 +12,7 @@ TARGET = algorithm
 QT += core
 QT -= gui
 
-DEFINES += ALGORITHM_LIBRARY
+DEFINES += ALGORITHM_LIBRARY_BUILD
 
 # OpenCV 已在 config.pri 中配置
 INCLUDEPATH += $$PWD/../../config

@@ -3,8 +3,9 @@
 
 #include <QString>
 #include <opencv2/opencv.hpp>
+#include "hal_global.h"
 
-struct CameraConfig {
+struct HAL_EXPORT CameraConfig {
   QString type;    // gige/usb/file/mock
   QString ip;
   int port = 0;
@@ -15,7 +16,7 @@ struct CameraConfig {
   double gainDb = 0.0;
 };
 
-class ICamera {
+class HAL_EXPORT ICamera {
 public:
   virtual ~ICamera() = default;
 

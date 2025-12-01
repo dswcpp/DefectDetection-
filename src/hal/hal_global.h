@@ -3,10 +3,10 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(HAL_LIBRARY)
-#  define HAL_LIBRARY Q_DECL_EXPORT
+#if defined(HAL_LIBRARY_BUILD)
+#  define HAL_EXPORT Q_DECL_EXPORT
 #else
-#  define HAL_LIBRARY Q_DECL_IMPORT
+#  define HAL_EXPORT Q_DECL_IMPORT
 #endif
 
 #endif // HAL_GLOBAL_H

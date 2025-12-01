@@ -12,7 +12,7 @@ TARGET = network
 QT += core network websockets
 QT -= gui
 
-DEFINES += NETWORK_LIBRARY
+DEFINES += NETWORK_LIBRARY_BUILD
 
 # 可选: HTTP 服务器库
 # LIBS += -lqhttpserver

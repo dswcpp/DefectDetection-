@@ -4,8 +4,9 @@
 #include <memory>
 #include <QString>
 #include "ICamera.h"
+#include "hal_global.h"
 
-class CameraFactory {
+class HAL_EXPORT CameraFactory {
 public:
   static std::unique_ptr<ICamera> create(const QString &type);
 };

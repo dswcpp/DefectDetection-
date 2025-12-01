@@ -12,7 +12,7 @@ TARGET = hal
 QT += core serialport
 QT -= gui
 
-DEFINES += HAL_LIBRARY
+DEFINES += HAL_LIBRARY_BUILD
 
 
 # ------------------ 相机 SDK 配置 ------------------

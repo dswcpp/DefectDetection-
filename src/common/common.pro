@@ -12,7 +12,7 @@ TARGET = common
 QT += core
 QT -= gui
 
-DEFINES += COMMON_LIBRARY
+DEFINES += COMMON_LIBRARY_BUILD
 
 INCLUDEPATH += $$PWD/../../config
 INCLUDEPATH += $$PWD/../../third_party

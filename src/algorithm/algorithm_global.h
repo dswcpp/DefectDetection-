@@ -3,10 +3,10 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(ALGORITHM_LIBRARY)
-#  define ALGORITHM_LIBRARY Q_DECL_EXPORT
+#if defined(ALGORITHM_LIBRARY_BUILD)
+#  define ALGORITHM_EXPORT Q_DECL_EXPORT
 #else
-#  define ALGORITHM_LIBRARY Q_DECL_IMPORT
+#  define ALGORITHM_EXPORT Q_DECL_IMPORT
 #endif
 
 #endif // ALGORITHM_GLOBAL_H

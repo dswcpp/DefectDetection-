@@ -3,7 +3,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(DATA_LIBRARY)
+#if defined(DATA_LIBRARY_BUILD)
 #  define DATA_EXPORT Q_DECL_EXPORT
 #else
 #  define DATA_EXPORT Q_DECL_IMPORT

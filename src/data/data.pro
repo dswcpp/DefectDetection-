@@ -12,7 +12,7 @@ TARGET = data
 QT += core sql
 QT -= gui
 
-DEFINES += DATA_LIBRARY
+DEFINES += DATA_LIBRARY_BUILD
 
 INCLUDEPATH += $$PWD/../../config
 # ------------------ 头文件 ------------------

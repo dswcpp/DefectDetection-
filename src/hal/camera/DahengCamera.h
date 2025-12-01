@@ -2,8 +2,9 @@
 #define DAHENGCAMERA_H
 
 #include "ICamera.h"
+#include "hal_global.h"
 
-class DahengCamera : public ICamera {
+class HAL_EXPORT DahengCamera : public ICamera {
 public:
   DahengCamera() = default;
 

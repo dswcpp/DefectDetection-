@@ -3,7 +3,7 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(UI_LIBRARY)
+#if defined(UI_LIBRARY_BUILD)
 #  define UI_LIBRARY Q_DECL_EXPORT
 #else
 #  define UI_LIBRARY Q_DECL_IMPORT

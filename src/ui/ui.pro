@@ -11,7 +11,7 @@ TARGET = ui
 
 QT += core gui widgets charts
 
-DEFINES += UI_LIBRARY
+DEFINES += UI_LIBRARY_BUILD
 
 INCLUDEPATH += $$PWD/../../config
 INCLUDEPATH += $$PWD/../../third_party/opencv/include

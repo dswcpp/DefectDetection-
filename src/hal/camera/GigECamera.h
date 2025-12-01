@@ -2,8 +2,9 @@
 #define GIGECAMERA_H
 
 #include "ICamera.h"
+#include "hal_global.h"
 
-class GigECamera : public ICamera {
+class HAL_EXPORT GigECamera : public ICamera {
 public:
   GigECamera() = default;
 

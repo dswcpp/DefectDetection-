@@ -2,10 +2,11 @@
 #define FILECAMERA_H
 
 #include "ICamera.h"
+#include "hal_global.h"
 #include <QStringList>
 #include <atomic>
 
-class FileCamera : public ICamera {
+class HAL_EXPORT FileCamera : public ICamera {
 public:
   FileCamera() = default;
 
