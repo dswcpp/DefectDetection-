@@ -132,6 +132,13 @@ void MainWindow::onResultReady(const DetectResult &result)
     } else {
         ++m_ngCount;
     }
+
+    // 更新节拍时间
+    m_lastCycleTimeMs = result.cycleTimeMs;
+    if (m_cycleTimeLabel) {
+        m_cycleTimeLabel->setText(tr("节拍: %1 ms").arg(result.cycleTimeMs));
+    }
+
     updateStatistics();
 
     // 更新结果卡片
@@ -169,8 +176,16 @@ void MainWindow::onResultReady(const DetectResult &result)
 
 void MainWindow::onFrameReady(const cv::Mat &frame)
 {
+    // 更新帧率统计
+    m_fpsCounter.tick();
+
     if (m_imageView) {
         m_imageView->setImage(frame);
+    }
+
+    // 限制状态栏更新频率
+    if (m_statusThrottle.check() && m_fpsLabel) {
+        m_fpsLabel->setText(tr("FPS: %1").arg(m_fpsCounter.fps(), 0, 'f', 1));
     }
 }
 
@@ -370,10 +385,21 @@ void MainWindow::setupToolBar()
 void MainWindow::setupStatusBar()
 {
   auto* bar = statusBar();
+
+  // FPS 显示
+  m_fpsLabel = new QLabel(tr("FPS: --"));
+  m_fpsLabel->setMinimumWidth(80);
+  m_fpsLabel->setStyleSheet(QLatin1String("color: #1976d2; font-weight: bold;"));
+  bar->addWidget(m_fpsLabel);
+  bar->addWidget(new QLabel(QLatin1String("|")));
+
+  // 节拍时间
   m_cycleTimeLabel = new QLabel(tr("节拍: -- ms"));
   m_cycleTimeLabel->setMinimumWidth(120);
   bar->addWidget(m_cycleTimeLabel);
   bar->addWidget(new QLabel(QLatin1String("|")));
+
+  // 统计信息
   m_totalCountLabel = new QLabel(tr("总数: 0"));
   bar->addWidget(m_totalCountLabel);
   m_okCountLabel = new QLabel(tr("OK: 0"));
@@ -383,6 +409,8 @@ void MainWindow::setupStatusBar()
   m_ngCountLabel->setStyleSheet(QLatin1String("color: #c62828;"));
   bar->addWidget(m_ngCountLabel);
   bar->addWidget(new QLabel(QLatin1String("|")));
+
+  // 良率
   m_yieldLabel = new QLabel(tr("良率: 0.0%"));
   m_yieldLabel->setMinimumWidth(120);
   bar->addWidget(m_yieldLabel);

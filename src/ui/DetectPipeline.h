@@ -4,6 +4,7 @@
 #include <QObject>
 #include <memory>
 #include "Types.h"
+#include "Timer.h"
 #include "ui_global.h"
 #include "opencv2/opencv.hpp"
 
@@ -20,6 +21,11 @@ public:
   void setImageDir(const QString& dir);
   void setCaptureInterval(int ms);
   bool isRunning() const;
+
+  // 性能统计
+  const PerfStats& detectStats() const { return m_detectStats; }
+  double lastDetectTimeMs() const { return m_detectStats.last(); }
+  double avgDetectTimeMs() const { return m_detectStats.avg(); }
 
 public slots:
   void start();
@@ -47,6 +53,10 @@ private:
   QString m_imageDir;
   int m_captureIntervalMs = 500;
   bool m_running = false;
+
+  // 性能统计
+  PerfStats m_detectStats{"Detection"};
+  Timer m_detectTimer;
 };
 
 #endif // DETECTPIPELINE_H

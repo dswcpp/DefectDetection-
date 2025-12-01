@@ -130,6 +130,9 @@ void DetectPipeline::releaseCamera() {
 }
 
 DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
+  // 开始计时
+  m_detectTimer.restart();
+
   // TODO: 接入真实的检测算法，目前用模拟数据
   DetectResult result;
   result.timestamp = QDateTime::currentDateTime().toMSecsSinceEpoch();
@@ -171,6 +174,15 @@ DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
     result.severity = 0.0;
     result.confidence = 1.0;
   }
+
+  // 记录检测耗时
+  m_detectTimer.stop();
+  double detectTimeMs = m_detectTimer.elapsedMs();
+  m_detectStats.record(detectTimeMs);
+  result.cycleTimeMs = static_cast<int>(detectTimeMs);
+
+  LOG_DEBUG("Detection completed in {:.2f}ms (avg: {:.2f}ms)",
+            detectTimeMs, m_detectStats.avg());
 
   return result;
 }
