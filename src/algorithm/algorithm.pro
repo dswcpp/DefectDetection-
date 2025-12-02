@@ -9,7 +9,7 @@ include($$PWD/../../config/config.pri)
 TEMPLATE = lib
 TARGET = algorithm
 
-QT += core
+QT += core concurrent
 QT -= gui
 
 DEFINES += ALGORITHM_LIBRARY_BUILD
@@ -36,6 +36,7 @@ HEADERS += \
     postprocess/NMSFilter.h \
     preprocess/Calibration.h \
     preprocess/ImagePreprocessor.h \
+    preprocess/PreprocessCache.h \
     preprocess/ROIManager.h \
     scoring/DefectScorer.h \
     scoring/SeverityConfig.h
@@ -53,6 +54,7 @@ SOURCES += \
     dnn/YoloDetector.cpp \
     postprocess/NMSFilter.cpp \
     preprocess/ImagePreprocessor.cpp \
+    preprocess/PreprocessCache.cpp \
     scoring/DefectScorer.cpp
 
 # OpenCV 链接（MinGW）

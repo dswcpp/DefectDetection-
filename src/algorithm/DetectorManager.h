@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariantMap>
+#include <QMutex>
 #include <vector>
 #include <map>
 
@@ -51,10 +52,18 @@ public:
     std::map<QString, DetectionResult> detectorResults;
   };
   
+  // 串行执行所有检测器
   CombinedResult detectAll(const cv::Mat& image);
+  
+  // 并行执行所有检测器（多线程）
+  CombinedResult detectAllParallel(const cv::Mat& image);
 
   // 执行单个检测器
   DetectionResult detectWith(const QString& name, const cv::Mat& image);
+  
+  // 设置是否使用并行检测
+  void setParallelEnabled(bool enabled) { m_parallelEnabled = enabled; }
+  bool isParallelEnabled() const { return m_parallelEnabled; }
 
 signals:
   void detectorAdded(const QString& name);
@@ -68,6 +77,8 @@ private:
 
   std::map<QString, DetectorPtr> m_detectors;
   bool m_initialized = false;
+  bool m_parallelEnabled = true;  // 默认启用并行检测
+  mutable QMutex m_resultMutex;   // 保护并行结果合并
 };
 
 #endif // DETECTORMANAGER_H

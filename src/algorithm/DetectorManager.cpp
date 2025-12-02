@@ -8,6 +8,9 @@
 #include "Logger.h"
 #include <QElapsedTimer>
 #include <QDebug>
+#include <QtConcurrent/QtConcurrent>
+#include <QFuture>
+#include <QFutureWatcher>
 
 DetectorManager::DetectorManager(QObject* parent) : QObject(parent) {
 }
@@ -273,4 +276,80 @@ DetectionResult DetectorManager::detectWith(const QString& name, const cv::Mat& 
   }
 
   return detector->detect(image);
+}
+
+DetectorManager::CombinedResult DetectorManager::detectAllParallel(const cv::Mat& image) {
+  CombinedResult result;
+  QElapsedTimer timer;
+  timer.start();
+
+  emit detectionStarted();
+
+  if (image.empty()) {
+    result.success = false;
+    result.errorMessage = "Empty input image";
+    emit detectionFinished(result);
+    return result;
+  }
+
+  // 收集启用的检测器
+  std::vector<std::pair<QString, DetectorPtr>> enabledDetectors;
+  for (auto& pair : m_detectors) {
+    if (pair.second->isEnabled()) {
+      enabledDetectors.push_back(pair);
+    }
+  }
+
+  if (enabledDetectors.empty()) {
+    result.totalTimeMs = timer.elapsed();
+    emit detectionFinished(result);
+    return result;
+  }
+
+  // 并行执行所有检测器
+  const size_t MAX_DEFECTS_PER_DETECTOR = 100;
+  
+  QList<QFuture<std::pair<QString, DetectionResult>>> futures;
+  for (auto& pair : enabledDetectors) {
+    QString name = pair.first;
+    DetectorPtr detector = pair.second;
+    
+    QFuture<std::pair<QString, DetectionResult>> future = 
+      QtConcurrent::run([name, detector, &image]() {
+        return std::make_pair(name, detector->detect(image));
+      });
+    futures.append(future);
+  }
+
+  // 等待所有检测完成并合并结果
+  for (auto& future : futures) {
+    future.waitForFinished();
+    auto [name, detResult] = future.result();
+    
+    result.detectorResults[name] = detResult;
+
+    if (detResult.success) {
+      size_t count = std::min(detResult.defects.size(), MAX_DEFECTS_PER_DETECTOR);
+      for (size_t i = 0; i < count; ++i) {
+        result.allDefects.push_back(detResult.defects[i]);
+      }
+      if (detResult.defects.size() > MAX_DEFECTS_PER_DETECTOR) {
+        LOG_WARN("DetectorManager: {} produced {} defects, truncated to {}", 
+                 name.toStdString(), detResult.defects.size(), MAX_DEFECTS_PER_DETECTOR);
+      }
+    } else {
+      LOG_WARN("DetectorManager: Detector {} failed: {}", 
+               name.toStdString(), detResult.errorMessage.toStdString());
+    }
+
+    emit detectorResult(name, detResult);
+  }
+
+  result.totalTimeMs = timer.elapsed();
+  emit detectionFinished(result);
+
+  LOG_DEBUG("DetectorManager: Parallel detection completed in {:.2f}ms, found {} defects",
+            result.totalTimeMs, result.allDefects.size());
+
+  return result;
 }

@@ -238,8 +238,8 @@ DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
     // 1. 预处理
     cv::Mat processed = m_preprocessor ? m_preprocessor->process(resized) : resized;
 
-    // 2. 执行检测
-    auto detectResult = m_detectorManager->detectAll(processed);
+    // 2. 执行检测（并行）
+    auto detectResult = m_detectorManager->detectAllParallel(processed);
 
     // 3. NMS 去重
     std::vector<DefectInfo> filteredDefects = detectResult.allDefects;
