@@ -47,41 +47,132 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
 
   updateParameters();
 
-  // 预处理
-  cv::Mat preprocessed = preprocessImage(image);
+  std::vector<DefectInfo> allDefects;
 
-  // 计算局部对比度：使用形态学顶帽和底帽变换
+  // 1. 灰度异物检测
+  cv::Mat preprocessed = preprocessImage(image);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(15, 15));
   
-  // 顶帽：提取比背景亮的区域（明亮异物）
-  cv::Mat tophat;
+  cv::Mat tophat, blackhat;
   cv::morphologyEx(preprocessed, tophat, cv::MORPH_TOPHAT, kernel);
-  
-  // 底帽：提取比背景暗的区域（暗色异物）
-  cv::Mat blackhat;
   cv::morphologyEx(preprocessed, blackhat, cv::MORPH_BLACKHAT, kernel);
 
-  // 合并亮暗异物
   cv::Mat combined;
   cv::add(tophat, blackhat, combined);
 
-  // 二值化
   int threshold = static_cast<int>(255 * m_contrast);
   cv::Mat binary;
   cv::threshold(combined, binary, threshold, 255, cv::THRESH_BINARY);
 
-  // 形态学去噪
   cv::Mat smallKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
   cv::morphologyEx(binary, binary, cv::MORPH_OPEN, smallKernel);
 
-  // 查找异物
-  std::vector<DefectInfo> defects = findForeignObjects(binary, image);
+  auto grayDefects = findForeignObjects(binary, image);
+  allDefects.insert(allDefects.end(), grayDefects.begin(), grayDefects.end());
+
+  // 2. 颜色异物检测（仅对彩色图像）
+  if (image.channels() == 3) {
+    auto colorDefects = detectColorAnomalies(image);
+    allDefects.insert(allDefects.end(), colorDefects.begin(), colorDefects.end());
+  }
+
+  // NMS 去重
+  allDefects = nmsDefects(allDefects, 0.5);
 
   // 过滤低置信度
-  defects = filterByConfidence(defects);
+  allDefects = filterByConfidence(allDefects);
 
   double timeMs = timer.elapsed();
-  return makeSuccessResult(defects, timeMs);
+  return makeSuccessResult(allDefects, timeMs);
+}
+
+std::vector<DefectInfo> ForeignDetector::detectColorAnomalies(const cv::Mat& image) {
+  std::vector<DefectInfo> defects;
+  
+  // 转换到 Lab 颜色空间
+  cv::Mat lab;
+  cv::cvtColor(image, lab, cv::COLOR_BGR2Lab);
+  
+  std::vector<cv::Mat> channels;
+  cv::split(lab, channels);
+  
+  // 计算 a, b 通道的均值和标准差
+  cv::Scalar meanA, stdA, meanB, stdB;
+  cv::meanStdDev(channels[1], meanA, stdA);
+  cv::meanStdDev(channels[2], meanB, stdB);
+  
+  // 检测颜色异常区域（偏离均值超过阈值）
+  cv::Mat anomalyA, anomalyB;
+  cv::absdiff(channels[1], meanA[0], anomalyA);
+  cv::absdiff(channels[2], meanB[0], anomalyB);
+  
+  cv::Mat colorAnomaly;
+  cv::max(anomalyA, anomalyB, colorAnomaly);
+  
+  // 阈值化
+  cv::Mat binary;
+  double colorThresh = std::max(stdA[0], stdB[0]) * 2.5;
+  cv::threshold(colorAnomaly, binary, colorThresh, 255, cv::THRESH_BINARY);
+  
+  // 形态学处理
+  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
+  cv::morphologyEx(binary, binary, cv::MORPH_OPEN, kernel);
+  cv::morphologyEx(binary, binary, cv::MORPH_CLOSE, kernel);
+  
+  // 查找轮廓
+  std::vector<std::vector<cv::Point>> contours;
+  cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  
+  for (const auto& contour : contours) {
+    double area = cv::contourArea(contour);
+    if (area < m_minArea) continue;
+    
+    DefectInfo defect;
+    defect.bbox = cv::boundingRect(contour);
+    defect.contour = contour;
+    defect.classId = 2;
+    defect.className = "Foreign";
+    defect.confidence = std::min(1.0, area / 100.0);
+    defect.severity = std::min(1.0, area / 200.0);
+    defect.attributes["area"] = area;
+    defect.attributes["method"] = "color";
+    
+    defects.push_back(defect);
+  }
+  
+  return defects;
+}
+
+std::vector<DefectInfo> ForeignDetector::nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold) {
+  if (defects.empty()) return defects;
+  
+  std::vector<DefectInfo> sorted = defects;
+  std::sort(sorted.begin(), sorted.end(), [](const DefectInfo& a, const DefectInfo& b) {
+    return a.confidence > b.confidence;
+  });
+  
+  std::vector<bool> suppressed(sorted.size(), false);
+  std::vector<DefectInfo> result;
+  
+  for (size_t i = 0; i < sorted.size(); ++i) {
+    if (suppressed[i]) continue;
+    result.push_back(sorted[i]);
+    
+    for (size_t j = i + 1; j < sorted.size(); ++j) {
+      if (suppressed[j]) continue;
+      
+      cv::Rect intersection = sorted[i].bbox & sorted[j].bbox;
+      if (intersection.area() == 0) continue;
+      
+      double iou = static_cast<double>(intersection.area()) / 
+                   (sorted[i].bbox.area() + sorted[j].bbox.area() - intersection.area());
+      if (iou > iouThreshold) {
+        suppressed[j] = true;
+      }
+    }
+  }
+  
+  return result;
 }
 
 std::vector<DefectInfo> ForeignDetector::findForeignObjects(const cv::Mat& binary, const cv::Mat& original) {

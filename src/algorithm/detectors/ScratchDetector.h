@@ -28,6 +28,8 @@ private:
   void updateParameters();
   cv::Mat preprocessImage(const cv::Mat& input);
   std::vector<DefectInfo> findScratches(const cv::Mat& edges, const cv::Mat& original);
+  std::vector<DefectInfo> detectLinesHough(const cv::Mat& edges, const cv::Mat& original);
+  std::vector<DefectInfo> nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold);
   bool isValidScratch(const std::vector<cv::Point>& contour);
   double calculateSeverity(double length, double avgWidth);
 };

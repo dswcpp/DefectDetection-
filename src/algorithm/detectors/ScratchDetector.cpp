@@ -52,27 +52,126 @@ DetectionResult ScratchDetector::detect(const cv::Mat& image) {
   // 预处理
   cv::Mat preprocessed = preprocessImage(image);
 
-  // 边缘检测（Canny）
-  // 根据灵敏度调整阈值：灵敏度越高，阈值越低
-  int lowThreshold = 100 - m_sensitivity;
-  int highThreshold = lowThreshold * 3;
-  
-  cv::Mat edges;
-  cv::Canny(preprocessed, edges, lowThreshold, highThreshold);
+  std::vector<DefectInfo> allDefects;
 
-  // 形态学操作：连接断开的边缘
-  cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 1));
-  cv::dilate(edges, edges, kernel, cv::Point(-1, -1), 1);
-  cv::erode(edges, edges, kernel, cv::Point(-1, -1), 1);
+  // 多尺度检测
+  std::vector<double> scales = {1.0, 0.5, 0.25};
+  for (double scale : scales) {
+    cv::Mat scaled;
+    if (scale < 1.0) {
+      cv::resize(preprocessed, scaled, cv::Size(), scale, scale, cv::INTER_AREA);
+    } else {
+      scaled = preprocessed;
+    }
 
-  // 查找划痕
-  std::vector<DefectInfo> defects = findScratches(edges, image);
+    // 边缘检测（Canny）
+    int lowThreshold = std::max(10, 100 - m_sensitivity);
+    int highThreshold = lowThreshold * 3;
+    
+    cv::Mat edges;
+    cv::Canny(scaled, edges, lowThreshold, highThreshold);
+
+    // 形态学操作：连接断开的边缘
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 1));
+    cv::dilate(edges, edges, kernel);
+    cv::erode(edges, edges, kernel);
+
+    // 轮廓检测
+    auto contourDefects = findScratches(edges, scaled);
+    
+    // Hough 线检测（增强长直线划痕检测）
+    auto lineDefects = detectLinesHough(edges, scaled);
+    
+    // 调整坐标回原始尺度
+    for (auto& d : contourDefects) {
+      if (scale < 1.0) {
+        d.bbox.x = static_cast<int>(d.bbox.x / scale);
+        d.bbox.y = static_cast<int>(d.bbox.y / scale);
+        d.bbox.width = static_cast<int>(d.bbox.width / scale);
+        d.bbox.height = static_cast<int>(d.bbox.height / scale);
+      }
+      allDefects.push_back(d);
+    }
+    for (auto& d : lineDefects) {
+      if (scale < 1.0) {
+        d.bbox.x = static_cast<int>(d.bbox.x / scale);
+        d.bbox.y = static_cast<int>(d.bbox.y / scale);
+        d.bbox.width = static_cast<int>(d.bbox.width / scale);
+        d.bbox.height = static_cast<int>(d.bbox.height / scale);
+      }
+      allDefects.push_back(d);
+    }
+  }
+
+  // 去重（NMS）
+  allDefects = nmsDefects(allDefects, 0.5);
 
   // 过滤低置信度
-  defects = filterByConfidence(defects);
+  allDefects = filterByConfidence(allDefects);
 
   double timeMs = timer.elapsed();
-  return makeSuccessResult(defects, timeMs);
+  return makeSuccessResult(allDefects, timeMs);
+}
+
+std::vector<DefectInfo> ScratchDetector::detectLinesHough(const cv::Mat& edges, const cv::Mat& original) {
+  std::vector<DefectInfo> defects;
+  
+  // 概率 Hough 变换检测线段
+  std::vector<cv::Vec4i> lines;
+  cv::HoughLinesP(edges, lines, 1, CV_PI / 180, 50, m_minLength, 10);
+  
+  for (const auto& line : lines) {
+    int x1 = line[0], y1 = line[1], x2 = line[2], y2 = line[3];
+    
+    double length = std::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+    if (length < m_minLength) continue;
+    
+    DefectInfo defect;
+    defect.bbox = cv::Rect(
+      std::min(x1, x2), std::min(y1, y2),
+      std::abs(x2 - x1) + 1, std::abs(y2 - y1) + 1
+    );
+    defect.classId = 0;
+    defect.className = "Scratch";
+    defect.confidence = std::min(1.0, length / 150.0);
+    defect.severity = std::min(1.0, length / 200.0);
+    defect.attributes["length"] = length;
+    defect.attributes["method"] = "hough";
+    
+    defects.push_back(defect);
+  }
+  
+  return defects;
+}
+
+std::vector<DefectInfo> ScratchDetector::nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold) {
+  if (defects.empty()) return defects;
+  
+  std::vector<DefectInfo> sorted = defects;
+  std::sort(sorted.begin(), sorted.end(), [](const DefectInfo& a, const DefectInfo& b) {
+    return a.confidence > b.confidence;
+  });
+  
+  std::vector<bool> suppressed(sorted.size(), false);
+  std::vector<DefectInfo> result;
+  
+  for (size_t i = 0; i < sorted.size(); ++i) {
+    if (suppressed[i]) continue;
+    result.push_back(sorted[i]);
+    
+    for (size_t j = i + 1; j < sorted.size(); ++j) {
+      if (suppressed[j]) continue;
+      
+      cv::Rect intersection = sorted[i].bbox & sorted[j].bbox;
+      double iou = static_cast<double>(intersection.area()) / 
+                   (sorted[i].bbox.area() + sorted[j].bbox.area() - intersection.area());
+      if (iou > iouThreshold) {
+        suppressed[j] = true;
+      }
+    }
+  }
+  
+  return result;
 }
 
 std::vector<DefectInfo> ScratchDetector::findScratches(const cv::Mat& edges, const cv::Mat& original) {

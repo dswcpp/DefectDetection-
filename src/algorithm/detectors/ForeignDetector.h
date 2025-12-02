@@ -27,6 +27,8 @@ private:
   void updateParameters();
   cv::Mat preprocessImage(const cv::Mat& input);
   std::vector<DefectInfo> findForeignObjects(const cv::Mat& diff, const cv::Mat& original);
+  std::vector<DefectInfo> detectColorAnomalies(const cv::Mat& image);
+  std::vector<DefectInfo> nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold);
   double calculateSeverity(double area, double contrast);
 };
 

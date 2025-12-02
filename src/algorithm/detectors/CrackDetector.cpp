@@ -32,6 +32,10 @@ cv::Mat CrackDetector::preprocessImage(const cv::Mat& input) {
     gray = input.clone();
   }
 
+  // CLAHE 增强对比度（更好地显示裂纹）
+  cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(2.0, cv::Size(8, 8));
+  clahe->apply(gray, gray);
+
   // 高斯模糊
   cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 0);
 
@@ -41,13 +45,10 @@ cv::Mat CrackDetector::preprocessImage(const cv::Mat& input) {
                         cv::THRESH_BINARY_INV, 11, 2);
 
   // 形态学操作：闭运算填充小孔
-  int kernelSize = m_morphKernelSize | 1;  // 确保奇数
+  int kernelSize = m_morphKernelSize | 1;
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, 
                                               cv::Size(kernelSize, kernelSize));
   cv::morphologyEx(binary, binary, cv::MORPH_CLOSE, kernel);
-
-  // 细化骨架（可选，用于提取裂纹中心线）
-  // cv::ximgproc::thinning(binary, binary);
 
   return binary;
 }
