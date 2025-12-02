@@ -1,9 +1,5 @@
 #include "ScratchDetector.h"
-#include "../DetectorFactory.h"
 #include <QElapsedTimer>
-
-// 自动注册到工厂
-REGISTER_DETECTOR("scratch", ScratchDetector)
 
 ScratchDetector::ScratchDetector() {
   m_confidenceThreshold = 0.5;

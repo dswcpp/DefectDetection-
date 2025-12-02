@@ -1,9 +1,5 @@
 #include "ForeignDetector.h"
-#include "../DetectorFactory.h"
 #include <QElapsedTimer>
-
-// 自动注册到工厂
-REGISTER_DETECTOR("foreign", ForeignDetector)
 
 ForeignDetector::ForeignDetector() {
   m_confidenceThreshold = 0.5;

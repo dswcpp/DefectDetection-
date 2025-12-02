@@ -13,14 +13,17 @@
 #include <QFileInfo>
 
 DetectPipeline::DetectPipeline(QObject* parent) : QObject(parent) {
+  qDebug() << "[DEBUG] DetectPipeline: Constructor start";
   qRegisterMetaType<DetectResult>("DetectResult");
   qRegisterMetaType<cv::Mat>("cv::Mat");
 
   m_captureTimer = new QTimer(this);
   connect(m_captureTimer, &QTimer::timeout, this, &DetectPipeline::onCaptureTimeout);
 
+  qDebug() << "[DEBUG] DetectPipeline: Calling initDetectors...";
   // 初始化检测组件
   initDetectors();
+  qDebug() << "[DEBUG] DetectPipeline: Constructor done";
 }
 
 DetectPipeline::~DetectPipeline() {
@@ -31,25 +34,32 @@ DetectPipeline::~DetectPipeline() {
 }
 
 bool DetectPipeline::initDetectors() {
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating DetectorManager...";
   // 初始化检测器管理器
   m_detectorManager = std::make_unique<DetectorManager>();
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: DetectorManager created, initializing...";
   if (!m_detectorManager->initialize()) {
     LOG_WARN("Failed to initialize DetectorManager, using simulated detection");
     m_useRealDetection = false;
   }
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: DetectorManager initialized";
 
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating ImagePreprocessor...";
   // 初始化预处理器
   m_preprocessor = std::make_unique<ImagePreprocessor>();
   m_preprocessor->setDenoiseStrength(20);
 
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating NMSFilter...";
   // 初始化 NMS 过滤器
   m_nmsFilter = std::make_unique<NMSFilter>();
   m_nmsFilter->setIoUThreshold(0.5);
   m_nmsFilter->setConfidenceThreshold(0.3);
 
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating DefectScorer...";
   // 初始化评分器
   m_scorer = std::make_unique<DefectScorer>();
 
+  qDebug() << "[DEBUG] DetectPipeline::initDetectors: All components initialized";
   LOG_INFO("DetectPipeline: Detection components initialized, useRealDetection={}", m_useRealDetection);
   return true;
 }
