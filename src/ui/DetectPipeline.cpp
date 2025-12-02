@@ -98,6 +98,13 @@ void DetectPipeline::stop() {
   }
 
   m_captureTimer->stop();
+  
+  // 等待异步检测完成
+  if (m_detectWatcher.isRunning()) {
+    m_detectWatcher.waitForFinished();
+  }
+  m_detecting.store(false);
+  
   releaseCamera();
   m_running = false;
   LOG_INFO("DetectPipeline stopped");
@@ -135,33 +142,46 @@ void DetectPipeline::onCaptureTimeout() {
 
   // 如果上一次检测还未完成，跳过本次
   if (m_detecting.load()) {
-    LOG_DEBUG("DetectPipeline: Skipping frame, detection in progress");
     return;
   }
 
-  cv::Mat frame;
-  if (m_camera->grab(frame) && !frame.empty()) {
-    m_currentImagePath = m_camera->currentImagePath();
-    emit frameReady(frame);
-
-    // 异步执行检测
-    m_detecting.store(true);
-    m_pendingFrame = frame.clone();
+  m_detecting.store(true);
+  
+  // 整个抓取+检测流程都在后台线程执行
+  QFuture<DetectResult> future = QtConcurrent::run([this]() {
+    cv::Mat frame;
+    if (!m_camera || !m_camera->grab(frame) || frame.empty()) {
+      DetectResult result;
+      result.isOK = true;
+      return result;
+    }
     
-    QFuture<DetectResult> future = QtConcurrent::run([this]() {
-      return runDetection(m_pendingFrame);
-    });
-    m_detectWatcher.setFuture(future);
-  } else {
-    LOG_WARN("Failed to grab frame, stopping...");
-    stop();
-  }
+    m_currentImagePath = m_camera->currentImagePath();
+    
+    // 缩小图片用于显示，避免大图阻塞UI
+    cv::Mat displayFrame = frame;
+    const int MAX_DISPLAY = 1280;
+    if (frame.cols > MAX_DISPLAY || frame.rows > MAX_DISPLAY) {
+      double scale = std::min(static_cast<double>(MAX_DISPLAY) / frame.cols,
+                              static_cast<double>(MAX_DISPLAY) / frame.rows);
+      cv::resize(frame, displayFrame, cv::Size(), scale, scale, cv::INTER_AREA);
+    }
+    m_pendingFrame = displayFrame;
+    
+    return runDetection(frame);
+  });
+  m_detectWatcher.setFuture(future);
 }
 
 void DetectPipeline::onDetectionFinished() {
   m_detecting.store(false);
   
   if (m_detectWatcher.future().isValid()) {
+    // 发射缩小后的图片用于显示
+    if (!m_pendingFrame.empty()) {
+      emit frameReady(m_pendingFrame);
+    }
+    
     DetectResult result = m_detectWatcher.result();
     emit resultReady(result);
   }

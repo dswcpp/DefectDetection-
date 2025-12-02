@@ -90,9 +90,14 @@ int main(int argc, char* argv[]) {
 
     int result = a.exec();
 
+    // 安全退出：先停止流水线，再删除窗口
+    pipeline.stop();
+    
+    delete desktop;
+    desktop = nullptr;
+
     LOG_INFO("Application exiting");
     logging::Logger::shutdown();
 
-    delete desktop;
     return result;
 }
