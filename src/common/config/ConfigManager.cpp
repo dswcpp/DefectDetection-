@@ -287,6 +287,71 @@ void ConfigManager::setLogConfig(const LogConfig& cfg, bool autoSave) {
     emitChanged("log", autoSave);
 }
 
+DetectorsConfig ConfigManager::detectorsConfig() const {
+    QReadLocker locker(&m_lock);
+    return m_config.detectors;
+}
+
+void ConfigManager::setDetectorsConfig(const DetectorsConfig& cfg, bool autoSave) {
+    {
+        QWriteLocker locker(&m_lock);
+        m_config.detectors = cfg;
+    }
+    emitChanged("detectors", autoSave);
+}
+
+ScratchDetectorConfig ConfigManager::scratchConfig() const {
+    QReadLocker locker(&m_lock);
+    return m_config.detectors.scratch;
+}
+
+void ConfigManager::setScratchConfig(const ScratchDetectorConfig& cfg, bool autoSave) {
+    {
+        QWriteLocker locker(&m_lock);
+        m_config.detectors.scratch = cfg;
+    }
+    emitChanged("detectors.scratch", autoSave);
+}
+
+CrackDetectorConfig ConfigManager::crackConfig() const {
+    QReadLocker locker(&m_lock);
+    return m_config.detectors.crack;
+}
+
+void ConfigManager::setCrackConfig(const CrackDetectorConfig& cfg, bool autoSave) {
+    {
+        QWriteLocker locker(&m_lock);
+        m_config.detectors.crack = cfg;
+    }
+    emitChanged("detectors.crack", autoSave);
+}
+
+ForeignDetectorConfig ConfigManager::foreignConfig() const {
+    QReadLocker locker(&m_lock);
+    return m_config.detectors.foreign;
+}
+
+void ConfigManager::setForeignConfig(const ForeignDetectorConfig& cfg, bool autoSave) {
+    {
+        QWriteLocker locker(&m_lock);
+        m_config.detectors.foreign = cfg;
+    }
+    emitChanged("detectors.foreign", autoSave);
+}
+
+DimensionDetectorConfig ConfigManager::dimensionConfig() const {
+    QReadLocker locker(&m_lock);
+    return m_config.detectors.dimension;
+}
+
+void ConfigManager::setDimensionConfig(const DimensionDetectorConfig& cfg, bool autoSave) {
+    {
+        QWriteLocker locker(&m_lock);
+        m_config.detectors.dimension = cfg;
+    }
+    emitChanged("detectors.dimension", autoSave);
+}
+
 // ============================================================================
 // 辅助函数
 // ============================================================================

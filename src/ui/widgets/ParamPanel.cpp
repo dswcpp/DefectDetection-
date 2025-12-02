@@ -1,4 +1,5 @@
 #include "ParamPanel.h"
+#include "config/ConfigManager.h"
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -24,6 +25,14 @@ constexpr auto kDimensionDetector = "dimension";
 ParamPanel::ParamPanel(QWidget* parent) : QWidget{parent}
 {
   setupUI();
+  loadFromConfig();
+
+  // 监听配置变化
+  connect(&gConfig, &ConfigManager::configChanged, this, [this](const QString& section) {
+    if (section.startsWith("detectors")) {
+      loadFromConfig();
+    }
+  });
 }
 
 void ParamPanel::setupUI()
@@ -361,6 +370,9 @@ void ParamPanel::registerControl(const QString& detector, const QString& key,
 void ParamPanel::emitParamsChanged(const QString& detector)
 {
   emit paramsChanged(detector, getDetectorParams(detector));
+  
+  // 自动保存到配置
+  saveToConfig();
 }
 
 QVariantMap ParamPanel::getDetectorParams(const QString& detector) const
@@ -432,38 +444,89 @@ void ParamPanel::setDetectorParams(const QString& detector, const QVariantMap& p
 
 void ParamPanel::loadParams(const QString& configPath)
 {
-  QFile file(configPath);
-  if (!file.open(QIODevice::ReadOnly)) {
-    return;
-  }
-
-  const auto doc = QJsonDocument::fromJson(file.readAll());
-  if (!doc.isObject()) {
-    return;
-  }
-
-  const auto obj = doc.object();
-  for (auto it = obj.begin(); it != obj.end(); ++it) {
-    if (it.value().isObject()) {
-      setDetectorParams(it.key(), it.value().toObject().toVariantMap());
-    }
-  }
+  Q_UNUSED(configPath)
+  loadFromConfig();
 }
 
 void ParamPanel::saveParams(const QString& configPath) const
 {
-  QFile file(configPath);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-    return;
-  }
+  Q_UNUSED(configPath)
+  const_cast<ParamPanel*>(this)->saveToConfig();
+}
 
-  QJsonObject root;
-  for (auto it = m_controls.cbegin(); it != m_controls.cend(); ++it) {
-    root.insert(it.key(), QJsonObject::fromVariantMap(getDetectorParams(it.key())));
-  }
+void ParamPanel::loadFromConfig()
+{
+  // 划痕检测参数
+  auto scratch = gConfig.scratchConfig();
+  QVariantMap scratchParams;
+  scratchParams["enabled"] = scratch.enabled;
+  scratchParams["sensitivity"] = scratch.sensitivity;
+  scratchParams["minLength"] = scratch.minLength;
+  scratchParams["maxWidth"] = scratch.maxWidth;
+  setDetectorParams(kScratchDetector, scratchParams);
 
-  QJsonDocument doc(root);
-  file.write(doc.toJson(QJsonDocument::Indented));
+  // 裂纹检测参数
+  auto crack = gConfig.crackConfig();
+  QVariantMap crackParams;
+  crackParams["enabled"] = crack.enabled;
+  crackParams["threshold"] = crack.threshold;
+  crackParams["minArea"] = crack.minArea;
+  setDetectorParams(kCrackDetector, crackParams);
+
+  // 异物检测参数
+  auto foreign = gConfig.foreignConfig();
+  QVariantMap foreignParams;
+  foreignParams["enabled"] = foreign.enabled;
+  foreignParams["minArea"] = foreign.minArea;
+  foreignParams["contrast"] = foreign.contrast;
+  setDetectorParams(kForeignDetector, foreignParams);
+
+  // 尺寸测量参数
+  auto dimension = gConfig.dimensionConfig();
+  QVariantMap dimensionParams;
+  dimensionParams["enabled"] = dimension.enabled;
+  dimensionParams["tolerance"] = dimension.tolerance;
+  dimensionParams["calibration"] = dimension.calibration;
+  setDetectorParams(kDimensionDetector, dimensionParams);
+}
+
+void ParamPanel::saveToConfig()
+{
+  // 划痕检测参数
+  auto scratchParams = getDetectorParams(kScratchDetector);
+  ScratchDetectorConfig scratch;
+  scratch.enabled = scratchParams.value("enabled", true).toBool();
+  scratch.sensitivity = scratchParams.value("sensitivity", 75).toInt();
+  scratch.minLength = scratchParams.value("minLength", 10).toInt();
+  scratch.maxWidth = scratchParams.value("maxWidth", 5).toInt();
+  gConfig.setScratchConfig(scratch);
+
+  // 裂纹检测参数
+  auto crackParams = getDetectorParams(kCrackDetector);
+  CrackDetectorConfig crack;
+  crack.enabled = crackParams.value("enabled", true).toBool();
+  crack.threshold = crackParams.value("threshold", 80).toInt();
+  crack.minArea = crackParams.value("minArea", 20).toInt();
+  gConfig.setCrackConfig(crack);
+
+  // 异物检测参数
+  auto foreignParams = getDetectorParams(kForeignDetector);
+  ForeignDetectorConfig foreign;
+  foreign.enabled = foreignParams.value("enabled", true).toBool();
+  foreign.minArea = foreignParams.value("minArea", 5).toInt();
+  foreign.contrast = foreignParams.value("contrast", 0.3).toDouble();
+  gConfig.setForeignConfig(foreign);
+
+  // 尺寸测量参数
+  auto dimensionParams = getDetectorParams(kDimensionDetector);
+  DimensionDetectorConfig dimension;
+  dimension.enabled = dimensionParams.value("enabled", false).toBool();
+  dimension.tolerance = dimensionParams.value("tolerance", 0.5).toDouble();
+  dimension.calibration = dimensionParams.value("calibration", 0.1).toDouble();
+  gConfig.setDimensionConfig(dimension);
+
+  // 保存到文件
+  gConfig.save();
 }
 
 void ParamPanel::toggleSection(const QString& sectionName)

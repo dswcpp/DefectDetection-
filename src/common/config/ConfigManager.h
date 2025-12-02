@@ -60,6 +60,22 @@ public:
     DetectionConfig detectionConfig() const;
     void setDetectionConfig(const DetectionConfig& cfg, bool autoSave = false);
 
+    DetectorsConfig detectorsConfig() const;
+    void setDetectorsConfig(const DetectorsConfig& cfg, bool autoSave = false);
+
+    // 单独访问检测器参数
+    ScratchDetectorConfig scratchConfig() const;
+    void setScratchConfig(const ScratchDetectorConfig& cfg, bool autoSave = false);
+
+    CrackDetectorConfig crackConfig() const;
+    void setCrackConfig(const CrackDetectorConfig& cfg, bool autoSave = false);
+
+    ForeignDetectorConfig foreignConfig() const;
+    void setForeignConfig(const ForeignDetectorConfig& cfg, bool autoSave = false);
+
+    DimensionDetectorConfig dimensionConfig() const;
+    void setDimensionConfig(const DimensionDetectorConfig& cfg, bool autoSave = false);
+
     UIConfig uiConfig() const;
     void setUIConfig(const UIConfig& cfg, bool autoSave = false);
 

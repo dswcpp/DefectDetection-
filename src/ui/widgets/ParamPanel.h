@@ -16,10 +16,14 @@ class ParamPanel : public QWidget {
 public:
   explicit ParamPanel(QWidget* parent = nullptr);
 
-  void loadParams(const QString& configPath);
-  void saveParams(const QString& configPath) const;
+  void loadParams(const QString& configPath = QString());
+  void saveParams(const QString& configPath = QString()) const;
   QVariantMap getDetectorParams(const QString& detector) const;
   void setDetectorParams(const QString& detector, const QVariantMap& params);
+
+  // 从/到 ConfigManager 加载/保存
+  void loadFromConfig();
+  void saveToConfig();
 
   // 设置手风琴模式（true = 一次只能打开一个，false = 可以同时打开多个）
   void setAccordionMode(bool enabled) { m_accordionMode = enabled; }
