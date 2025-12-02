@@ -10,7 +10,6 @@
 #include <QDebug>
 
 DetectorManager::DetectorManager(QObject* parent) : QObject(parent) {
-  qDebug() << "[DEBUG] DetectorManager: Constructor";
 }
 
 DetectorManager::~DetectorManager() {
@@ -18,34 +17,22 @@ DetectorManager::~DetectorManager() {
 }
 
 bool DetectorManager::initialize() {
-  qDebug() << "[DEBUG] DetectorManager::initialize: Start";
   if (m_initialized) {
     return true;
   }
 
   LOG_INFO("DetectorManager: Initializing...");
 
-  qDebug() << "[DEBUG] DetectorManager::initialize: Registering builtin detectors...";
-  // 注册内置检测器
   registerBuiltinDetectors();
-  qDebug() << "[DEBUG] DetectorManager::initialize: Builtin detectors registered";
-
-  qDebug() << "[DEBUG] DetectorManager::initialize: Loading from config...";
-  // 从配置加载参数
   loadFromConfig();
-  qDebug() << "[DEBUG] DetectorManager::initialize: Config loaded";
 
-  qDebug() << "[DEBUG] DetectorManager::initialize: Initializing all detectors...";
-  // 初始化所有检测器
   for (auto& pair : m_detectors) {
-    qDebug() << "[DEBUG] DetectorManager::initialize: Initializing detector:" << pair.first;
     if (!pair.second->initialize()) {
       LOG_WARN("DetectorManager: Failed to initialize detector: {}", pair.first.toStdString());
     }
   }
 
   m_initialized = true;
-  qDebug() << "[DEBUG] DetectorManager::initialize: Done";
   LOG_INFO("DetectorManager: Initialized with {} detectors", m_detectors.size());
   return true;
 }
@@ -60,16 +47,10 @@ void DetectorManager::release() {
 }
 
 void DetectorManager::registerBuiltinDetectors() {
-  qDebug() << "[DEBUG] DetectorManager::registerBuiltinDetectors: Creating ScratchDetector...";
-  // 直接创建内置检测器，避免依赖静态自动注册
   addDetector(DetectorFactory::TYPE_SCRATCH, std::make_shared<ScratchDetector>());
-  qDebug() << "[DEBUG] DetectorManager::registerBuiltinDetectors: Creating CrackDetector...";
   addDetector(DetectorFactory::TYPE_CRACK, std::make_shared<CrackDetector>());
-  qDebug() << "[DEBUG] DetectorManager::registerBuiltinDetectors: Creating ForeignDetector...";
   addDetector(DetectorFactory::TYPE_FOREIGN, std::make_shared<ForeignDetector>());
-  qDebug() << "[DEBUG] DetectorManager::registerBuiltinDetectors: Creating DimensionDetector...";
   addDetector(DetectorFactory::TYPE_DIMENSION, std::make_shared<DimensionDetector>());
-  qDebug() << "[DEBUG] DetectorManager::registerBuiltinDetectors: Done";
 }
 
 void DetectorManager::addDetector(const QString& name, DetectorPtr detector) {

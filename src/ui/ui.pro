@@ -9,7 +9,7 @@ include($$PWD/../../config/config.pri)
 TEMPLATE = lib
 TARGET = ui
 
-QT += core gui widgets charts sql
+QT += core gui widgets charts sql concurrent
 
 DEFINES += UI_LIBRARY_BUILD
 

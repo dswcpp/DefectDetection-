@@ -2,7 +2,10 @@
 #define DETECTPIPELINE_H
 
 #include <QObject>
+#include <QFutureWatcher>
+#include <QMutex>
 #include <memory>
+#include <atomic>
 #include "Types.h"
 #include "Timer.h"
 #include "ui_global.h"
@@ -47,6 +50,7 @@ signals:
 
 private slots:
   void onCaptureTimeout();
+  void onDetectionFinished();
 
 private:
   bool initCamera();
@@ -65,7 +69,13 @@ private:
   QString m_currentImagePath;
   int m_captureIntervalMs = 500;
   bool m_running = false;
-  bool m_useRealDetection = true;  // 是否使用真实检测
+  bool m_useRealDetection = true;
+
+  // 异步检测
+  QFutureWatcher<DetectResult> m_detectWatcher;
+  std::atomic<bool> m_detecting{false};
+  QMutex m_detectMutex;
+  cv::Mat m_pendingFrame;
 
   // 性能统计
   PerfStats m_detectStats{"Detection"};

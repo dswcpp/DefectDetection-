@@ -11,55 +11,51 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QFileInfo>
+#include <QtConcurrent/QtConcurrent>
 
 DetectPipeline::DetectPipeline(QObject* parent) : QObject(parent) {
-  qDebug() << "[DEBUG] DetectPipeline: Constructor start";
   qRegisterMetaType<DetectResult>("DetectResult");
   qRegisterMetaType<cv::Mat>("cv::Mat");
 
   m_captureTimer = new QTimer(this);
   connect(m_captureTimer, &QTimer::timeout, this, &DetectPipeline::onCaptureTimeout);
 
-  qDebug() << "[DEBUG] DetectPipeline: Calling initDetectors...";
-  // 初始化检测组件
+  // 连接异步检测完成信号
+  connect(&m_detectWatcher, &QFutureWatcher<DetectResult>::finished,
+          this, &DetectPipeline::onDetectionFinished);
+
   initDetectors();
-  qDebug() << "[DEBUG] DetectPipeline: Constructor done";
 }
 
 DetectPipeline::~DetectPipeline() {
   stop();
+  
+  // 等待异步检测完成
+  if (m_detectWatcher.isRunning()) {
+    m_detectWatcher.waitForFinished();
+  }
+  
   if (m_detectorManager) {
     m_detectorManager->release();
   }
 }
 
 bool DetectPipeline::initDetectors() {
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating DetectorManager...";
-  // 初始化检测器管理器
   m_detectorManager = std::make_unique<DetectorManager>();
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: DetectorManager created, initializing...";
   if (!m_detectorManager->initialize()) {
     LOG_WARN("Failed to initialize DetectorManager, using simulated detection");
     m_useRealDetection = false;
   }
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: DetectorManager initialized";
 
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating ImagePreprocessor...";
-  // 初始化预处理器
   m_preprocessor = std::make_unique<ImagePreprocessor>();
   m_preprocessor->setDenoiseStrength(20);
 
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating NMSFilter...";
-  // 初始化 NMS 过滤器
   m_nmsFilter = std::make_unique<NMSFilter>();
   m_nmsFilter->setIoUThreshold(0.5);
   m_nmsFilter->setConfidenceThreshold(0.3);
 
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: Creating DefectScorer...";
-  // 初始化评分器
   m_scorer = std::make_unique<DefectScorer>();
 
-  qDebug() << "[DEBUG] DetectPipeline::initDetectors: All components initialized";
   LOG_INFO("DetectPipeline: Detection components initialized, useRealDetection={}", m_useRealDetection);
   return true;
 }
@@ -137,15 +133,37 @@ void DetectPipeline::onCaptureTimeout() {
     return;
   }
 
+  // 如果上一次检测还未完成，跳过本次
+  if (m_detecting.load()) {
+    LOG_DEBUG("DetectPipeline: Skipping frame, detection in progress");
+    return;
+  }
+
   cv::Mat frame;
   if (m_camera->grab(frame) && !frame.empty()) {
     m_currentImagePath = m_camera->currentImagePath();
     emit frameReady(frame);
-    DetectResult result = runDetection(frame);
-    emit resultReady(result);
+
+    // 异步执行检测
+    m_detecting.store(true);
+    m_pendingFrame = frame.clone();
+    
+    QFuture<DetectResult> future = QtConcurrent::run([this]() {
+      return runDetection(m_pendingFrame);
+    });
+    m_detectWatcher.setFuture(future);
   } else {
     LOG_WARN("Failed to grab frame, stopping...");
     stop();
+  }
+}
+
+void DetectPipeline::onDetectionFinished() {
+  m_detecting.store(false);
+  
+  if (m_detectWatcher.future().isValid()) {
+    DetectResult result = m_detectWatcher.result();
+    emit resultReady(result);
   }
 }
 
@@ -186,8 +204,19 @@ DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
   if (m_useRealDetection && m_detectorManager) {
     // 使用真实检测
     
+    // 0. 缩放大图以避免处理过慢
+    cv::Mat resized = frame;
+    const int MAX_DIM = 1920;  // 最大边长限制
+    if (frame.cols > MAX_DIM || frame.rows > MAX_DIM) {
+      double scale = std::min(static_cast<double>(MAX_DIM) / frame.cols,
+                              static_cast<double>(MAX_DIM) / frame.rows);
+      cv::resize(frame, resized, cv::Size(), scale, scale, cv::INTER_AREA);
+      LOG_DEBUG("DetectPipeline: Resized image from {}x{} to {}x{}",
+                frame.cols, frame.rows, resized.cols, resized.rows);
+    }
+    
     // 1. 预处理
-    cv::Mat processed = m_preprocessor ? m_preprocessor->process(frame) : frame;
+    cv::Mat processed = m_preprocessor ? m_preprocessor->process(resized) : resized;
 
     // 2. 执行检测
     auto detectResult = m_detectorManager->detectAll(processed);

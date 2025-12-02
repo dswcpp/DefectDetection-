@@ -16,16 +16,12 @@
 // ============================================================================
 
 ConfigManager& ConfigManager::instance() {
-    qDebug() << "[DEBUG] ConfigManager::instance: Entering";
     static ConfigManager inst;
-    qDebug() << "[DEBUG] ConfigManager::instance: Returning";
     return inst;
 }
 
 ConfigManager::ConfigManager() : QObject(nullptr) {
-    qDebug() << "[DEBUG] ConfigManager::ConfigManager: Constructor start";
     m_configPath = defaultConfigPath();
-    qDebug() << "[DEBUG] ConfigManager::ConfigManager: Constructor done, path =" << m_configPath;
 }
 
 // ============================================================================
@@ -63,47 +59,30 @@ bool ConfigManager::isLoaded() const {
 // ============================================================================
 
 bool ConfigManager::load(const QString& path) {
-    qDebug() << "[DEBUG] ConfigManager::load: Start";
     QString targetPath = path.isEmpty() ? defaultConfigPath() : path;
-    qDebug() << "[DEBUG] ConfigManager::load: targetPath =" << targetPath;
 
     // 如果用户配置不存在，从应用程序目录复制默认配置
     if (!QFile::exists(targetPath)) {
-        qDebug() << "[DEBUG] ConfigManager::load: Target config does not exist";
         QString bundled = bundledConfigPath();
-        qDebug() << "[DEBUG] ConfigManager::load: bundled =" << bundled;
         if (QFile::exists(bundled)) {
-            // 确保目标目录存在
             QFileInfo fi(targetPath);
             QDir dir = fi.dir();
             if (!dir.exists()) {
                 dir.mkpath(".");
             }
-            // 复制默认配置到用户目录
-            if (QFile::copy(bundled, targetPath)) {
-                qDebug() << "[DEBUG] ConfigManager::load: Copied default config";
-            } else {
-                qDebug() << "[DEBUG] ConfigManager::load: Failed to copy default config";
-            }
+            QFile::copy(bundled, targetPath);
         }
     }
 
-    qDebug() << "[DEBUG] ConfigManager::load: Loading from file...";
     if (!loadFromFile(targetPath)) {
-        qDebug() << "[DEBUG] ConfigManager::load: loadFromFile failed, trying bundled";
-        // 尝试从应用程序目录加载
         QString bundled = bundledConfigPath();
         if (targetPath != bundled && loadFromFile(bundled)) {
-            qDebug() << "[DEBUG] ConfigManager::load: Loaded bundled config";
-            // 保存到用户目录
             m_configPath = targetPath;
             save();
             emit configLoaded(targetPath);
             return true;
         }
         
-        qDebug() << "[DEBUG] ConfigManager::load: Using defaults";
-        // 使用默认配置
         QWriteLocker locker(&m_lock);
         m_config = AppConfig();
         m_configPath = targetPath;
@@ -112,7 +91,6 @@ bool ConfigManager::load(const QString& path) {
         return false;
     }
 
-    qDebug() << "[DEBUG] ConfigManager::load: Done";
     emit configLoaded(targetPath);
     return true;
 }
@@ -151,36 +129,29 @@ bool ConfigManager::reload() {
 }
 
 bool ConfigManager::loadFromFile(const QString& path) {
-    qDebug() << "[DEBUG] ConfigManager::loadFromFile:" << path;
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "[DEBUG] ConfigManager::loadFromFile: Cannot open file";
         return false;
     }
 
     QByteArray data = file.readAll();
     file.close();
-    qDebug() << "[DEBUG] ConfigManager::loadFromFile: File read, size =" << data.size();
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &error);
     if (error.error != QJsonParseError::NoError) {
-        qDebug() << "[DEBUG] ConfigManager::loadFromFile: JSON parse error:" << error.errorString();
         return false;
     }
 
     if (!doc.isObject()) {
-        qDebug() << "[DEBUG] ConfigManager::loadFromFile: Root is not a JSON object";
         return false;
     }
 
-    qDebug() << "[DEBUG] ConfigManager::loadFromFile: Parsing AppConfig...";
     QWriteLocker locker(&m_lock);
     m_config = AppConfig::fromJson(doc.object());
     m_configPath = path;
     m_loaded = true;
 
-    qDebug() << "[DEBUG] ConfigManager::loadFromFile: Success";
     return true;
 }
 
