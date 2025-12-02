@@ -28,6 +28,7 @@ HEADERS += \
     repositories/IRepository.h \
     repositories/ImageRepository.h \
     repositories/InspectionRepository.h \
+    repositories/UserRepository.h \
     storage/BackupManager.h \
     storage/ImageStorage.h
 
@@ -42,6 +43,7 @@ SOURCES += \
     repositories/DefectRepository.cpp \
     repositories/ImageRepository.cpp \
     repositories/InspectionRepository.cpp \
+    repositories/UserRepository.cpp \
     storage/BackupManager.cpp \
     storage/ImageStorage.cpp
 

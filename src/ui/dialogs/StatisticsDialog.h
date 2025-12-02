@@ -15,6 +15,8 @@ class QDateEdit;
 class QLineEdit;
 class QPushButton;
 class QGroupBox;
+class QMenu;
+class QAction;
 class DatabaseManager;
 
 class UI_LIBRARY StatisticsDialog : public QDialog {
@@ -22,19 +24,35 @@ class UI_LIBRARY StatisticsDialog : public QDialog {
 public:
   explicit StatisticsDialog(DatabaseManager* dbManager = nullptr, QWidget* parent = nullptr);
 
+signals:
+  void requestRetest(qint64 recordId, const QString& imagePath);
+
+protected:
+  bool eventFilter(QObject* obj, QEvent* event) override;
+
 private slots:
   void onSearchClicked();
   void onExportClicked();
   void onRecordSelected();
   void onPageChanged(int page);
   void updatePagination();
+  
+  // 右键菜单操作
+  void showContextMenu(const QPoint& pos);
+  void onViewDetails();
+  void onEditRecord();
+  void onDeleteRecord();
+  void onRetestRecord();
+  void onExportRecord();
 
 private:
   void setupUI();
+  void setupContextMenu();
   void loadFromDatabase();
   void updateTable();
   void updateDetailPanel(const InspectionRecord* record);
   void applyFilters();
+  InspectionRecord* getSelectedRecord();
 
   // UI Elements - Filter Section
   QDateEdit* m_startDateEdit;
@@ -67,6 +85,14 @@ private:
   QLabel* m_sizeLabel;
   QLabel* m_operatorLabel;
 
+  // Context Menu
+  QMenu* m_contextMenu = nullptr;
+  QAction* m_viewAction = nullptr;
+  QAction* m_editAction = nullptr;
+  QAction* m_deleteAction = nullptr;
+  QAction* m_retestAction = nullptr;
+  QAction* m_exportAction = nullptr;
+
   // Data
   DatabaseManager* m_dbManager = nullptr;
   QVector<InspectionRecord> m_allRecords;
@@ -74,6 +100,7 @@ private:
   int m_currentPage = 1;
   int m_recordsPerPage = 15;
   int m_selectedIndex = -1;
+  QString m_currentImagePath;
 };
 
 #endif // STATISTICSDIALOG_H

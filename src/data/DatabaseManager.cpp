@@ -3,6 +3,7 @@
 #include "repositories/DefectRepository.h"
 #include "repositories/ImageRepository.h"
 #include "repositories/AnnotationRepository.h"
+#include "repositories/UserRepository.h"
 #include "Logger.h"
 #include <QDir>
 #include <QFile>
@@ -21,6 +22,7 @@ DatabaseManager::DatabaseManager(QObject* parent)
   m_defectRepo = std::make_unique<DefectRepository>(m_connectionName, this);
   m_imageRepo = std::make_unique<ImageRepository>(m_connectionName, this);
   m_annotationRepo = std::make_unique<AnnotationRepository>(m_connectionName, this);
+  m_userRepo = std::make_unique<UserRepository>(m_connectionName, this);
 
   // 监听配置变更
   connect(m_configRepo.get(), &ConfigRepository::databaseConfigChanged,
@@ -142,24 +144,48 @@ bool DatabaseManager::executeSchema(const QString& schemaPath) {
   QString content = QString::fromUtf8(file.readAll());
   file.close();
 
-  // 按分号分割 SQL 语句
-  QStringList statements = content.split(';', Qt::SkipEmptyParts);
-
-  QSqlQuery query(m_db);
-  for (const QString& stmtRaw : statements) {
-    QString stmt = stmtRaw.trimmed();
-    if (stmt.isEmpty() || stmt.startsWith("--")) {
-      continue;
-    }
-
-    if (!query.exec(stmt)) {
-      LOG_ERROR("DatabaseManager: Schema statement failed: {} | error={}",
-                stmt.left(100), query.lastError().text());
-      return false;
+  // 移除多行注释和单行注释
+  // 简单处理：按行读取，移除 -- 开头的行
+  QStringList lines = content.split('\n');
+  QString cleanContent;
+  for (const QString& line : lines) {
+    QString trimmed = line.trimmed();
+    if (!trimmed.startsWith("--")) {
+      cleanContent += line + "\n";
     }
   }
 
-  LOG_INFO("DatabaseManager: Schema executed successfully: {}", schemaPath);
+  // 按分号分割 SQL 语句
+  QStringList statements = cleanContent.split(';', Qt::SkipEmptyParts);
+
+  LOG_INFO("DatabaseManager: Executing {} statements from schema", statements.size());
+
+  QSqlQuery query(m_db);
+  int successCount = 0;
+  for (const QString& stmtRaw : statements) {
+    QString stmt = stmtRaw.trimmed();
+    if (stmt.isEmpty()) {
+      continue;
+    }
+
+    // 提取语句类型用于日志
+    QString stmtType = stmt.split(' ').first().toUpper();
+    
+    if (!query.exec(stmt)) {
+      LOG_ERROR("DatabaseManager: {} failed: {} | error={}",
+                stmtType, stmt.left(80), query.lastError().text());
+      return false;
+    }
+    successCount++;
+    
+    // 对于 CREATE TABLE 语句，记录成功
+    if (stmt.toUpper().contains("CREATE TABLE")) {
+      LOG_DEBUG("DatabaseManager: Created table successfully");
+    }
+  }
+
+  LOG_INFO("DatabaseManager: Schema executed successfully ({} statements): {}", 
+           successCount, schemaPath);
   return true;
 }
 

@@ -9,6 +9,7 @@ class QLabel;
 class QVBoxLayout;
 class QWidget;
 class QScrollArea;
+class SeverityBar;
 
 class ResultCard : public QFrame {
   Q_OBJECT
@@ -23,10 +24,13 @@ private:
   void updateStatus(bool isOk);
   void clearDefectList();
   void rebuildDefectList(const QString& typeName, const std::vector<DefectRegion>& defects);
+  QString calculateSeverityLevel(const std::vector<DefectRegion>& defects);
 
   QLabel* m_titleLabel = nullptr;
   QLabel* m_statusIcon = nullptr;
   QLabel* m_statusText = nullptr;
+  QLabel* m_defectCountLabel = nullptr;
+  SeverityBar* m_severityBar = nullptr;
   QScrollArea* m_scrollArea = nullptr;
   QWidget* m_defectList = nullptr;
   QVBoxLayout* m_defectListLayout = nullptr;

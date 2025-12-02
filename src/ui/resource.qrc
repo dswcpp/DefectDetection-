@@ -3404,5 +3404,7 @@
         <file>resources/icons/plc.svg</file>
         <file>resources/icons/storage.svg</file>
         <file>resources/icons/user.svg</file>
+        <file>../../resources/icons/history.svg</file>
+        <file>resources/icons/history.svg</file>
     </qresource>
 </RCC>

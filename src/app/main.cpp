@@ -4,6 +4,9 @@
 #include <QDebug>
 #include "config/ConfigManager.h"
 #include "Logger.h"
+#include "data/DatabaseManager.h"
+#include "ui/services/UserManager.h"
+#include "ui/dialogs/LoginDialog.h"
 #include "ui/DetectPipeline.h"
 #include "ui/mainwindow.h"
 
@@ -57,6 +60,22 @@ int main(int argc, char* argv[]) {
     if (!styleSheet.isEmpty()) {
       a.setStyleSheet(styleSheet);
     }
+
+    // 初始化数据库
+    DatabaseManager dbManager;
+    if (!dbManager.initFromConfig()) {
+      qWarning() << "Failed to initialize database";
+    }
+
+    // 显示登录对话框（内部会初始化 UserManager）
+    LoginDialog loginDialog;
+    loginDialog.setDatabaseManager(&dbManager);
+    if (loginDialog.exec() != QDialog::Accepted) {
+      LOG_INFO("User cancelled login, exiting");
+      return 0;
+    }
+
+    LOG_INFO("User logged in: {}", UserManager::instance()->currentUsername().toStdString());
 
     // 创建流水线（使用配置）
     auto camCfg = gConfig.cameraConfig();

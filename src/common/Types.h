@@ -26,6 +26,27 @@ enum class AlarmLevel {
   Critical    // 严重
 };
 
+// ==================== 用户权限相关 ====================
+
+// 权限枚举
+enum class Permission {
+  ViewHistory = 0,      // 查看历史记录
+  DeleteHistory,        // 删除历史记录
+  ViewStatistics,       // 查看统计
+  ExportData,           // 导出数据
+  RunDetection,         // 运行检测
+  SystemSettings,       // 系统设置
+  ManageUsers,          // 用户管理
+  COUNT                 // 权限总数
+};
+
+// 用户角色
+enum class UserRole {
+  Admin,      // 管理员 - 所有权限
+  Operator,   // 操作员 - 操作权限
+  Viewer      // 观察员 - 只读权限
+};
+
 struct DetectResult {
   QString defectType;                    // 缺陷类型
   std::vector<cv::Rect> regions;         // 检测到的缺陷框列表

@@ -1,4 +1,6 @@
 #include "LoginDialog.h"
+#include "services/UserManager.h"
+#include "data/DatabaseManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
@@ -7,7 +9,6 @@
 #include <QPushButton>
 #include <QPixmap>
 #include <QSettings>
-#include <QCryptographicHash>
 #include <QTimer>
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
@@ -17,13 +18,23 @@ LoginDialog::LoginDialog(QWidget* parent) : QDialog(parent) {
     loadSettings();
 }
 
+void LoginDialog::setDatabaseManager(DatabaseManager* dbManager) {
+    m_dbManager = dbManager;
+    UserManager::instance()->setDatabaseManager(dbManager);
+    UserManager::instance()->initialize();
+}
+
 QString LoginDialog::getUsername() const {
-    return m_username ? m_username->text() : QString();
+    return UserManager::instance()->currentUsername();
+}
+
+QString LoginDialog::getRole() const {
+    return UserManager::instance()->currentRole();
 }
 
 void LoginDialog::setupUI() {
     setWindowTitle(tr("系统登录"));
-    setFixedSize(400, 480);
+    setFixedSize(420, 560);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     // 设置整体样式
@@ -92,6 +103,7 @@ void LoginDialog::setupUI() {
 
     // 输入区域
     auto* formWidget = new QWidget();
+    formWidget->setMinimumHeight(280);
     formWidget->setStyleSheet(R"(
         background-color: white;
         border-radius: 10px;
@@ -264,13 +276,12 @@ void LoginDialog::onLoginClicked() {
         return;
     }
 
-    // 验证凭据
-    if (validateCredentials(username, password)) {
-        // 保存设置
+    // 使用 UserManager 验证
+    if (UserManager::instance()->login(username, password)) {
         if (m_rememberMe->isChecked()) {
             saveSettings();
         }
-        accept();  // 关闭对话框，返回Accepted
+        accept();
     } else {
         m_loginAttempts++;
 
@@ -278,7 +289,6 @@ void LoginDialog::onLoginClicked() {
             showError(tr("登录失败次数过多，请稍后再试"));
             m_loginBtn->setEnabled(false);
 
-            // 30秒后重新启用登录按钮
             QTimer::singleShot(30000, this, [this]() {
                 m_loginBtn->setEnabled(true);
                 m_loginAttempts = 0;
@@ -306,39 +316,6 @@ void LoginDialog::onUsernameChanged(const QString& text) {
 void LoginDialog::onPasswordChanged(const QString& text) {
     Q_UNUSED(text)
     clearError();
-}
-
-bool LoginDialog::validateCredentials(const QString& username, const QString& password) {
-    // 这里使用简单的硬编码验证，实际应用中应该查询数据库或调用认证服务
-
-    // 计算密码的MD5哈希（仅用于演示，实际应用应使用更安全的哈希算法）
-    QString hashedPassword = QString(QCryptographicHash::hash(
-        password.toUtf8(),
-        QCryptographicHash::Md5).toHex());
-
-    // 预设的用户账号（实际应用中应从数据库读取）
-    struct User {
-        QString username;
-        QString passwordHash;  // MD5哈希
-        QString role;
-    };
-
-    QList<User> users = {
-        {"admin", "21232f297a57a5a743894a0e4a801fc3", "管理员"},  // 密码: admin
-        {"operator", "4b583376b2767b923c3e1da60d10de59", "操作员"}, // 密码: operator
-        {"viewer", "feb8bc875e33bc5f8ae0e97cf78bb68f", "观察员"},   // 密码: viewer
-        {"test", "098f6bcd4621d373cade4e832627b4f6", "测试员"}     // 密码: test
-    };
-
-    // 查找匹配的用户
-    for (const auto& user : users) {
-        if (user.username == username && user.passwordHash == hashedPassword) {
-            m_role = user.role;
-            return true;
-        }
-    }
-
-    return false;
 }
 
 void LoginDialog::showError(const QString& message) {

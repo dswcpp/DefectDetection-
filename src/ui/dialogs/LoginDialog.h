@@ -2,6 +2,7 @@
 #define LOGINDIALOG_H
 
 #include <QDialog>
+#include "ui_global.h"
 
 QT_BEGIN_NAMESPACE
 class QLineEdit;
@@ -10,15 +11,18 @@ class QLabel;
 class QPushButton;
 QT_END_NAMESPACE
 
-class LoginDialog : public QDialog {
+class DatabaseManager;
+
+class UI_LIBRARY LoginDialog : public QDialog {
     Q_OBJECT
 
 public:
     explicit LoginDialog(QWidget* parent = nullptr);
     ~LoginDialog() = default;
 
+    void setDatabaseManager(DatabaseManager* dbManager);
     QString getUsername() const;
-    QString getRole() const { return m_role; }
+    QString getRole() const;
 
 private slots:
     void onLoginClicked();
@@ -28,7 +32,6 @@ private slots:
 
 private:
     void setupUI();
-    bool validateCredentials(const QString& username, const QString& password);
     void showError(const QString& message);
     void clearError();
     void loadSettings();
@@ -43,9 +46,9 @@ private:
     QPushButton* m_cancelBtn;
 
     // 数据
-    QString m_role;
+    DatabaseManager* m_dbManager = nullptr;
     int m_loginAttempts = 0;
-    static const int MAX_LOGIN_ATTEMPTS = 3;
+    static const int MAX_LOGIN_ATTEMPTS = 5;
 };
 
 #endif // LOGINDIALOG_H

@@ -37,6 +37,9 @@ private slots:
   void onSettingsClicked();
   void onStatisticsClicked();
   void onHistoryClicked();
+  void onUserManagementClicked();
+  void onChangePasswordClicked();
+  void onLogoutClicked();
 public slots:
   void onResultReady(const DetectResult& result);
   void onFrameReady(const cv::Mat& frame);
@@ -53,6 +56,7 @@ private:
   void setupConnections();
   void openConfigFile();
   void saveConfigFile();
+  void updateMenuPermissions();
 
   // UI 组件
   QWidget* m_centralWidget;
@@ -75,6 +79,9 @@ private:
   QAction* m_actionSaveConfig;
   QAction* m_actionExit;
   QAction* m_actionAbout;
+  QAction* m_actionUserManagement;
+  QAction* m_actionChangePassword;
+  QAction* m_actionLogout;
 
   // 状态栏组件
   QLabel* m_cycleTimeLabel;

@@ -41,7 +41,8 @@ public:
 
     QString configPath() const;
     void setConfigPath(const QString& path);
-    static QString defaultConfigPath();
+    static QString defaultConfigPath();   // 用户配置路径（可写）
+    static QString bundledConfigPath();   // 应用自带配置路径（只读）
 
     // ======================== 完整配置访问 ========================
 

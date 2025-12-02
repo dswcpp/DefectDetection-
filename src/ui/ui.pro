@@ -21,12 +21,22 @@ HEADERS += \
     dialogs/AboutDialog.h \
     dialogs/CalibrationDialog.h \
     dialogs/HistoryDialog.h \
+    dialogs/ImagePreviewDialog.h \
     dialogs/LoginDialog.h \
     dialogs/SettingsDialog.h \
     dialogs/StatisticsDialog.h \
+    dialogs/UserManagementDialog.h \
+    dialogs/settings/SettingsPageUtils.h \
+    dialogs/settings/CameraSettingsPage.h \
+    dialogs/settings/LightSettingsPage.h \
+    dialogs/settings/PLCSettingsPage.h \
+    dialogs/settings/StorageSettingsPage.h \
+    dialogs/settings/DetectionSettingsPage.h \
+    dialogs/settings/UserSettingsPage.h \
     mainwindow.h \
     models/DefectTableModel.h \
     models/HistoryTableModel.h \
+    services/UserManager.h \
     ui_global.h \
     views/DetectView.h \
     views/HistoryView.h \
@@ -46,12 +56,21 @@ SOURCES += \
     dialogs/AboutDialog.cpp \
     dialogs/CalibrationDialog.cpp \
     dialogs/HistoryDialog.cpp \
+    dialogs/ImagePreviewDialog.cpp \
     dialogs/LoginDialog.cpp \
     dialogs/SettingsDialog.cpp \
     dialogs/StatisticsDialog.cpp \
+    dialogs/UserManagementDialog.cpp \
+    dialogs/settings/CameraSettingsPage.cpp \
+    dialogs/settings/LightSettingsPage.cpp \
+    dialogs/settings/PLCSettingsPage.cpp \
+    dialogs/settings/StorageSettingsPage.cpp \
+    dialogs/settings/DetectionSettingsPage.cpp \
+    dialogs/settings/UserSettingsPage.cpp \
     mainwindow.cpp \
     models/DefectTableModel.cpp \
     models/HistoryTableModel.cpp \
+    services/UserManager.cpp \
     views/DetectView.cpp \
     views/HistoryView.cpp \
     views/SPCView.cpp \
@@ -124,3 +143,6 @@ else:unix: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
 
 RESOURCES += \
     resource.qrc
+
+DISTFILES += \
+    resources/icons/history.svg

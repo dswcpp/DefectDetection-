@@ -3,10 +3,12 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QReadLocker>
 #include <QWriteLocker>
+#include <QStandardPaths>
 
 // ============================================================================
 // Meyers' Singleton
@@ -26,6 +28,13 @@ ConfigManager::ConfigManager() : QObject(nullptr) {
 // ============================================================================
 
 QString ConfigManager::defaultConfigPath() {
+    // 用户配置保存到用户数据目录，避免被构建覆盖
+    QString userDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    return userDataPath + "/config/app.json";
+}
+
+QString ConfigManager::bundledConfigPath() {
+    // 应用程序自带的默认配置（只读）
     return QCoreApplication::applicationDirPath() + "/config/app.json";
 }
 
@@ -51,7 +60,37 @@ bool ConfigManager::isLoaded() const {
 bool ConfigManager::load(const QString& path) {
     QString targetPath = path.isEmpty() ? defaultConfigPath() : path;
 
+    // 如果用户配置不存在，从应用程序目录复制默认配置
+    if (!QFile::exists(targetPath)) {
+        QString bundled = bundledConfigPath();
+        if (QFile::exists(bundled)) {
+            // 确保目标目录存在
+            QFileInfo fi(targetPath);
+            QDir dir = fi.dir();
+            if (!dir.exists()) {
+                dir.mkpath(".");
+            }
+            // 复制默认配置到用户目录
+            if (QFile::copy(bundled, targetPath)) {
+                LOG_INFO("ConfigManager: Copied default config to {}", targetPath);
+            } else {
+                LOG_WARN("ConfigManager: Failed to copy default config");
+            }
+        }
+    }
+
     if (!loadFromFile(targetPath)) {
+        // 尝试从应用程序目录加载
+        QString bundled = bundledConfigPath();
+        if (targetPath != bundled && loadFromFile(bundled)) {
+            LOG_INFO("ConfigManager: Loaded bundled config from {}", bundled);
+            // 保存到用户目录
+            m_configPath = targetPath;
+            save();
+            emit configLoaded(targetPath);
+            return true;
+        }
+        
         LOG_WARN("ConfigManager: Failed to load {}, using defaults", targetPath);
         // 使用默认配置
         QWriteLocker locker(&m_lock);

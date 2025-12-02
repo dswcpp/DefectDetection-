@@ -1,7 +1,12 @@
 #include "StatisticsDialog.h"
+#include "ImagePreviewDialog.h"
 #include "data/DatabaseManager.h"
+#include "services/UserManager.h"
 
 #include <QVBoxLayout>
+#include <QEvent>
+#include <QMouseEvent>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QTableWidget>
@@ -19,12 +24,19 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QDate>
+#include <QMenu>
+#include <QAction>
+#include <QClipboard>
+#include <QApplication>
+#include <QFile>
+#include <QTextStream>
 
 StatisticsDialog::StatisticsDialog(DatabaseManager* dbManager, QWidget* parent)
     : QDialog{parent}, m_dbManager(dbManager) {
   setModal(true);
   setWindowTitle(tr("检测记录统计"));
   setupUI();
+  setupContextMenu();
   loadFromDatabase();
   updateTable();
 }
@@ -408,6 +420,11 @@ void StatisticsDialog::setupUI() {
   connect(m_recordTable, &QTableWidget::itemSelectionChanged,
           this, &StatisticsDialog::onRecordSelected);
 
+  // 启用右键菜单
+  m_recordTable->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_recordTable, &QTableWidget::customContextMenuRequested,
+          this, &StatisticsDialog::showContextMenu);
+
   tableLayout->addWidget(m_recordTable, 1);
 
   // 分页控件
@@ -499,6 +516,7 @@ void StatisticsDialog::setupUI() {
   )");
   m_imagePreview->setAlignment(Qt::AlignCenter);
   m_imagePreview->setText(tr("暂无图像"));
+  m_imagePreview->installEventFilter(this);  // 双击放大
   imageLayout->addWidget(m_imagePreview);
 
   detailLayout->addWidget(imageContainer);
@@ -685,6 +703,7 @@ void StatisticsDialog::updateDetailPanel(const InspectionRecord* record) {
   m_operatorLabel->setText("-");
 
   // 加载图片
+  m_currentImagePath = record->imagePath;
   if (!record->imagePath.isEmpty()) {
     QPixmap pixmap(record->imagePath);
     if (!pixmap.isNull()) {
@@ -695,6 +714,19 @@ void StatisticsDialog::updateDetailPanel(const InspectionRecord* record) {
   } else {
     m_imagePreview->setText(tr("暂无图像"));
   }
+}
+
+bool StatisticsDialog::eventFilter(QObject* obj, QEvent* event) {
+  if (obj == m_imagePreview && event->type() == QEvent::MouseButtonDblClick) {
+    if (!m_currentImagePath.isEmpty() && QFileInfo::exists(m_currentImagePath)) {
+      auto* dialog = new ImagePreviewDialog(this);
+      dialog->setImage(m_currentImagePath);
+      dialog->exec();
+      dialog->deleteLater();
+    }
+    return true;
+  }
+  return QDialog::eventFilter(obj, event);
 }
 
 void StatisticsDialog::onSearchClicked() {
@@ -785,4 +817,204 @@ void StatisticsDialog::applyFilters() {
   }
 
   m_currentPage = 1;
+}
+
+void StatisticsDialog::setupContextMenu() {
+  m_contextMenu = new QMenu(this);
+  m_contextMenu->setStyleSheet(R"(
+    QMenu {
+      background-color: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 4px 0;
+    }
+    QMenu::item {
+      padding: 8px 32px 8px 16px;
+      color: #212529;
+    }
+    QMenu::item:selected {
+      background-color: #e9ecef;
+    }
+    QMenu::item:disabled {
+      color: #adb5bd;
+    }
+    QMenu::separator {
+      height: 1px;
+      background-color: #dee2e6;
+      margin: 4px 8px;
+    }
+  )");
+
+  m_viewAction = m_contextMenu->addAction(tr("👁 查看详情"));
+  connect(m_viewAction, &QAction::triggered, this, &StatisticsDialog::onViewDetails);
+
+  m_contextMenu->addSeparator();
+
+  m_editAction = m_contextMenu->addAction(tr("✏ 编辑记录"));
+  connect(m_editAction, &QAction::triggered, this, &StatisticsDialog::onEditRecord);
+
+  m_retestAction = m_contextMenu->addAction(tr("🔄 重新检测"));
+  connect(m_retestAction, &QAction::triggered, this, &StatisticsDialog::onRetestRecord);
+
+  m_contextMenu->addSeparator();
+
+  m_exportAction = m_contextMenu->addAction(tr("📥 导出此记录"));
+  connect(m_exportAction, &QAction::triggered, this, &StatisticsDialog::onExportRecord);
+
+  m_contextMenu->addSeparator();
+
+  m_deleteAction = m_contextMenu->addAction(tr("🗑 删除记录"));
+  m_deleteAction->setShortcut(QKeySequence::Delete);
+  connect(m_deleteAction, &QAction::triggered, this, &StatisticsDialog::onDeleteRecord);
+}
+
+InspectionRecord* StatisticsDialog::getSelectedRecord() {
+  if (m_selectedIndex >= 0 && m_selectedIndex < m_filteredRecords.size()) {
+    return &m_filteredRecords[m_selectedIndex];
+  }
+  return nullptr;
+}
+
+void StatisticsDialog::showContextMenu(const QPoint& pos) {
+  auto* item = m_recordTable->itemAt(pos);
+  if (!item) return;
+
+  // 选中当前行
+  int row = item->row();
+  m_recordTable->selectRow(row);
+  int recordIndex = (m_currentPage - 1) * m_recordsPerPage + row;
+  if (recordIndex < m_filteredRecords.size()) {
+    m_selectedIndex = recordIndex;
+  }
+
+  // 根据权限更新菜单项状态
+  auto* userMgr = UserManager::instance();
+  
+  m_viewAction->setEnabled(true);  // 查看详情始终可用
+  m_editAction->setEnabled(userMgr->hasPermission("DeleteHistory"));  // 编辑需要管理权限
+  m_deleteAction->setEnabled(userMgr->hasPermission("DeleteHistory"));
+  m_retestAction->setEnabled(userMgr->hasPermission("RunDetection"));
+  m_exportAction->setEnabled(userMgr->hasPermission("ExportData"));
+
+  m_contextMenu->popup(m_recordTable->viewport()->mapToGlobal(pos));
+}
+
+void StatisticsDialog::onViewDetails() {
+  auto* record = getSelectedRecord();
+  if (!record) return;
+
+  // 显示详情面板
+  updateDetailPanel(record);
+
+  // 如果有图片，双击可以预览
+  if (!record->imagePath.isEmpty() && QFileInfo::exists(record->imagePath)) {
+    auto* dialog = new ImagePreviewDialog(this);
+    dialog->setImage(record->imagePath);
+    dialog->exec();
+    dialog->deleteLater();
+  }
+}
+
+void StatisticsDialog::onEditRecord() {
+  auto* record = getSelectedRecord();
+  if (!record) return;
+
+  // TODO: 实现编辑对话框
+  QMessageBox::information(this, tr("编辑记录"), 
+    tr("编辑记录功能开发中...\n\n记录ID: %1").arg(record->id));
+}
+
+void StatisticsDialog::onDeleteRecord() {
+  auto* record = getSelectedRecord();
+  if (!record) return;
+
+  auto result = QMessageBox::question(this, tr("确认删除"),
+    tr("确定要删除记录 ID: %1 吗？\n\n此操作不可撤销。").arg(record->id),
+    QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+  if (result != QMessageBox::Yes) return;
+
+  if (m_dbManager && m_dbManager->defectRepository()) {
+    if (m_dbManager->defectRepository()->deleteInspection(record->id)) {
+      QMessageBox::information(this, tr("删除成功"), tr("记录已删除"));
+      // 刷新列表
+      loadFromDatabase();
+      applyFilters();
+      updateTable();
+      updateDetailPanel(nullptr);
+    } else {
+      QMessageBox::warning(this, tr("删除失败"), tr("无法删除记录，请稍后重试"));
+    }
+  }
+}
+
+void StatisticsDialog::onRetestRecord() {
+  auto* record = getSelectedRecord();
+  if (!record) return;
+
+  if (record->imagePath.isEmpty() || !QFileInfo::exists(record->imagePath)) {
+    QMessageBox::warning(this, tr("无法重测"), tr("原始图像文件不存在"));
+    return;
+  }
+
+  auto result = QMessageBox::question(this, tr("确认重测"),
+    tr("确定要重新检测记录 ID: %1 吗？").arg(record->id),
+    QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+  if (result == QMessageBox::Yes) {
+    emit requestRetest(record->id, record->imagePath);
+    QMessageBox::information(this, tr("重测请求"), 
+      tr("已发送重测请求，请在主界面查看结果"));
+  }
+}
+
+void StatisticsDialog::onExportRecord() {
+  auto* record = getSelectedRecord();
+  if (!record) return;
+
+  QString fileName = QFileDialog::getSaveFileName(this,
+    tr("导出记录"),
+    QString("record_%1_%2.csv")
+      .arg(record->id)
+      .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")),
+    tr("CSV Files (*.csv);;JSON Files (*.json)"));
+
+  if (fileName.isEmpty()) return;
+
+  QFile file(fileName);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    QMessageBox::warning(this, tr("导出失败"), tr("无法创建文件"));
+    return;
+  }
+
+  QTextStream out(&file);
+  
+  if (fileName.endsWith(".json", Qt::CaseInsensitive)) {
+    // JSON 格式
+    out << "{\n";
+    out << QString("  \"id\": %1,\n").arg(record->id);
+    out << QString("  \"inspectTime\": \"%1\",\n").arg(record->inspectTime.toString(Qt::ISODate));
+    out << QString("  \"result\": \"%1\",\n").arg(record->result);
+    out << QString("  \"defectCount\": %1,\n").arg(record->defectCount);
+    out << QString("  \"severityLevel\": \"%1\",\n").arg(record->severityLevel);
+    out << QString("  \"maxSeverity\": %1,\n").arg(record->maxSeverity);
+    out << QString("  \"cycleTimeMs\": %1,\n").arg(record->cycleTimeMs);
+    out << QString("  \"imagePath\": \"%1\"\n").arg(record->imagePath);
+    out << "}\n";
+  } else {
+    // CSV 格式
+    out << "ID,检测时间,结果,缺陷数,严重等级,最大严重度,耗时(ms),图像路径\n";
+    out << QString("%1,%2,%3,%4,%5,%6,%7,%8\n")
+      .arg(record->id)
+      .arg(record->inspectTime.toString("yyyy-MM-dd hh:mm:ss"))
+      .arg(record->result)
+      .arg(record->defectCount)
+      .arg(record->severityLevel)
+      .arg(record->maxSeverity)
+      .arg(record->cycleTimeMs)
+      .arg(record->imagePath);
+  }
+
+  file.close();
+  QMessageBox::information(this, tr("导出成功"), tr("记录已导出到: %1").arg(fileName));
 }

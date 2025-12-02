@@ -11,6 +11,7 @@ class ConfigRepository;
 class DefectRepository;
 class ImageRepository;
 class AnnotationRepository;
+class UserRepository;
 
 class DATA_EXPORT DatabaseManager : public QObject {
   Q_OBJECT
@@ -53,6 +54,9 @@ public:
   // 获取标注仓库
   AnnotationRepository* annotationRepository() const { return m_annotationRepo.get(); }
 
+  // 获取用户仓库
+  UserRepository* userRepository() const { return m_userRepo.get(); }
+
   // 当前数据库路径
   QString databasePath() const { return m_dbPath; }
 
@@ -74,6 +78,7 @@ private:
   std::unique_ptr<DefectRepository> m_defectRepo;
   std::unique_ptr<ImageRepository> m_imageRepo;
   std::unique_ptr<AnnotationRepository> m_annotationRepo;
+  std::unique_ptr<UserRepository> m_userRepo;
 };
 
 #endif // DATABASEMANAGER_H

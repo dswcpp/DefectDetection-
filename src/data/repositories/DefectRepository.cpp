@@ -17,34 +17,53 @@ qint64 DefectRepository::insertInspection(const InspectionRecord& record) {
     return -1;
   }
 
-  QSqlQuery query(db);
-  query.prepare(R"(
-    INSERT INTO inspections (
-      product_id, station_id, inspect_time, result, defect_count,
-      max_severity, severity_level, cycle_time_ms, image_path,
-      annotated_path, thumbnail_path, model_version
-    ) VALUES (
-      :product_id, :station_id, :inspect_time, :result, :defect_count,
-      :max_severity, :severity_level, :cycle_time_ms, :image_path,
-      :annotated_path, :thumbnail_path, :model_version
-    )
-  )");
+  // 首先检查表是否存在
+  QSqlQuery checkTable(db);
+  if (!checkTable.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='inspections'")) {
+    LOG_ERROR("DefectRepository: Failed to check table existence: {}", checkTable.lastError().text());
+    return -1;
+  }
+  
+  if (!checkTable.next()) {
+    LOG_ERROR("DefectRepository: Table 'inspections' does not exist! Please run schema.sql first.");
+    return -1;
+  }
+  
+  // 检查表结构
+  QSqlQuery schemaQuery(db);
+  schemaQuery.exec("PRAGMA table_info(inspections)");
+  LOG_INFO("DefectRepository: Table structure:");
 
-  query.bindValue(":product_id", record.productId > 0 ? record.productId : QVariant());
-  query.bindValue(":station_id", record.stationId > 0 ? record.stationId : QVariant());
-  query.bindValue(":inspect_time", record.inspectTime.isValid() ? record.inspectTime : QDateTime::currentDateTime());
-  query.bindValue(":result", record.result);
-  query.bindValue(":defect_count", record.defectCount);
-  query.bindValue(":max_severity", record.maxSeverity);
-  query.bindValue(":severity_level", record.severityLevel);
-  query.bindValue(":cycle_time_ms", record.cycleTimeMs);
-  query.bindValue(":image_path", record.imagePath.isEmpty() ? QVariant() : record.imagePath);
-  query.bindValue(":annotated_path", record.annotatedPath.isEmpty() ? QVariant() : record.annotatedPath);
-  query.bindValue(":thumbnail_path", record.thumbnailPath.isEmpty() ? QVariant() : record.thumbnailPath);
-  query.bindValue(":model_version", record.modelVersion.isEmpty() ? QVariant() : record.modelVersion);
+  QSqlQuery query(db);
+  QString sql = 
+    "INSERT INTO inspections ("
+    "product_id, station_id, inspect_time, result, defect_count, "
+    "max_severity, severity_level, cycle_time_ms, image_path, "
+    "annotated_path, thumbnail_path, model_version"
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  
+  if (!query.prepare(sql)) {
+    LOG_ERROR("DefectRepository: Failed to prepare: {}", query.lastError().text());
+    return -1;
+  }
+
+  query.addBindValue(record.productId > 0 ? record.productId : QVariant());
+  query.addBindValue(record.stationId > 0 ? record.stationId : QVariant());
+  query.addBindValue(record.inspectTime.isValid() ? record.inspectTime : QDateTime::currentDateTime());
+  query.addBindValue(record.result);
+  query.addBindValue(record.defectCount);
+  query.addBindValue(record.maxSeverity);
+  query.addBindValue(record.severityLevel);
+  query.addBindValue(record.cycleTimeMs);
+  query.addBindValue(record.imagePath.isEmpty() ? QVariant() : record.imagePath);
+  query.addBindValue(record.annotatedPath.isEmpty() ? QVariant() : record.annotatedPath);
+  query.addBindValue(record.thumbnailPath.isEmpty() ? QVariant() : record.thumbnailPath);
+  query.addBindValue(record.modelVersion.isEmpty() ? QVariant() : record.modelVersion);
 
   if (!query.exec()) {
     LOG_ERROR("DefectRepository: Failed to insert inspection: {}", query.lastError().text());
+    LOG_ERROR("DefectRepository: SQL was: {}", query.lastQuery());
+    LOG_ERROR("DefectRepository: Bound values count: {}", query.boundValues().size());
     return -1;
   }
 
@@ -100,26 +119,23 @@ bool DefectRepository::insertDefect(const DefectRecord& defect) {
   }
 
   QSqlQuery query(db);
-  query.prepare(R"(
-    INSERT INTO defects (
-      inspection_id, defect_type, confidence, severity_score,
-      severity_level, region_x, region_y, region_width, region_height, features
-    ) VALUES (
-      :inspection_id, :defect_type, :confidence, :severity_score,
-      :severity_level, :region_x, :region_y, :region_width, :region_height, :features
-    )
-  )");
+  query.prepare(
+    "INSERT INTO defects ("
+    "inspection_id, defect_type, confidence, severity_score, "
+    "severity_level, region_x, region_y, region_width, region_height, features"
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  );
 
-  query.bindValue(":inspection_id", defect.inspectionId);
-  query.bindValue(":defect_type", defect.defectType);
-  query.bindValue(":confidence", defect.confidence);
-  query.bindValue(":severity_score", defect.severityScore);
-  query.bindValue(":severity_level", defect.severityLevel);
-  query.bindValue(":region_x", defect.region.x());
-  query.bindValue(":region_y", defect.region.y());
-  query.bindValue(":region_width", defect.region.width());
-  query.bindValue(":region_height", defect.region.height());
-  query.bindValue(":features", defect.features.isEmpty() ? QVariant() : defect.features);
+  query.addBindValue(defect.inspectionId);
+  query.addBindValue(defect.defectType);
+  query.addBindValue(defect.confidence);
+  query.addBindValue(defect.severityScore);
+  query.addBindValue(defect.severityLevel);
+  query.addBindValue(defect.region.x());
+  query.addBindValue(defect.region.y());
+  query.addBindValue(defect.region.width());
+  query.addBindValue(defect.region.height());
+  query.addBindValue(defect.features.isEmpty() ? QVariant() : defect.features);
 
   if (!query.exec()) {
     LOG_ERROR("DefectRepository: Failed to insert defect: {}", query.lastError().text());
@@ -153,42 +169,44 @@ QVector<InspectionRecord> DefectRepository::queryInspections(const InspectionFil
     return results;
   }
 
-  QString sql = R"(
-    SELECT id, product_id, station_id, inspect_time, result, defect_count,
-           max_severity, severity_level, cycle_time_ms, image_path,
-           annotated_path, thumbnail_path, model_version
-    FROM inspections
-    WHERE 1=1
-  )";
+  QString sql =
+    "SELECT id, product_id, station_id, inspect_time, result, defect_count, "
+    "max_severity, severity_level, cycle_time_ms, image_path, "
+    "annotated_path, thumbnail_path, model_version "
+    "FROM inspections WHERE 1=1";
 
   if (filter.startTime.isValid()) {
-    sql += " AND inspect_time >= :start_time";
+    sql += " AND inspect_time >= ?";
   }
   if (filter.endTime.isValid()) {
-    sql += " AND inspect_time <= :end_time";
+    sql += " AND inspect_time <= ?";
   }
   if (!filter.result.isEmpty()) {
-    sql += " AND result = :result";
+    sql += " AND result = ?";
   }
 
   sql += " ORDER BY inspect_time DESC";
   sql += QString(" LIMIT %1 OFFSET %2").arg(filter.limit).arg(filter.offset);
 
   QSqlQuery query(db);
-  query.prepare(sql);
+  if (!query.prepare(sql)) {
+    LOG_ERROR("DefectRepository: Query prepare failed: {}", query.lastError().text());
+    LOG_ERROR("DefectRepository: SQL: {}", sql);
+    return results;
+  }
 
   if (filter.startTime.isValid()) {
-    query.bindValue(":start_time", filter.startTime);
+    query.addBindValue(filter.startTime);
   }
   if (filter.endTime.isValid()) {
-    query.bindValue(":end_time", filter.endTime);
+    query.addBindValue(filter.endTime);
   }
   if (!filter.result.isEmpty()) {
-    query.bindValue(":result", filter.result);
+    query.addBindValue(filter.result);
   }
 
   if (!query.exec()) {
-    LOG_ERROR("DefectRepository: Query failed: {}", query.lastError().text());
+    LOG_ERROR("DefectRepository: Query exec failed: {}", query.lastError().text());
     return results;
   }
 
@@ -222,13 +240,13 @@ InspectionRecord DefectRepository::getInspection(qint64 id) {
   }
 
   QSqlQuery query(db);
-  query.prepare(R"(
-    SELECT id, product_id, station_id, inspect_time, result, defect_count,
-           max_severity, severity_level, cycle_time_ms, image_path,
-           annotated_path, thumbnail_path, model_version
-    FROM inspections WHERE id = :id
-  )");
-  query.bindValue(":id", id);
+  query.prepare(
+    "SELECT id, product_id, station_id, inspect_time, result, defect_count, "
+    "max_severity, severity_level, cycle_time_ms, image_path, "
+    "annotated_path, thumbnail_path, model_version "
+    "FROM inspections WHERE id = ?"
+  );
+  query.addBindValue(id);
 
   if (query.exec() && query.next()) {
     record.id = query.value("id").toLongLong();
@@ -258,13 +276,13 @@ QVector<DefectRecord> DefectRepository::getDefects(qint64 inspectionId) {
   }
 
   QSqlQuery query(db);
-  query.prepare(R"(
-    SELECT id, inspection_id, defect_type, confidence, severity_score,
-           severity_level, region_x, region_y, region_width, region_height,
-           features, created_at
-    FROM defects WHERE inspection_id = :inspection_id
-  )");
-  query.bindValue(":inspection_id", inspectionId);
+  query.prepare(
+    "SELECT id, inspection_id, defect_type, confidence, severity_score, "
+    "severity_level, region_x, region_y, region_width, region_height, "
+    "features, created_at "
+    "FROM defects WHERE inspection_id = ?"
+  );
+  query.addBindValue(inspectionId);
 
   if (!query.exec()) {
     LOG_ERROR("DefectRepository: getDefects failed: {}", query.lastError().text());
@@ -302,26 +320,26 @@ int DefectRepository::countInspections(const InspectionFilter& filter) {
   QString sql = "SELECT COUNT(*) FROM inspections WHERE 1=1";
 
   if (filter.startTime.isValid()) {
-    sql += " AND inspect_time >= :start_time";
+    sql += " AND inspect_time >= ?";
   }
   if (filter.endTime.isValid()) {
-    sql += " AND inspect_time <= :end_time";
+    sql += " AND inspect_time <= ?";
   }
   if (!filter.result.isEmpty()) {
-    sql += " AND result = :result";
+    sql += " AND result = ?";
   }
 
   QSqlQuery query(db);
   query.prepare(sql);
 
   if (filter.startTime.isValid()) {
-    query.bindValue(":start_time", filter.startTime);
+    query.addBindValue(filter.startTime);
   }
   if (filter.endTime.isValid()) {
-    query.bindValue(":end_time", filter.endTime);
+    query.addBindValue(filter.endTime);
   }
   if (!filter.result.isEmpty()) {
-    query.bindValue(":result", filter.result);
+    query.addBindValue(filter.result);
   }
 
   if (query.exec() && query.next()) {
@@ -348,18 +366,18 @@ bool DefectRepository::deleteInspection(qint64 id) {
 
   // 先删除关联的缺陷记录
   QSqlQuery deleteDefects(db);
-  deleteDefects.prepare("DELETE FROM defects WHERE inspection_id = :id");
-  deleteDefects.bindValue(":id", id);
+  deleteDefects.prepare("DELETE FROM defects WHERE inspection_id = ?");
+  deleteDefects.addBindValue(id);
   if (!deleteDefects.exec()) {
     db.rollback();
     return false;
   }
 
   // 删除检测记录
-  QSqlQuery deleteInspection(db);
-  deleteInspection.prepare("DELETE FROM inspections WHERE id = :id");
-  deleteInspection.bindValue(":id", id);
-  if (!deleteInspection.exec()) {
+  QSqlQuery deleteInsp(db);
+  deleteInsp.prepare("DELETE FROM inspections WHERE id = ?");
+  deleteInsp.addBindValue(id);
+  if (!deleteInsp.exec()) {
     db.rollback();
     return false;
   }

@@ -1,4 +1,5 @@
 #include "ResultCard.h"
+#include "SeverityBar.h"
 
 #include <QDateTime>
 #include <QHBoxLayout>
@@ -46,6 +47,25 @@ void ResultCard::setupUI()
 
   rootLayout->addLayout(statusLayout);
 
+  // 缺陷计数和严重度
+  auto* infoLayout = new QHBoxLayout();
+  infoLayout->setSpacing(16);
+
+  m_defectCountLabel = new QLabel(tr("缺陷数: 0"), this);
+  m_defectCountLabel->setObjectName(QStringLiteral("defectCountLabel"));
+  infoLayout->addWidget(m_defectCountLabel);
+
+  auto* severityLabel = new QLabel(tr("严重度:"), this);
+  infoLayout->addWidget(severityLabel);
+
+  m_severityBar = new SeverityBar(this);
+  m_severityBar->setDisplayMode(SeverityBar::DisplayMode::LevelOnly);
+  m_severityBar->setFixedHeight(22);
+  m_severityBar->setMinimumWidth(80);
+  infoLayout->addWidget(m_severityBar, 1);
+
+  rootLayout->addLayout(infoLayout);
+
   // 使用 QScrollArea 包装缺陷列表以支持滚动
   m_scrollArea = new QScrollArea(this);
   m_scrollArea->setObjectName(QStringLiteral("ResultsScrollArea"));
@@ -84,6 +104,11 @@ void ResultCard::setResult(const DetectResult& result)
           : QStringLiteral("--");
   m_timestampLabel->setText(tr("更新时间: %1").arg(timestamp));
 
+  // 更新缺陷计数和严重度
+  m_defectCountLabel->setText(tr("缺陷数: %1").arg(result.defects.size()));
+  QString severityLevel = calculateSeverityLevel(result.defects);
+  m_severityBar->setLevel(severityLevel);
+
   rebuildDefectList(result.defectType, result.defects);
 }
 
@@ -92,6 +117,8 @@ void ResultCard::clear()
   updateStatus(true);
   m_statusIcon->setText(QStringLiteral("—"));
   m_statusText->setText(QStringLiteral("--"));
+  m_defectCountLabel->setText(tr("缺陷数: 0"));
+  m_severityBar->setLevel("None");
   m_timestampLabel->setText(tr("更新时间: --"));
   clearDefectList();
   m_scrollArea->setVisible(false);
@@ -173,4 +200,30 @@ void ResultCard::rebuildDefectList(const QString& typeName, const std::vector<De
 
     m_defectListLayout->addWidget(entry);
   }
+}
+
+QString ResultCard::calculateSeverityLevel(const std::vector<DefectRegion>& defects)
+{
+  if (defects.empty()) {
+    return QStringLiteral("OK");
+  }
+
+  // 根据缺陷数量和置信度计算严重度
+  double maxConfidence = 0.0;
+  for (const auto& defect : defects) {
+    maxConfidence = qMax(maxConfidence, defect.confidence);
+  }
+
+  int count = static_cast<int>(defects.size());
+
+  // 多个缺陷或高置信度 = Critical
+  if (count >= 3 || maxConfidence >= 0.9) {
+    return QStringLiteral("Critical");
+  }
+  // 2个缺陷或中等置信度 = Major
+  if (count >= 2 || maxConfidence >= 0.7) {
+    return QStringLiteral("Major");
+  }
+  // 1个低置信度缺陷 = Minor
+  return QStringLiteral("Minor");
 }

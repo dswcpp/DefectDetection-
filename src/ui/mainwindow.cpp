@@ -8,6 +8,8 @@
 #include "dialogs/StatisticsDialog.h"
 #include "dialogs/HistoryDialog.h"
 #include "dialogs/AboutDialog.h"
+#include "dialogs/UserManagementDialog.h"
+#include "services/UserManager.h"
 #include "DetectPipeline.h"
 #include "Types.h"
 #include "config/ConfigManager.h"
@@ -28,6 +30,7 @@
 #include <QKeySequence>
 #include <QLatin1String>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QSize>
 #include <QFile>
 #include <QFileDialog>
@@ -46,12 +49,31 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
   // 初始化数据库
   m_dbManager = new DatabaseManager(this);
   if (m_dbManager->initFromConfig()) {
-    // 执行 schema 初始化表结构
-    QString schemaPath = QCoreApplication::applicationDirPath() + "/config/schema.sql";
-    if (QFile::exists(schemaPath)) {
-      m_dbManager->executeSchema(schemaPath);
+    // 执行 schema 初始化表结构 - 尝试多个位置
+    QStringList schemaPaths = {
+      QCoreApplication::applicationDirPath() + "/config/schema.sql",
+      QCoreApplication::applicationDirPath() + "/../../../../config/schema.sql",  // 开发环境 (build/Desktop.../src/app -> config)
+      "F:/Code/QT/DefectDetection/config/schema.sql",  // 绝对路径后备
+      ":/config/schema.sql"  // 资源文件
+    };
+    
+    bool schemaFound = false;
+    for (const QString& schemaPath : schemaPaths) {
+      LOG_INFO("Looking for schema at: {}", schemaPath);
+      if (QFile::exists(schemaPath)) {
+        if (m_dbManager->executeSchema(schemaPath)) {
+          LOG_INFO("Database schema initialized successfully from: {}", schemaPath);
+          schemaFound = true;
+          break;
+        } else {
+          LOG_ERROR("Failed to execute database schema from: {}", schemaPath);
+        }
+      }
     }
-    LOG_INFO("Database initialized successfully");
+    
+    if (!schemaFound) {
+      LOG_WARN("Schema file not found in any location!");
+    }
   } else {
     LOG_WARN("Failed to initialize database");
   }
@@ -335,19 +357,24 @@ void MainWindow::setupUI()
 
 void MainWindow::createActions()
 {
-  m_actionStart = new QAction(QIcon(":/icons/play.svg"), tr("启动"), this);
+  m_actionStart = new QAction(QIcon(":/resources/icons/play.svg"), tr("启动"), this);
   m_actionStart->setShortcut(QKeySequence(QStringLiteral("F5")));
-  m_actionStop = new QAction(QIcon(":/icons/stop.svg"), tr("停止"), this);
+  m_actionStop = new QAction(QIcon(":/resources/icons/stop.svg"), tr("停止"), this);
   m_actionStop->setShortcut(QKeySequence(QStringLiteral("F6")));
   m_actionStop->setEnabled(false);
-  m_actionSingleShot = new QAction(QIcon(":/icons/camera.svg"), tr("单拍"), this);
+  m_actionSingleShot = new QAction(QIcon(":/resources/icons/camera.svg"), tr("单拍"), this);
   m_actionSingleShot->setShortcut(QKeySequence(QStringLiteral("F7")));
-  m_actionSettings = new QAction(QIcon(":/icons/settings.svg"), tr("参数"), this);
-  m_actionStatistics = new QAction(QIcon(":/icons/chart.svg"), tr("统计"), this);
-  m_actionHistory = new QAction(QIcon(":/icons/history.svg"), tr("历史"), this);
+  m_actionSettings = new QAction(QIcon(":/resources/icons/settings.svg"), tr("参数"), this);
+  m_actionStatistics = new QAction(QIcon(":/resources/icons/chart.svg"), tr("统计"), this);
+  m_actionHistory = new QAction(QIcon(":/resources/icons/history.svg"), tr("历史"), this);
   m_actionExit = new QAction(tr("退出"), this);
   m_actionExit->setShortcut(QKeySequence::Quit);
   m_actionAbout = new QAction(tr("关于"), this);
+
+  // 用户管理
+  m_actionUserManagement = new QAction(tr("用户管理"), this);
+  m_actionChangePassword = new QAction(tr("修改密码"), this);
+  m_actionLogout = new QAction(tr("注销登录"), this);
 }
 
 
@@ -362,12 +389,23 @@ void MainWindow::setupMenuBar()
   fileMenu->addAction(m_actionSingleShot);
   fileMenu->addSeparator();
   fileMenu->addAction(m_actionExit);
+
   auto* settingsMenu = bar->addMenu(tr("设置"));
   settingsMenu->addAction(m_actionSettings);
   settingsMenu->addAction(m_actionStatistics);
   settingsMenu->addAction(m_actionHistory);
+
+  auto* userMenu = bar->addMenu(tr("用户"));
+  userMenu->addAction(m_actionUserManagement);
+  userMenu->addAction(m_actionChangePassword);
+  userMenu->addSeparator();
+  userMenu->addAction(m_actionLogout);
+
   auto* helpMenu = bar->addMenu(tr("帮助"));
   helpMenu->addAction(m_actionAbout);
+
+  // 根据权限控制菜单可见性
+  updateMenuPermissions();
 }
 
 void MainWindow::setupToolBar()
@@ -505,4 +543,73 @@ void MainWindow::setupConnections()
         connect(m_imageView, &ImageView::zoomChanged,
                 m_imageViewControls, &ImageViewControls::setZoomLevel);
     }
+
+    // 用户管理
+    connect(m_actionUserManagement, &QAction::triggered, this, &MainWindow::onUserManagementClicked);
+    connect(m_actionChangePassword, &QAction::triggered, this, &MainWindow::onChangePasswordClicked);
+    connect(m_actionLogout, &QAction::triggered, this, &MainWindow::onLogoutClicked);
+}
+
+void MainWindow::onUserManagementClicked()
+{
+    if (!UserManager::instance()->hasPermission(Permission::ManageUsers)) {
+        QMessageBox::warning(this, tr("权限不足"), tr("您没有用户管理权限"));
+        return;
+    }
+    UserManagementDialog dialog(this);
+    dialog.exec();
+}
+
+void MainWindow::onChangePasswordClicked()
+{
+    // 简单的修改密码对话框
+    QString oldPwd = QInputDialog::getText(this, tr("修改密码"), tr("请输入当前密码:"),
+                                            QLineEdit::Password);
+    if (oldPwd.isEmpty()) return;
+
+    QString newPwd = QInputDialog::getText(this, tr("修改密码"), tr("请输入新密码:"),
+                                            QLineEdit::Password);
+    if (newPwd.isEmpty()) return;
+
+    QString confirmPwd = QInputDialog::getText(this, tr("修改密码"), tr("请确认新密码:"),
+                                                QLineEdit::Password);
+    if (newPwd != confirmPwd) {
+        QMessageBox::warning(this, tr("错误"), tr("两次输入的密码不一致"));
+        return;
+    }
+
+    if (UserManager::instance()->changeOwnPassword(oldPwd, newPwd)) {
+        QMessageBox::information(this, tr("成功"), tr("密码修改成功"));
+    } else {
+        QMessageBox::warning(this, tr("错误"), tr("密码修改失败，请检查当前密码是否正确"));
+    }
+}
+
+void MainWindow::onLogoutClicked()
+{
+    auto result = QMessageBox::question(this, tr("确认注销"),
+                                         tr("确定要注销当前用户吗？"));
+    if (result == QMessageBox::Yes) {
+        UserManager::instance()->logout();
+        close();  // 关闭主窗口，返回登录界面
+    }
+}
+
+void MainWindow::updateMenuPermissions()
+{
+    auto* um = UserManager::instance();
+
+    // 用户管理菜单
+    m_actionUserManagement->setVisible(um->hasPermission(Permission::ManageUsers));
+
+    // 统计和历史
+    m_actionStatistics->setEnabled(um->hasPermission(Permission::ViewStatistics));
+    m_actionHistory->setEnabled(um->hasPermission(Permission::ViewHistory));
+
+    // 系统设置
+    m_actionSettings->setEnabled(um->hasPermission(Permission::SystemSettings));
+
+    // 检测操作
+    m_actionStart->setEnabled(um->hasPermission(Permission::RunDetection));
+    m_actionSingleShot->setEnabled(um->hasPermission(Permission::RunDetection));
 }
