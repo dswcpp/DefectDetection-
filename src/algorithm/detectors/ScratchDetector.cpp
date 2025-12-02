@@ -3,7 +3,7 @@
 #include <QElapsedTimer>
 
 // 自动注册到工厂
-REGISTER_DETECTOR(DetectorFactory::TYPE_SCRATCH, ScratchDetector)
+REGISTER_DETECTOR("scratch", ScratchDetector)
 
 ScratchDetector::ScratchDetector() {
   m_confidenceThreshold = 0.5;

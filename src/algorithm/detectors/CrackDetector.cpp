@@ -3,7 +3,7 @@
 #include <QElapsedTimer>
 
 // 自动注册到工厂
-REGISTER_DETECTOR(DetectorFactory::TYPE_CRACK, CrackDetector)
+REGISTER_DETECTOR("crack", CrackDetector)
 
 CrackDetector::CrackDetector() {
   m_confidenceThreshold = 0.5;

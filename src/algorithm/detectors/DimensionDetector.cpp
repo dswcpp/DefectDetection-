@@ -3,7 +3,7 @@
 #include <QElapsedTimer>
 
 // 自动注册到工厂
-REGISTER_DETECTOR(DetectorFactory::TYPE_DIMENSION, DimensionDetector)
+REGISTER_DETECTOR("dimension", DimensionDetector)
 
 DimensionDetector::DimensionDetector() {
   m_confidenceThreshold = 0.3;  // 尺寸检测置信度阈值较低
