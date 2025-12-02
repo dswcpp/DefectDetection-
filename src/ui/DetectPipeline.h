@@ -10,6 +10,10 @@
 
 class QTimer;
 class ICamera;
+class DetectorManager;
+class ImagePreprocessor;
+class NMSFilter;
+class DefectScorer;
 struct CameraConfig;
 
 class UI_LIBRARY DetectPipeline : public QObject {
@@ -47,14 +51,21 @@ private slots:
 private:
   bool initCamera();
   void releaseCamera();
+  bool initDetectors();
   DetectResult runDetection(const cv::Mat& frame);
 
   std::unique_ptr<ICamera> m_camera;
+  std::unique_ptr<DetectorManager> m_detectorManager;
+  std::unique_ptr<ImagePreprocessor> m_preprocessor;
+  std::unique_ptr<NMSFilter> m_nmsFilter;
+  std::unique_ptr<DefectScorer> m_scorer;
+
   QTimer* m_captureTimer = nullptr;
   QString m_imageDir;
   QString m_currentImagePath;
   int m_captureIntervalMs = 500;
   bool m_running = false;
+  bool m_useRealDetection = true;  // 是否使用真实检测
 
   // 性能统计
   PerfStats m_detectStats{"Detection"};

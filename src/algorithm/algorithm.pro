@@ -18,7 +18,9 @@ DEFINES += ALGORITHM_LIBRARY_BUILD
 INCLUDEPATH += $$PWD/../../config
 # ------------------ 头文件 ------------------
 HEADERS += \
+    BaseDetector.h \
     DetectorFactory.h \
+    DetectorManager.h \
     IDefectDetector.h \
     algorithm_global.h \
     detectors/CrackDetector.h \
@@ -41,6 +43,7 @@ HEADERS += \
 # ------------------ 源文件 ------------------
 SOURCES += \
     DetectorFactory.cpp \
+    DetectorManager.cpp \
     detectors/CrackDetector.cpp \
     detectors/DimensionDetector.cpp \
     detectors/ForeignDetector.cpp \
@@ -48,6 +51,7 @@ SOURCES += \
     dnn/DnnDetector.cpp \
     dnn/ModelValidator.cpp \
     dnn/YoloDetector.cpp \
+    postprocess/NMSFilter.cpp \
     preprocess/ImagePreprocessor.cpp \
     scoring/DefectScorer.cpp
 
