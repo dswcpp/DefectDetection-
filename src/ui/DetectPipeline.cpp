@@ -227,6 +227,19 @@ DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
       filteredDefects = m_nmsFilter->filterByClass(filteredDefects);
     }
 
+    // 3.5 限制缺陷数量，避免过多缺陷导致性能问题
+    const size_t MAX_DEFECTS = 50;
+    if (filteredDefects.size() > MAX_DEFECTS) {
+      // 按置信度排序，保留最高的
+      std::sort(filteredDefects.begin(), filteredDefects.end(),
+                [](const DefectInfo& a, const DefectInfo& b) {
+                  return a.confidence > b.confidence;
+                });
+      filteredDefects.resize(MAX_DEFECTS);
+      LOG_WARN("DetectPipeline: Too many defects ({}), keeping top {}", 
+               detectResult.allDefects.size(), MAX_DEFECTS);
+    }
+
     // 4. 评分
     ScoringResult scoreResult;
     if (m_scorer) {

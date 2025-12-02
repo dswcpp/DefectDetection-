@@ -226,6 +226,8 @@ DetectorManager::CombinedResult DetectorManager::detectAll(const cv::Mat& image)
   }
 
   // 执行所有启用的检测器
+  const size_t MAX_DEFECTS_PER_DETECTOR = 100;
+  
   for (auto& pair : m_detectors) {
     if (!pair.second->isEnabled()) {
       continue;
@@ -235,9 +237,14 @@ DetectorManager::CombinedResult DetectorManager::detectAll(const cv::Mat& image)
     result.detectorResults[pair.first] = detResult;
 
     if (detResult.success) {
-      // 合并检测结果
-      for (auto& defect : detResult.defects) {
-        result.allDefects.push_back(defect);
+      // 限制每个检测器的缺陷数量
+      size_t count = std::min(detResult.defects.size(), MAX_DEFECTS_PER_DETECTOR);
+      for (size_t i = 0; i < count; ++i) {
+        result.allDefects.push_back(detResult.defects[i]);
+      }
+      if (detResult.defects.size() > MAX_DEFECTS_PER_DETECTOR) {
+        LOG_WARN("DetectorManager: {} produced {} defects, truncated to {}", 
+                 pair.first.toStdString(), detResult.defects.size(), MAX_DEFECTS_PER_DETECTOR);
       }
     } else {
       LOG_WARN("DetectorManager: Detector {} failed: {}", 
