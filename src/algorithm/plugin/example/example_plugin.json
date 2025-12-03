@@ -1,0 +1,6 @@
+{
+  "name": "Example Detector Plugin",
+  "version": "1.0.0",
+  "author": "DefectDetection Team",
+  "description": "A simple example detector plugin for demonstration"
+}

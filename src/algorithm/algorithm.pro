@@ -32,6 +32,8 @@ HEADERS += \
     dnn/ModelValidationReport.h \
     dnn/ModelValidator.h \
     dnn/YoloDetector.h \
+    plugin/IDetectorPlugin.h \
+    plugin/PluginManager.h \
     postprocess/DefectMerger.h \
     postprocess/NMSFilter.h \
     preprocess/Calibration.h \
@@ -52,6 +54,7 @@ SOURCES += \
     dnn/DnnDetector.cpp \
     dnn/ModelValidator.cpp \
     dnn/YoloDetector.cpp \
+    plugin/PluginManager.cpp \
     postprocess/NMSFilter.cpp \
     preprocess/ImagePreprocessor.cpp \
     preprocess/PreprocessCache.cpp \
