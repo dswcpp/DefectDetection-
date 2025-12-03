@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * CameraSettingsPage.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：相机设置页面接口定义
+ * 描述：相机参数设置页面，配置相机类型、曝光、增益、触发模式等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CAMERASETTINGSPAGE_H
 #define CAMERASETTINGSPAGE_H
 

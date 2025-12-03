@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ParamPanel.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：参数面板控件接口定义
+ * 描述：检测参数调节面板，显示和修改各检测器的参数，
+ *       支持实时预览参数效果
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef PARAMPANEL_H
 #define PARAMPANEL_H
 

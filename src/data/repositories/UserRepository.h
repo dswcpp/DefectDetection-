@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * UserRepository.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：用户数据仓储接口定义
+ * 描述：用户数据访问层，提供用户增删改查、密码验证、权限管理等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef USERREPOSITORY_H
 #define USERREPOSITORY_H
 

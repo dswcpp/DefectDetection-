@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * AnnotationPanel.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：标注面板控件接口定义
+ * 描述：缺陷标注工具面板，提供标注形状选择、缺陷类型选择、
+ *       严重等级选择、标注列表管理等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef ANNOTATIONPANEL_H
 #define ANNOTATIONPANEL_H
 

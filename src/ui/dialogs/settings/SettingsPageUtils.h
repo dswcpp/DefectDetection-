@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * SettingsPageUtils.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：设置页面工具类定义
+ * 描述：设置页面公共工具函数和样式定义，提供统一的UI组件创建方法
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SETTINGSPAGEUTILS_H
 #define SETTINGSPAGEUTILS_H
 

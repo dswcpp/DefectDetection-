@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ModbusRTUClient.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：Modbus RTU客户端接口定义
+ * 描述：Modbus RTU协议实现，通过串口与PLC通信
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef MODBUSRTUCLIENT_H
 #define MODBUSRTUCLIENT_H
 

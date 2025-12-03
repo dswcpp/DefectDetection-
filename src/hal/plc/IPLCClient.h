@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * IPLCClient.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：PLC客户端接口基类定义
+ * 描述：PLC通信抽象接口，定义连接、读写寄存器、位操作等方法
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IPLCCLIENT_H
 #define IPLCCLIENT_H
 

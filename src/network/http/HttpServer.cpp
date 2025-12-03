@@ -1,3 +1,6 @@
 #include "HttpServer.h"
+#include "common/Logger.h"
 
-HttpServer::HttpServer() {}
+HttpServer::HttpServer() {
+  LOG_DEBUG("HttpServer::HttpServer - Created (not implemented)");
+}

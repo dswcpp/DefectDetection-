@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * StatisticsDialog.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：统计对话框接口定义
+ * 描述：统计数据查看对话框，显示指定时间范围的统计信息
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef STATISTICSDIALOG_H
 #define STATISTICSDIALOG_H
 

@@ -1,5 +1,6 @@
 #include "ConfigValidator.h"
 #include "config/AppConfig.h"
+#include "common/Logger.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -23,6 +24,7 @@ QString ConfigValidator::ValidationResult::summary() const
 ConfigValidator::ValidationResult ConfigValidator::validateFile(const QString& path) const
 {
     ValidationResult result;
+    LOG_DEBUG("ConfigValidator: Validating config file: {}", path.toStdString());
 
     // 检查文件存在，如果不存在则创建默认配置
     QFile file(path);
@@ -119,6 +121,13 @@ ConfigValidator::ValidationResult ConfigValidator::validate(const AppConfig& con
 
     result.valid = cameraResult.valid && detectionResult.valid &&
                    uiResult.valid && dbResult.valid && logResult.valid;
+    
+    if (result.valid) {
+        LOG_INFO("ConfigValidator: Config valid - {} warnings", result.warnings.size());
+    } else {
+        LOG_ERROR("ConfigValidator: Config invalid - {} errors, {} warnings", 
+                  result.errors.size(), result.warnings.size());
+    }
 
     return result;
 }

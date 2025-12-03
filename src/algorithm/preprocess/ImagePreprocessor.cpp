@@ -1,7 +1,8 @@
 #include "ImagePreprocessor.h"
 #include <cmath>
 
-ImagePreprocessor::ImagePreprocessor() {}
+ImagePreprocessor::ImagePreprocessor() {
+}
 
 void ImagePreprocessor::setROI(const cv::Rect& roi) {
   m_roi = roi;

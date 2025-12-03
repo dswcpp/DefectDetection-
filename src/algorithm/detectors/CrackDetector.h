@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * CrackDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：裂纹检测器接口定义
+ * 描述：基于形态学和轮廓分析的裂纹检测算法，支持分支裂纹检测、
+ *       裂纹长度和宽度测量
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CRACKDETECTOR_H
 #define CRACKDETECTOR_H
 

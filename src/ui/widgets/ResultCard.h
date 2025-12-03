@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ResultCard.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：结果卡片控件接口定义
+ * 描述：检测结果显示卡片，展示OK/NG状态、缺陷类型、
+ *       严重等级、置信度等信息
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef RESULTCARD_H
 #define RESULTCARD_H
 

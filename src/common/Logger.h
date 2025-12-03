@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * Logger.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：日志记录模块接口定义
+ * 描述：基于spdlog封装的日志系统，支持多级别日志(DEBUG/INFO/WARN/ERROR)，
+ *       支持控制台和文件输出，提供LOG_DEBUG/LOG_INFO等便捷宏
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef LOGGER_H
 #define LOGGER_H
 

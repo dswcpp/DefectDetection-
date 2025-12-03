@@ -1,4 +1,5 @@
 #include "DimensionDetector.h"
+#include "../common/Logger.h"
 #include <QElapsedTimer>
 
 DimensionDetector::DimensionDetector() {
@@ -54,10 +55,14 @@ DetectionResult DimensionDetector::detect(const cv::Mat& image) {
   timer.start();
 
   if (image.empty()) {
+    LOG_ERROR("DimensionDetector::detect - Input image is empty");
     return makeErrorResult("Empty input image");
   }
 
   updateParameters();
+  
+  LOG_DEBUG("DimensionDetector::detect - Input: {}x{}, target: {:.2f}x{:.2f}mm, tolerance: {:.2f}mm, calibration: {:.4f}mm/px",
+            image.cols, image.rows, m_targetWidth, m_targetHeight, m_tolerance, m_calibration);
 
   // 预处理
   cv::Mat binary = preprocessImage(image);
@@ -66,6 +71,21 @@ DetectionResult DimensionDetector::detect(const cv::Mat& image) {
   std::vector<DefectInfo> defects = measureDimensions(binary, image);
 
   double timeMs = timer.elapsed();
+  
+  // 日志输出测量结果
+  if (defects.empty()) {
+    LOG_INFO("DimensionDetector::detect - OK, all dimensions within tolerance, time:{:.1f}ms", timeMs);
+  } else {
+    for (const auto& d : defects) {
+      if (d.attributes.contains("measureType") && d.attributes.contains("deviation") && d.attributes.contains("actualValue")) {
+        std::string type = d.attributes.value("measureType").toDouble() > 0.5 ? "height" : "width";
+        LOG_WARN("DimensionDetector::detect - NG {}: actual={:.2f}mm, deviation={:.2f}mm (tolerance={:.2f}mm), severity={:.2f}",
+                 type, d.attributes.value("actualValue").toDouble(), d.attributes.value("deviation").toDouble(), m_tolerance, d.severity);
+      }
+    }
+    LOG_INFO("DimensionDetector::detect - Result: {} dimension errors, time:{:.1f}ms", defects.size(), timeMs);
+  }
+  
   return makeSuccessResult(defects, timeMs);
 }
 

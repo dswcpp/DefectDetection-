@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * HistoryView.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：历史视图接口定义
+ * 描述：历史记录查看界面，显示检测历史列表、支持筛选、排序、导出
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef HISTORYVIEW_H
 #define HISTORYVIEW_H
 
@@ -81,6 +96,8 @@ private:
   // 数据
   DatabaseManager* m_dbManager = nullptr;
   QString m_currentImagePath;
+  QVector<DefectRecord> m_currentDefects;  // 当前选中记录的缺陷数据
+  qint64 m_currentRecordId = 0;            // 当前选中记录的ID
 };
 
 #endif // HISTORYVIEW_H

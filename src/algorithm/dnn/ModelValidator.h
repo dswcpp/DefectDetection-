@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ModelValidator.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：模型验证模块接口定义
+ * 描述：模型质量验证工具，检查模型格式、输入输出维度、
+ *       推理速度等指标
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef MODELVALIDATOR_H
 #define MODELVALIDATOR_H
 

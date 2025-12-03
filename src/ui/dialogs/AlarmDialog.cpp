@@ -1,4 +1,5 @@
 #include "AlarmDialog.h"
+#include "common/Logger.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTableWidget>
@@ -193,6 +194,9 @@ void AlarmDialog::addAlarm(const QString& module, const QString& message, AlarmL
     m_alarms.prepend(entry);  // 最新的在前面
     updateTable();
     updateStatistics();
+    
+    LOG_INFO("AlarmDialog::addAlarm - id={}, module={}, level={}, message={}", 
+             entry.id, module.toStdString(), static_cast<int>(level), message.toStdString());
 }
 
 void AlarmDialog::clearAlarms() {
@@ -203,9 +207,11 @@ void AlarmDialog::clearAlarms() {
         QMessageBox::Yes | QMessageBox::No);
 
     if (ret == QMessageBox::Yes) {
+        int count = m_alarms.size();
         m_alarms.clear();
         updateTable();
         updateStatistics();
+        LOG_INFO("AlarmDialog::clearAlarms - Cleared {} alarms", count);
     }
 }
 
@@ -214,15 +220,21 @@ void AlarmDialog::acknowledgeAlarm(int row) {
         m_alarms[row].acknowledged = true;
         updateTable();
         updateStatistics();
+        LOG_DEBUG("AlarmDialog::acknowledgeAlarm - Acknowledged alarm id={}", m_alarms[row].id);
     }
 }
 
 void AlarmDialog::acknowledgeAll() {
+    int count = 0;
     for (auto& alarm : m_alarms) {
-        alarm.acknowledged = true;
+        if (!alarm.acknowledged) {
+            alarm.acknowledged = true;
+            count++;
+        }
     }
     updateTable();
     updateStatistics();
+    LOG_INFO("AlarmDialog::acknowledgeAll - Acknowledged {} alarms", count);
 }
 
 void AlarmDialog::onFilterChanged() {

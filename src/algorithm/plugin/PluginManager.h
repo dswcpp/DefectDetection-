@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * PluginManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：插件管理模块接口定义
+ * 描述：插件管理器，负责扫描插件目录、加载/卸载插件、
+ *       查询可用检测器类型
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef PLUGINMANAGER_H
 #define PLUGINMANAGER_H
 

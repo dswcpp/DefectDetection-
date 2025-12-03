@@ -1,6 +1,7 @@
 #include "LoginDialog.h"
 #include "services/UserManager.h"
 #include "data/DatabaseManager.h"
+#include "common/Logger.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
@@ -12,6 +13,7 @@
 #include <QTimer>
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
+#include <QMessageBox>
 
 LoginDialog::LoginDialog(QWidget* parent) : QDialog(parent) {
     setupUI();
@@ -158,6 +160,33 @@ void LoginDialog::setupUI() {
     connect(m_password, &QLineEdit::textChanged, this, &LoginDialog::onPasswordChanged);
     passLayout->addWidget(m_password);
 
+    // 显示/隐藏密码按钮
+    auto* togglePassBtn = new QPushButton("👁");
+    togglePassBtn->setFixedSize(32, 32);
+    togglePassBtn->setCursor(Qt::PointingHandCursor);
+    togglePassBtn->setCheckable(true);
+    togglePassBtn->setToolTip(tr("显示/隐藏密码"));
+    togglePassBtn->setStyleSheet(R"(
+        QPushButton {
+            background-color: transparent;
+            border: none;
+            font-size: 16px;
+        }
+        QPushButton:hover {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        QPushButton:checked {
+            color: #2196F3;
+        }
+    )");
+    connect(togglePassBtn, &QPushButton::toggled, this, [this, togglePassBtn](bool checked) {
+        m_password->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        togglePassBtn->setText(checked ? "🙈" : "👁");
+        togglePassBtn->setToolTip(checked ? tr("隐藏密码") : tr("显示密码"));
+    });
+    passLayout->addWidget(togglePassBtn);
+
     formLayout->addWidget(passContainer);
 
     // 记住密码选项
@@ -277,6 +306,7 @@ void LoginDialog::onLoginClicked() {
     }
 
     // 使用 UserManager 验证
+    LOG_DEBUG("LoginDialog::onLoginClicked - Attempting login for user: {}", username.toStdString());
     if (UserManager::instance()->login(username, password)) {
         if (m_rememberMe->isChecked()) {
             saveSettings();
@@ -284,9 +314,14 @@ void LoginDialog::onLoginClicked() {
         accept();
     } else {
         m_loginAttempts++;
+        LOG_WARN("LoginDialog::onLoginClicked - Login failed for user: {}, attempt {}/{}", 
+                 username.toStdString(), m_loginAttempts, MAX_LOGIN_ATTEMPTS);
 
         if (m_loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-            showError(tr("登录失败次数过多，请稍后再试"));
+            LOG_WARN("LoginDialog::onLoginClicked - Max login attempts reached, locking for 30s");
+            QString errorMsg = tr("登录失败次数过多，请30秒后再试");
+            showError(errorMsg);
+            QMessageBox::warning(this, tr("登录失败"), errorMsg);
             m_loginBtn->setEnabled(false);
 
             QTimer::singleShot(30000, this, [this]() {
@@ -295,9 +330,11 @@ void LoginDialog::onLoginClicked() {
                 clearError();
             });
         } else {
-            showError(tr("用户名或密码错误 (尝试 %1/%2)")
+            QString errorMsg = tr("用户名或密码错误 (尝试 %1/%2)")
                 .arg(m_loginAttempts)
-                .arg(MAX_LOGIN_ATTEMPTS));
+                .arg(MAX_LOGIN_ATTEMPTS);
+            showError(errorMsg);
+            QMessageBox::warning(this, tr("登录失败"), errorMsg);
             m_password->clear();
             m_password->setFocus();
         }

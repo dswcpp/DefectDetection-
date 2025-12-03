@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ForeignDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：异物检测器接口定义
+ * 描述：基于颜色和纹理分析的异物检测算法，支持背景建模、
+ *       多尺度斑点检测
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef FOREIGNDETECTOR_H
 #define FOREIGNDETECTOR_H
 

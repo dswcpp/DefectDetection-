@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * BaseDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：检测器基类实现定义
+ * 描述：检测器公共实现基类，提供参数管理、置信度过滤、结果构造等
+ *       通用功能，具体检测器继承此类
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef BASEDETECTOR_H
 #define BASEDETECTOR_H
 

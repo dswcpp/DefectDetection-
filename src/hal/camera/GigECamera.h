@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * GigECamera.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：GigE相机接口定义
+ * 描述：通用GigE Vision协议相机封装，基于GenICam标准
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef GIGECAMERA_H
 #define GIGECAMERA_H
 

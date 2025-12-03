@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * AlarmDialog.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：报警对话框接口定义
+ * 描述：报警信息显示和处理对话框，展示报警详情、确认操作等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef ALARMDIALOG_H
 #define ALARMDIALOG_H
 

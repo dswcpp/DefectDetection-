@@ -35,31 +35,28 @@ bool UserManager::initialize() {
 }
 
 bool UserManager::login(const QString& username, const QString& password) {
-    LOG_DEBUG("UserManager::login called for: {}", username.toStdString());
-
     if (!m_userRepo) {
-        LOG_WARN("UserManager: userRepo is null");
+        LOG_WARN("UserManager::login - Database not connected");
         emit loginFailed(tr("数据库未连接"));
         return false;
     }
 
     UserInfo user = m_userRepo->findByUsername(username);
-    LOG_DEBUG("UserManager: findByUsername returned id: {}", user.id);
 
     if (user.id == 0) {
-        LOG_DEBUG("UserManager: User not found");
+        LOG_WARN("UserManager::login - User not found: {}", username.toStdString());
         emit loginFailed(tr("用户名或密码错误"));
         return false;
     }
 
     if (!user.isActive) {
-        LOG_DEBUG("UserManager: User is inactive");
+        LOG_WARN("UserManager::login - User disabled: {}", username.toStdString());
         emit loginFailed(tr("账户已禁用"));
         return false;
     }
 
     if (!UserRepository::verifyPassword(password, user.passwordHash)) {
-        LOG_DEBUG("UserManager: Password verification failed");
+        LOG_WARN("UserManager::login - Invalid password for: {}", username.toStdString());
         emit loginFailed(tr("用户名或密码错误"));
         return false;
     }
@@ -75,17 +72,24 @@ bool UserManager::login(const QString& username, const QString& password) {
     // 更新最后登录时间
     m_userRepo->updateLastLogin(user.id, QDateTime::currentDateTime());
 
+    LOG_INFO("UserManager::login - Success: user={}, role={}, permissions={}", 
+             m_currentUsername.toStdString(), m_currentRole.toStdString(), 
+             m_currentPermissions.size());
+    
     emit loginSucceeded(m_currentUsername);
     return true;
 }
 
 void UserManager::logout() {
+    QString prevUser = m_currentUsername;
     m_currentUserId = 0;
     m_currentUsername.clear();
     m_currentDisplayName.clear();
     m_currentRole.clear();
     m_currentPermissions.clear();
     m_isLoggedIn = false;
+    
+    LOG_INFO("UserManager::logout - User logged out: {}", prevUser.toStdString());
     emit loggedOut();
 }
 

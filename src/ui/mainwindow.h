@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * mainwindow.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：主窗口接口定义
+ * 描述：应用程序主窗口，包含菜单栏、工具栏、状态栏，
+ *       管理各功能视图和对话框
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -9,6 +25,7 @@
 
 class QLabel;
 class QAction;
+class QTableView;
 class ImageView;
 class ResultCard;
 class ParamPanel;
@@ -16,6 +33,7 @@ class DetectResult;
 class AnnotationPanel;
 class DetectPipeline;
 class DatabaseManager;
+class DefectTableModel;
 
 class UI_LIBRARY MainWindow : public QMainWindow {
   Q_OBJECT
@@ -108,5 +126,9 @@ private:
 
   // 数据库管理器
   DatabaseManager* m_dbManager = nullptr;
+
+  // 缺陷列表模型和视图
+  DefectTableModel* m_defectModel = nullptr;
+  QTableView* m_defectTableView = nullptr;
 };
 #endif // MAINWINDOW_H

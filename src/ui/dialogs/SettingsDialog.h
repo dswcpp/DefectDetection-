@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * SettingsDialog.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：设置对话框接口定义
+ * 描述：系统设置对话框，包含多个设置页面（相机、光源、检测、存储等）
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 

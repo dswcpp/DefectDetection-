@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * HistoryTableModel.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：历史表格模型定义
+ * 描述：Qt Model/View架构的历史记录数据模型，供QTableView显示检测历史
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef HISTORYTABLEMODEL_H
 #define HISTORYTABLEMODEL_H
 

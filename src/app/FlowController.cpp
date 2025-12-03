@@ -2,6 +2,7 @@
 #include "DetectPipeline.h"
 #include "plc/IPLCClient.h"
 #include "Types.h"
+#include "common/Logger.h"
 #include <QDateTime>
 #include <QDebug>
 
@@ -86,10 +87,11 @@ void FlowController::resetStatistics()
 void FlowController::initialize()
 {
     if (m_state != State::Idle && m_state != State::Error) {
-        qWarning() << "Cannot initialize from state:" << stateString();
+        LOG_WARN("FlowController: Cannot initialize from state: {}", stateString().toStdString());
         return;
     }
 
+    LOG_INFO("FlowController: Initializing...");
     setState(State::Initializing);
 
     bool success = true;
@@ -108,9 +110,11 @@ void FlowController::initialize()
     }
 
     if (success) {
+        LOG_INFO("FlowController: Initialized successfully");
         setState(State::Ready);
         emit initialized();
     } else {
+        LOG_ERROR("FlowController: Initialize failed - {}", errorMsg.toStdString());
         m_lastErrorModule = "FlowController";
         m_lastErrorMessage = errorMsg;
         setState(State::Error);
@@ -121,9 +125,11 @@ void FlowController::initialize()
 void FlowController::start()
 {
     if (!checkTransition(m_state, State::Running)) {
-        qWarning() << "Cannot start from state:" << stateString();
+        LOG_WARN("FlowController: Cannot start from state: {}", stateString().toStdString());
         return;
     }
+    
+    LOG_INFO("FlowController: Starting (triggerMode={})", static_cast<int>(m_triggerMode));
 
     if (!m_pipeline) {
         emit error("FlowController", tr("检测管道未设置"));
@@ -170,6 +176,8 @@ void FlowController::stop()
         return;
     }
 
+    LOG_INFO("FlowController: Stopping...");
+    
     if (m_pipeline && m_pipeline->isRunning()) {
         m_pipeline->stop();
     }
@@ -366,6 +374,9 @@ void FlowController::onPipelineResult(const DetectResult& result)
 
 void FlowController::onPipelineError(const QString& module, const QString& message)
 {
+    LOG_ERROR("FlowController: Pipeline error - module={}, message={}", 
+              module.toStdString(), message.toStdString());
+    
     m_lastErrorModule = module;
     m_lastErrorMessage = message;
 
@@ -382,12 +393,13 @@ void FlowController::onPipelineError(const QString& module, const QString& messa
 
 void FlowController::onPipelineStarted()
 {
-    qDebug() << "Pipeline started";
+    LOG_DEBUG("FlowController: Pipeline started");
 }
 
 void FlowController::onPipelineStopped()
 {
-    qDebug() << "Pipeline stopped";
+    LOG_DEBUG("FlowController: Pipeline stopped, stats: total={}, ok={}, ng={}, yield={:.1f}%",
+              m_stats.totalCount, m_stats.okCount, m_stats.ngCount, m_stats.yield);
 }
 
 void FlowController::onPLCPollTimeout()

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ConfigValidator.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：配置验证器接口定义
+ * 描述：配置文件验证工具，检查配置完整性、参数合法性、
+ *       硬件连接可用性等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CONFIGVALIDATOR_H
 #define CONFIGVALIDATOR_H
 

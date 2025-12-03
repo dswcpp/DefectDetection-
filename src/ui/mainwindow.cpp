@@ -4,6 +4,7 @@
 #include "widgets/ParamPanel.h"
 #include "widgets/ResultCard.h"
 #include "widgets/AnnotationPanel.h"
+#include "models/DefectTableModel.h"
 #include "dialogs/SettingsDialog.h"
 #include "dialogs/StatisticsDialog.h"
 #include "dialogs/HistoryDialog.h"
@@ -40,6 +41,8 @@
 #include <QImage>
 #include <QDebug>
 #include <QTabWidget>
+#include <QTableView>
+#include <QHeaderView>
 #include <algorithm>
 #include "common/Logger.h"
 
@@ -188,6 +191,11 @@ void MainWindow::onResultReady(const DetectResult &result)
     // 更新结果卡片
     if (m_resultCard) {
       m_resultCard->setResult(result);
+    }
+
+    // 更新缺陷列表模型
+    if (m_defectModel) {
+      m_defectModel->setDefects(result.defects);
     }
 
     // 绘制检测框
@@ -339,6 +347,40 @@ void MainWindow::setupUI()
   m_annotationPanel = new AnnotationPanel(this);
   m_annotationPanel->setImageView(m_imageView);
   tabWidget->addTab(m_annotationPanel, tr("缺陷标注"));
+
+  // 缺陷详情表格
+  auto* defectListWidget = new QWidget(this);
+  auto* defectListLayout = new QVBoxLayout(defectListWidget);
+  defectListLayout->setContentsMargins(0, 0, 0, 0);
+  
+  m_defectModel = new DefectTableModel(this);
+  m_defectTableView = new QTableView(this);
+  m_defectTableView->setModel(m_defectModel);
+  m_defectTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+  m_defectTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_defectTableView->setAlternatingRowColors(true);
+  m_defectTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  m_defectTableView->horizontalHeader()->setStretchLastSection(true);
+  m_defectTableView->verticalHeader()->setVisible(false);
+  m_defectTableView->setColumnWidth(0, 40);   // 序号
+  m_defectTableView->setColumnWidth(1, 60);   // 类别
+  m_defectTableView->setColumnWidth(2, 60);   // 置信度
+  m_defectTableView->setColumnWidth(3, 70);   // 面积
+  m_defectTableView->setStyleSheet(R"(
+    QTableView {
+      font-size: 12px;
+    }
+    QTableView::item {
+      padding: 4px;
+    }
+    QHeaderView::section {
+      font-size: 11px;
+      padding: 4px;
+    }
+  )");
+  
+  defectListLayout->addWidget(m_defectTableView);
+  tabWidget->addTab(defectListWidget, tr("缺陷列表"));
 
   rightLayout->addWidget(tabWidget, 1);
 

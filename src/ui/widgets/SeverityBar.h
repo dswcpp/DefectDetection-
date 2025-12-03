@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * SeverityBar.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：严重度条控件接口定义
+ * 描述：严重度可视化条形控件，用颜色和长度直观展示缺陷严重程度
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SEVERITYBAR_H
 #define SEVERITYBAR_H
 

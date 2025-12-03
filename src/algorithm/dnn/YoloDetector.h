@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * YoloDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：YOLO检测器接口定义
+ * 描述：基于YOLO的深度学习检测器，支持YOLOv5/v8 ONNX模型，
+ *       提供letterbox预处理、NMS后处理、CUDA加速
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef YOLODETECTOR_H
 #define YOLODETECTOR_H
 

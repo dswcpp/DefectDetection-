@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ModelManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：模型管理模块接口定义
+ * 描述：DNN模型管理器，负责模型文件的加载、缓存、版本管理、
+ *       热更新等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef MODELMANAGER_H
 #define MODELMANAGER_H
 #include <QString>

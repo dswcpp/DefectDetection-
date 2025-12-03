@@ -32,7 +32,6 @@ qint64 DefectRepository::insertInspection(const InspectionRecord& record) {
   // 检查表结构
   QSqlQuery schemaQuery(db);
   schemaQuery.exec("PRAGMA table_info(inspections)");
-  LOG_INFO("DefectRepository: Table structure:");
 
   QSqlQuery query(db);
   QString sql = 
@@ -226,6 +225,14 @@ QVector<InspectionRecord> DefectRepository::queryInspections(const InspectionFil
     record.thumbnailPath = query.value("thumbnail_path").toString();
     record.modelVersion = query.value("model_version").toString();
     results.append(record);
+  }
+  
+  if (!results.isEmpty()) {
+    LOG_DEBUG("DefectRepository::queryInspections - Found {} records (filter: {}-{}, result={})",
+              results.size(), 
+              filter.startTime.isValid() ? filter.startTime.toString("yyyy-MM-dd").toStdString() : "any",
+              filter.endTime.isValid() ? filter.endTime.toString("yyyy-MM-dd").toStdString() : "any",
+              filter.result.isEmpty() ? "all" : filter.result.toStdString());
   }
 
   return results;

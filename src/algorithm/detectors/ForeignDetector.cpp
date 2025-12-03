@@ -1,4 +1,5 @@
 #include "ForeignDetector.h"
+#include "../common/Logger.h"
 #include <QElapsedTimer>
 
 ForeignDetector::ForeignDetector() {
@@ -42,10 +43,14 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
   timer.start();
 
   if (image.empty()) {
+    LOG_ERROR("ForeignDetector::detect - Input image is empty");
     return makeErrorResult("Empty input image");
   }
 
   updateParameters();
+  
+  LOG_DEBUG("ForeignDetector::detect - Input: {}x{}, channels={}, params: minArea={}, contrast={:.2f}",
+            image.cols, image.rows, image.channels(), m_minArea, m_contrast);
 
   std::vector<DefectInfo> allDefects;
 
@@ -68,21 +73,39 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
   cv::morphologyEx(binary, binary, cv::MORPH_OPEN, smallKernel);
 
   auto grayDefects = findForeignObjects(binary, image);
+  size_t grayCount = grayDefects.size();
   allDefects.insert(allDefects.end(), grayDefects.begin(), grayDefects.end());
 
   // 2. 颜色异物检测（仅对彩色图像）
+  size_t colorCount = 0;
   if (image.channels() == 3) {
     auto colorDefects = detectColorAnomalies(image);
+    colorCount = colorDefects.size();
     allDefects.insert(allDefects.end(), colorDefects.begin(), colorDefects.end());
   }
 
   // NMS 去重
+  size_t beforeNMS = allDefects.size();
   allDefects = nmsDefects(allDefects, 0.5);
 
   // 过滤低置信度
+  size_t beforeFilter = allDefects.size();
   allDefects = filterByConfidence(allDefects);
 
   double timeMs = timer.elapsed();
+  
+  // 统计
+  double maxContrast = 0;
+  double totalArea = 0;
+  for (const auto& d : allDefects) {
+    if (d.attributes.contains("contrast")) maxContrast = std::max(maxContrast, d.attributes.value("contrast").toDouble());
+    if (d.attributes.contains("area")) totalArea += d.attributes.value("area").toDouble();
+  }
+  
+  LOG_INFO("ForeignDetector::detect - Result: {} foreign (gray:{}, color:{}), NMS:{}->{}, filter:{}->{}, totalArea={:.0f}px, maxContrast={:.2f}, time:{:.1f}ms",
+           allDefects.size(), grayCount, colorCount, beforeNMS, beforeFilter, beforeFilter, allDefects.size(),
+           totalArea, maxContrast, timeMs);
+  
   return makeSuccessResult(allDefects, timeMs);
 }
 

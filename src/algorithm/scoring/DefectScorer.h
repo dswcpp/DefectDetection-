@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DefectScorer.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：缺陷评分模块接口定义
+ * 描述：缺陷严重度评分器，根据缺陷类型、大小、位置等因素
+ *       计算综合评分，确定产品等级(OK/Minor/Major/Critical)
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DEFECTSCORER_H
 #define DEFECTSCORER_H
 

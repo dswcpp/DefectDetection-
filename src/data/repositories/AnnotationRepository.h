@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * AnnotationRepository.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：标注数据仓储接口定义
+ * 描述：人工标注数据访问层，存储手动标注的缺陷信息，用于模型训练
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef ANNOTATIONREPOSITORY_H
 #define ANNOTATIONREPOSITORY_H
 

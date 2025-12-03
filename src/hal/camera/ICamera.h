@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ICamera.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：相机接口基类定义
+ * 描述：相机抽象接口，定义open/close/grab/setExposure等通用方法，
+ *       所有相机实现类继承此接口
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef ICAMERA_H
 #define ICAMERA_H
 

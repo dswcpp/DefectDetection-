@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ScratchDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：划痕检测器接口定义
+ * 描述：基于边缘检测和Hough变换的划痕检测算法，支持多尺度检测、
+ *       参数可配置（灵敏度、最小长度、最大宽度等）
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SCRATCHDETECTOR_H
 #define SCRATCHDETECTOR_H
 

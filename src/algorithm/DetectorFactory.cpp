@@ -1,4 +1,5 @@
 #include "DetectorFactory.h"
+#include "common/Logger.h"
 
 // 预定义的检测器类型常量
 const QString DetectorFactory::TYPE_SCRATCH = "scratch";
@@ -14,13 +15,16 @@ DetectorFactory& DetectorFactory::instance() {
 
 void DetectorFactory::registerDetector(const QString& type, CreatorFunc creator) {
   m_creators[type] = std::move(creator);
+  LOG_DEBUG("DetectorFactory: Registered detector type '{}'", type.toStdString());
 }
 
 DetectorPtr DetectorFactory::create(const QString& type) const {
   auto it = m_creators.find(type);
   if (it != m_creators.end()) {
+    LOG_DEBUG("DetectorFactory: Creating detector '{}'", type.toStdString());
     return it->second();
   }
+  LOG_WARN("DetectorFactory: Unknown detector type '{}'", type.toStdString());
   return nullptr;
 }
 

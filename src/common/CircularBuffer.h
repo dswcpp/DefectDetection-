@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * CircularBuffer.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：环形缓冲区模板类定义
+ * 描述：固定大小的环形缓冲区，支持FIFO操作，用于数据流缓存、
+ *       历史记录存储等场景
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CIRCULARBUFFER_H
 #define CIRCULARBUFFER_H
 

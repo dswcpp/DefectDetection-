@@ -1,4 +1,5 @@
 #include "NMSFilter.h"
+#include "../common/Logger.h"
 #include <algorithm>
 #include <map>
 #include <cmath>
@@ -7,7 +8,8 @@
 // NMSFilter
 // ============================================================================
 
-NMSFilter::NMSFilter() {}
+NMSFilter::NMSFilter() {
+}
 
 void NMSFilter::setIoUThreshold(double threshold) {
   m_iouThreshold = qBound(0.0, threshold, 1.0);
@@ -39,6 +41,8 @@ std::vector<DefectInfo> NMSFilter::filter(const std::vector<DefectInfo>& defects
   if (defects.empty()) {
     return {};
   }
+  
+  size_t inputCount = defects.size();
 
   // 按置信度降序排序
   std::vector<DefectInfo> sorted = defects;
@@ -66,6 +70,11 @@ std::vector<DefectInfo> NMSFilter::filter(const std::vector<DefectInfo>& defects
     }
   }
 
+  size_t suppCount = inputCount - result.size();
+  if (suppCount > 0) {
+    LOG_DEBUG("NMSFilter::filter - {} -> {} defects (suppressed {} by IoU>{:.2f}, conf<{:.2f})",
+              inputCount, result.size(), suppCount, m_iouThreshold, m_confThreshold);
+  }
   return result;
 }
 
@@ -90,7 +99,8 @@ std::vector<DefectInfo> NMSFilter::filterByClass(const std::vector<DefectInfo>& 
 // DefectMerger
 // ============================================================================
 
-DefectMerger::DefectMerger() {}
+DefectMerger::DefectMerger() {
+}
 
 void DefectMerger::setDistanceThreshold(double threshold) {
   m_distanceThreshold = std::max(0.0, threshold);

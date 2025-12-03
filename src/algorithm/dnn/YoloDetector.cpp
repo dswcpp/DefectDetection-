@@ -144,11 +144,25 @@ DetectionResult YoloDetector::detect(const cv::Mat& image) {
     std::vector<DefectInfo> defects = postprocess(output, image.size());
     
     // 过滤低置信度
+    size_t beforeFilter = defects.size();
     defects = filterByConfidence(defects);
     
     double timeMs = timer.elapsed();
-    LOG_DEBUG("YoloDetector: Inference completed in {:.2f}ms, found {} defects",
-              timeMs, defects.size());
+    
+    if (!defects.empty()) {
+      // 统计各类别
+      std::map<int, int> classCounts;
+      double minConf = 1.0, maxConf = 0.0;
+      for (const auto& d : defects) {
+        classCounts[d.classId]++;
+        minConf = std::min(minConf, d.confidence);
+        maxConf = std::max(maxConf, d.confidence);
+      }
+      LOG_INFO("YoloDetector::detect - {} defects (raw:{}, filtered:{}), conf:[{:.2f},{:.2f}], time:{:.1f}ms",
+               defects.size(), beforeFilter, defects.size(), minConf, maxConf, timeMs);
+    } else {
+      LOG_DEBUG("YoloDetector::detect - No defects found, time:{:.1f}ms", timeMs);
+    }
     
     return makeSuccessResult(defects, timeMs);
     

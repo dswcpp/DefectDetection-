@@ -5,6 +5,7 @@
 #include "dialogs/ImagePreviewDialog.h"
 #include "services/UserManager.h"
 #include "data/DatabaseManager.h"
+#include "common/Logger.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSplitter>
@@ -359,6 +360,36 @@ bool HistoryView::eventFilter(QObject* obj, QEvent* event) {
     if (!m_currentImagePath.isEmpty() && QFileInfo::exists(m_currentImagePath)) {
       auto* dialog = new ImagePreviewDialog(this);
       dialog->setImage(m_currentImagePath);
+      
+      // 设置数据库管理器和记录ID，用于保存标注
+      dialog->setDatabaseManager(m_dbManager);
+      dialog->setInspectionId(m_currentRecordId);
+      
+      // 传递缺陷标注数据
+      if (!m_currentDefects.isEmpty()) {
+        std::vector<cv::Rect> boxes;
+        QStringList labels;
+        std::vector<double> confidences;
+        
+        for (const auto& defect : m_currentDefects) {
+          boxes.push_back(cv::Rect(defect.region.x(), defect.region.y(),
+                                   defect.region.width(), defect.region.height()));
+          labels.append(defect.defectType);
+          confidences.push_back(defect.confidence);
+        }
+        
+        dialog->setDetectionResults(boxes, labels, confidences);
+      }
+      
+      // 连接保存信号，保存后刷新列表
+      connect(dialog, &ImagePreviewDialog::annotationsSavedToDatabase, this, [this]() {
+        // 重新加载当前记录的缺陷数据
+        if (m_dbManager && m_dbManager->isOpen() && m_currentRecordId > 0) {
+          m_currentDefects = m_dbManager->defectRepository()->getDefects(m_currentRecordId);
+          drawDefectsOnPreview(m_currentDefects);
+        }
+      });
+      
       dialog->exec();
       dialog->deleteLater();
     }
@@ -377,9 +408,17 @@ void HistoryView::onSearchClicked() {
   filter.limit = m_pageSizeBox->value();
   filter.offset = m_currentPage * filter.limit;
 
+  LOG_DEBUG("HistoryView::onSearchClicked - filter: {}-{}, result={}, page={}", 
+            filter.startTime.toString("yyyy-MM-dd").toStdString(),
+            filter.endTime.toString("yyyy-MM-dd").toStdString(),
+            filter.result.isEmpty() ? "all" : filter.result.toStdString(),
+            m_currentPage);
+
   m_model->refresh(filter);
   m_totalCount = m_dbManager->defectRepository()->countInspections(filter);
   updatePagination();
+  
+  LOG_DEBUG("HistoryView::onSearchClicked - Found {} records", m_totalCount);
 }
 
 void HistoryView::onResetClicked() {
@@ -427,9 +466,11 @@ void HistoryView::onDeleteClicked() {
   if (m_dbManager && m_dbManager->isOpen()) {
     // 删除记录
     if (m_dbManager->defectRepository()->deleteInspection(record.id)) {
+      LOG_INFO("HistoryView::onDeleteClicked - Deleted record id={}", record.id);
       QMessageBox::information(this, tr("成功"), tr("记录已删除"));
       onSearchClicked();  // 刷新列表
     } else {
+      LOG_ERROR("HistoryView::onDeleteClicked - Failed to delete record id={}", record.id);
       QMessageBox::warning(this, tr("错误"), tr("删除失败"));
     }
   }
@@ -455,8 +496,9 @@ void HistoryView::updatePagination() {
 }
 
 void HistoryView::displayRecord(const InspectionRecord& record) {
-  // 保存当前图片路径
+  // 保存当前记录信息
   m_currentImagePath = record.imagePath;
+  m_currentRecordId = record.id;
 
   // 显示图像
   if (!record.imagePath.isEmpty() && QFileInfo::exists(record.imagePath)) {
@@ -471,10 +513,11 @@ void HistoryView::displayRecord(const InspectionRecord& record) {
     m_previewView->clear();
   }
 
-  // 绘制缺陷框
+  // 获取并绘制缺陷框
+  m_currentDefects.clear();
   if (m_dbManager && m_dbManager->isOpen() && record.id > 0) {
-    auto defects = m_dbManager->defectRepository()->getDefects(record.id);
-    drawDefectsOnPreview(defects);
+    m_currentDefects = m_dbManager->defectRepository()->getDefects(record.id);
+    drawDefectsOnPreview(m_currentDefects);
   }
 
   // 更新底部信息栏

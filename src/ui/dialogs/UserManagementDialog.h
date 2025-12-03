@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * UserManagementDialog.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：用户管理对话框接口定义
+ * 描述：用户账号管理对话框，支持用户增删改、权限设置、密码重置
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef USERMANAGEMENTDIALOG_H
 #define USERMANAGEMENTDIALOG_H
 

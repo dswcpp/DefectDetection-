@@ -2,6 +2,7 @@
 #include "ImagePreviewDialog.h"
 #include "data/DatabaseManager.h"
 #include "services/UserManager.h"
+#include "common/Logger.h"
 
 #include <QVBoxLayout>
 #include <QEvent>
@@ -583,6 +584,7 @@ void StatisticsDialog::loadFromDatabase() {
   m_allRecords.clear();
 
   if (!m_dbManager || !m_dbManager->isOpen()) {
+    LOG_WARN("StatisticsDialog::loadFromDatabase - Database not available");
     return;
   }
 
@@ -594,6 +596,11 @@ void StatisticsDialog::loadFromDatabase() {
 
   m_allRecords = m_dbManager->defectRepository()->queryInspections(filter);
   m_filteredRecords = m_allRecords;
+  
+  LOG_DEBUG("StatisticsDialog::loadFromDatabase - Loaded {} records ({} to {})", 
+            m_allRecords.size(),
+            filter.startTime.toString("yyyy-MM-dd").toStdString(),
+            filter.endTime.toString("yyyy-MM-dd").toStdString());
 }
 
 void StatisticsDialog::updateTable() {

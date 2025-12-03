@@ -6,6 +6,7 @@
 #include "settings/DetectionSettingsPage.h"
 #include "settings/UserSettingsPage.h"
 #include "config/ConfigManager.h"
+#include "common/Logger.h"
 
 #include <QFrame>
 #include <QHBoxLayout>
@@ -188,6 +189,7 @@ void SettingsDialog::createPages() {
 }
 
 void SettingsDialog::loadSettings() {
+  LOG_DEBUG("SettingsDialog::loadSettings - Loading all settings pages");
   if (m_cameraPage) m_cameraPage->loadSettings();
   if (m_lightPage) m_lightPage->loadSettings();
   if (m_plcPage) m_plcPage->loadSettings();
@@ -197,6 +199,7 @@ void SettingsDialog::loadSettings() {
 }
 
 void SettingsDialog::saveSettings() {
+  LOG_INFO("SettingsDialog::saveSettings - Saving all settings pages");
   if (m_cameraPage) m_cameraPage->saveSettings();
   if (m_lightPage) m_lightPage->saveSettings();
   if (m_plcPage) m_plcPage->saveSettings();
@@ -204,6 +207,7 @@ void SettingsDialog::saveSettings() {
   if (m_detectionPage) m_detectionPage->saveSettings();
   if (m_userPage) m_userPage->saveSettings();
   gConfig.save();
+  LOG_INFO("SettingsDialog::saveSettings - Settings saved to config file");
 }
 
 void SettingsDialog::onPageChanged(int index) {

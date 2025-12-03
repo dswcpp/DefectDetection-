@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * SPSCQueue.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：单生产者单消费者无锁队列
+ * 描述：高性能无锁队列模板类，适用于单线程生产、单线程消费场景，
+ *       用于线程间高效数据传递
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SPSCQUEUE_H
 #define SPSCQUEUE_H
 

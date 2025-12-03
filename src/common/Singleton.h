@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * Singleton.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：单例模式模板类定义
+ * 描述：CRTP单例模式实现，派生类继承此模板即可获得单例特性，
+ *       线程安全，支持延迟初始化
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SINGLETON_H
 #define SINGLETON_H
 

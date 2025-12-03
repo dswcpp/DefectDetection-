@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * IDefectDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：缺陷检测器接口基类定义
+ * 描述：检测器抽象接口，定义initialize/release/detect等核心方法，
+ *       以及参数管理、结果过滤等通用功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IDEFECTDETECTOR_H
 #define IDEFECTDETECTOR_H
 

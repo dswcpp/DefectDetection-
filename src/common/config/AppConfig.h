@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * AppConfig.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：应用程序配置类定义
+ * 描述：定义应用配置数据结构：相机配置CameraConfig、检测器配置DetectorsConfig、
+ *       存储配置StorageConfig、用户配置UserConfig等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef APPCONFIG_H
 #define APPCONFIG_H
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DatabaseManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：数据库管理模块接口定义
+ * 描述：SQLite数据库管理器，负责数据库连接、表创建、事务管理，
+ *       提供统一的数据库访问接口
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 

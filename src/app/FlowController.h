@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * FlowController.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：流程控制器接口定义
+ * 描述：检测流程总控制器，管理自动检测循环、与PLC交互、
+ *       异常处理和恢复等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef FLOWCONTROLLER_H
 #define FLOWCONTROLLER_H
 

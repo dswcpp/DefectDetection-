@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * Types.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：通用类型定义
+ * 描述：定义项目中使用的通用数据结构：DetectResult检测结果、DefectRegion缺陷区域、
+ *       SeverityLevel严重等级、PerfStats性能统计等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef TYPES_H
 #define TYPES_H
 #include <QMetaType>

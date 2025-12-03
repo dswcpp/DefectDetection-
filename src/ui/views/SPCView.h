@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * SPCView.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：SPC统计过程控制视图接口定义
+ * 描述：SPC控制图界面，显示X-bar图、R图、Cpk计算等质量控制工具
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef SPCVIEW_H
 #define SPCVIEW_H
 

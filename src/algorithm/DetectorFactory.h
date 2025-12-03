@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DetectorFactory.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：检测器工厂类定义
+ * 描述：检测器对象工厂，根据类型字符串创建对应检测器实例，
+ *       支持注册自定义检测器类型
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DETECTORFACTORY_H
 #define DETECTORFACTORY_H
 

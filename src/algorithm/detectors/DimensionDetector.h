@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DimensionDetector.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：尺寸检测器接口定义
+ * 描述：尺寸测量检测器，基于边缘检测和亚像素拟合，
+ *       支持长度、宽度、角度测量和公差判断
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DIMENSIONDETECTOR_H
 #define DIMENSIONDETECTOR_H
 

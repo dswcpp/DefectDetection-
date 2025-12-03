@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ResultAggregator.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：结果聚合器接口定义
+ * 描述：多工位/多相机检测结果聚合器，合并各路检测结果，
+ *       生成综合判定
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef RESULTAGGREGATOR_H
 #define RESULTAGGREGATOR_H
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ImageView.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：图像视图控件接口定义
+ * 描述：基于QGraphicsView的图像显示控件，支持缩放、平移、
+ *       缺陷标注显示、ROI编辑、手动标注绘制等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IMAGEVIEW_H
 #define IMAGEVIEW_H
 

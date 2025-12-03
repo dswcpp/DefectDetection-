@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ImageViewControls.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：图像视图控制控件接口定义
+ * 描述：图像视图的控制面板，包含缩放按钮、适应窗口、1:1显示等快捷操作
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IMAGEVIEWCONTROLS_H
 #define IMAGEVIEWCONTROLS_H
 

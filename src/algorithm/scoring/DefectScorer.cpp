@@ -1,4 +1,5 @@
 #include "DefectScorer.h"
+#include "../common/Logger.h"
 
 DefectScorer::DefectScorer() {
   initDefaultWeights();
@@ -106,6 +107,17 @@ ScoringResult DefectScorer::score(const std::vector<DefectInfo>& defects) {
   }
   
   result.summary = parts.join(", ");
+  
+  // 构建分类扣分详情
+  std::string deductionDetails;
+  for (const auto& pair : result.categoryScores) {
+    if (!deductionDetails.empty()) deductionDetails += ", ";
+    deductionDetails += pair.first.toStdString() + ":-" + std::to_string(static_cast<int>(pair.second));
+  }
+  
+  LOG_INFO("DefectScorer: {} defects -> Score={:.1f}, Grade={}, Pass={} [{}]", 
+           defects.size(), result.totalScore, result.gradeText.toStdString(), 
+           result.isPass, deductionDetails);
 
   return result;
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ConfigRepository.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：配置数据仓储接口定义
+ * 描述：配置数据访问层，支持配置版本管理、配置导入导出
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CONFIGREPOSITORY_H
 #define CONFIGREPOSITORY_H
 

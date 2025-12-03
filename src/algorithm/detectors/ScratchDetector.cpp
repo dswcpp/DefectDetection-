@@ -1,4 +1,5 @@
 #include "ScratchDetector.h"
+#include "../common/Logger.h"
 #include <QElapsedTimer>
 
 ScratchDetector::ScratchDetector() {
@@ -44,15 +45,21 @@ DetectionResult ScratchDetector::detect(const cv::Mat& image) {
   timer.start();
 
   if (image.empty()) {
+    LOG_ERROR("ScratchDetector::detect - Input image is empty");
     return makeErrorResult("Empty input image");
   }
 
   updateParameters();
+  
+  LOG_DEBUG("ScratchDetector::detect - Input: {}x{}, channels={}, params: sensitivity={}, minLength={}, maxWidth={}", 
+            image.cols, image.rows, image.channels(), m_sensitivity, m_minLength, m_maxWidth);
 
   // 预处理
   cv::Mat preprocessed = preprocessImage(image);
 
   std::vector<DefectInfo> allDefects;
+  size_t totalContourDefects = 0;
+  size_t totalHoughDefects = 0;
 
   // 多尺度检测
   std::vector<double> scales = {1.0, 0.5, 0.25};
@@ -78,9 +85,11 @@ DetectionResult ScratchDetector::detect(const cv::Mat& image) {
 
     // 轮廓检测
     auto contourDefects = findScratches(edges, scaled);
+    totalContourDefects += contourDefects.size();
     
     // Hough 线检测（增强长直线划痕检测）
     auto lineDefects = detectLinesHough(edges, scaled);
+    totalHoughDefects += lineDefects.size();
     
     // 调整坐标回原始尺度
     for (auto& d : contourDefects) {
@@ -104,12 +113,29 @@ DetectionResult ScratchDetector::detect(const cv::Mat& image) {
   }
 
   // 去重（NMS）
+  size_t beforeNMS = allDefects.size();
   allDefects = nmsDefects(allDefects, 0.5);
 
   // 过滤低置信度
+  size_t beforeFilter = allDefects.size();
   allDefects = filterByConfidence(allDefects);
 
   double timeMs = timer.elapsed();
+  
+  // 计算置信度统计
+  double minConf = 1.0, maxConf = 0.0, avgConf = 0.0;
+  for (const auto& d : allDefects) {
+    minConf = std::min(minConf, d.confidence);
+    maxConf = std::max(maxConf, d.confidence);
+    avgConf += d.confidence;
+  }
+  if (!allDefects.empty()) avgConf /= allDefects.size();
+  
+  LOG_INFO("ScratchDetector::detect - Result: {} defects (contour:{}, hough:{}), NMS:{}->{}, filter:{}->{}, conf:[{:.2f},{:.2f}], time:{:.1f}ms",
+           allDefects.size(), totalContourDefects, totalHoughDefects, 
+           beforeNMS, beforeFilter, beforeFilter, allDefects.size(),
+           allDefects.empty() ? 0.0 : minConf, maxConf, timeMs);
+  
   return makeSuccessResult(allDefects, timeMs);
 }
 

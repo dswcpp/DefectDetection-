@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DetectPipeline.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：检测流水线模块接口定义
+ * 描述：检测流程控制器，协调相机采集、图像预处理、缺陷检测、
+ *       结果评分等步骤，支持连续检测和单次检测模式
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DETECTPIPELINE_H
 #define DETECTPIPELINE_H
 

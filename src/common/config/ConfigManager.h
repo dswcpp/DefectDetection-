@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ConfigManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：配置管理模块接口定义
+ * 描述：单例配置管理器，负责加载/保存JSON配置文件，提供类型安全的
+ *       配置读写接口，支持配置变更通知
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef CONFIGMANAGER_H
 #define CONFIGMANAGER_H
 

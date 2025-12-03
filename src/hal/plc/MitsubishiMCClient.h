@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * MitsubishiMCClient.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：三菱MC协议客户端接口定义
+ * 描述：三菱MC协议实现，支持Q/L/FX系列PLC的数据读写
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef MITSUBISHIMCCLIENT_H
 #define MITSUBISHIMCCLIENT_H
 

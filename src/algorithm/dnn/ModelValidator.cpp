@@ -1,5 +1,6 @@
 // ModelValidator.cpp
 #include "ModelValidator.h"
+#include "../common/Logger.h"
 #include <QFileInfo>
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
@@ -10,10 +11,14 @@ ModelValidationReport ModelValidator::validateONNX(const QString& onnxPath,
                                                   const Expectation& exp,
                                                   bool tryCUDA) {
   ModelValidationReport rep;
+  
+  LOG_INFO("ModelValidator: Validating ONNX model: {}, inputSize={}x{}, cuda={}", 
+           onnxPath.toStdString(), exp.inputSize.width, exp.inputSize.height, tryCUDA);
 
   // 0) 文件检查
   QFileInfo fi(onnxPath);
   if (!fi.exists() || !fi.isFile()) {
+    LOG_ERROR("ModelValidator: Model file not found: {}", onnxPath.toStdString());
     rep.errors << QString("模型文件不存在：%1").arg(onnxPath);
     return rep;
   }
@@ -144,5 +149,14 @@ ModelValidationReport ModelValidator::validateONNX(const QString& onnxPath,
   }
 
   rep.ok = rep.errors.isEmpty();
+  
+  if (rep.ok) {
+    LOG_INFO("ModelValidator: Validation passed - backend={}, warmup={:.1f}ms, inference={:.1f}ms, classes={}",
+             rep.backend.toStdString(), rep.warmupMs, rep.singleRunMs, rep.numClasses);
+  } else {
+    LOG_ERROR("ModelValidator: Validation failed - {} errors, {} warnings", 
+              rep.errors.size(), rep.warnings.size());
+  }
+  
   return rep;
 }

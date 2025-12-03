@@ -1,19 +1,22 @@
 #include "StorageSettingsPage.h"
 #include "SettingsPageUtils.h"
+#include "services/StorageService.h"
 #include "config/ConfigManager.h"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSpinBox>
-#include <QStorageInfo>
 #include <QVBoxLayout>
+#include <QFrame>
 
 using namespace SettingsUtils;
 
@@ -133,44 +136,36 @@ void StorageSettingsPage::setupUI() {
 
   layout->addWidget(dbGroup);
 
-  // 磁盘空间信息
-  auto* spaceGroup = createStyledGroupBox(tr("磁盘空间"), this);
-  auto* spaceLayout = new QVBoxLayout(spaceGroup);
-  spaceLayout->setContentsMargins(20, 20, 20, 20);
-  spaceLayout->setSpacing(12);
+  // 磁盘空间信息（多路径监控）
+  auto* spaceGroup = createStyledGroupBox(tr("存储空间监控"), this);
+  auto* spaceMainLayout = new QVBoxLayout(spaceGroup);
+  spaceMainLayout->setContentsMargins(20, 20, 20, 20);
+  spaceMainLayout->setSpacing(12);
 
-  m_spaceInfoLabel = new QLabel();
-  m_spaceInfoLabel->setStyleSheet("font-size: 14px; color: #333;");
-  spaceLayout->addWidget(m_spaceInfoLabel);
+  // 存储信息容器
+  m_storageInfoContainer = new QWidget();
+  m_storageInfoLayout = new QVBoxLayout(m_storageInfoContainer);
+  m_storageInfoLayout->setContentsMargins(0, 0, 0, 0);
+  m_storageInfoLayout->setSpacing(16);
+  spaceMainLayout->addWidget(m_storageInfoContainer);
 
-  m_spaceProgressBar = new QProgressBar();
-  m_spaceProgressBar->setRange(0, 100);
-  m_spaceProgressBar->setTextVisible(true);
-  m_spaceProgressBar->setFixedHeight(24);
-  m_spaceProgressBar->setStyleSheet(R"(
-    QProgressBar {
-      border: 1px solid #d0d0d0;
-      border-radius: 4px;
-      background-color: #f0f0f0;
-      text-align: center;
-    }
-    QProgressBar::chunk {
-      background-color: #3b82f6;
-      border-radius: 3px;
-    }
-  )");
-  spaceLayout->addWidget(m_spaceProgressBar);
-
-  auto* refreshBtn = new QPushButton(tr("🔄 刷新"));
+  // 刷新按钮
+  auto* btnLayout = new QHBoxLayout();
+  btnLayout->addStretch();
+  auto* refreshBtn = new QPushButton(tr("刷新"));
   refreshBtn->setFixedWidth(100);
   refreshBtn->setMinimumHeight(32);
   connect(refreshBtn, &QPushButton::clicked, this, &StorageSettingsPage::updateDiskSpaceInfo);
-  spaceLayout->addWidget(refreshBtn);
+  btnLayout->addWidget(refreshBtn);
+  spaceMainLayout->addLayout(btnLayout);
 
   layout->addWidget(spaceGroup);
 
   layout->addStretch();
 
+  // 初始化存储服务路径
+  StorageService::instance()->initialize();
+  
   // 初始化磁盘空间信息
   updateDiskSpaceInfo();
 }
@@ -204,88 +199,127 @@ void StorageSettingsPage::saveSettings() {
 }
 
 void StorageSettingsPage::updateDiskSpaceInfo() {
-  QString path = m_imagePathEdit ? m_imagePathEdit->text() : QString();
-  if (path.isEmpty()) {
-    path = QDir::currentPath();
+  auto* service = StorageService::instance();
+  
+  // 更新路径设置
+  if (m_imagePathEdit && !m_imagePathEdit->text().isEmpty()) {
+    service->setPath(StoragePathType::ImageSave, m_imagePathEdit->text());
   }
-
-  QStorageInfo storage(path);
-  if (!storage.isValid() || !storage.isReady()) {
-    // 尝试使用根目录
-    storage = QStorageInfo::root();
+  if (m_dbPathEdit && !m_dbPathEdit->text().isEmpty()) {
+    QFileInfo dbInfo(m_dbPathEdit->text());
+    service->setPath(StoragePathType::Database, dbInfo.absolutePath());
   }
-
-  if (storage.isValid() && storage.isReady()) {
-    qint64 totalBytes = storage.bytesTotal();
-    qint64 freeBytes = storage.bytesAvailable();
-    qint64 usedBytes = totalBytes - freeBytes;
-    int usagePercent = totalBytes > 0 ? static_cast<int>((usedBytes * 100) / totalBytes) : 0;
-
-    QString info = tr("💾 驱动器: %1\n"
-                      "   总空间: %2\n"
-                      "   已用空间: %3\n"
-                      "   可用空间: %4")
-                       .arg(storage.rootPath())
-                       .arg(formatSize(totalBytes))
-                       .arg(formatSize(usedBytes))
-                       .arg(formatSize(freeBytes));
-
-    if (m_spaceInfoLabel) {
-      m_spaceInfoLabel->setText(info);
-    }
-
-    if (m_spaceProgressBar) {
-      m_spaceProgressBar->setValue(usagePercent);
-      m_spaceProgressBar->setFormat(tr("已使用 %1%").arg(usagePercent));
-
-      // 根据使用率改变颜色
-      QString chunkColor;
-      if (usagePercent < 70) {
-        chunkColor = "#10b981";  // 绿色
-      } else if (usagePercent < 90) {
-        chunkColor = "#f59e0b";  // 黄色
-      } else {
-        chunkColor = "#ef4444";  // 红色
-      }
-
-      m_spaceProgressBar->setStyleSheet(QString(R"(
-        QProgressBar {
-          border: 1px solid #d0d0d0;
-          border-radius: 4px;
-          background-color: #f0f0f0;
-          text-align: center;
-        }
-        QProgressBar::chunk {
-          background-color: %1;
-          border-radius: 3px;
-        }
-      )").arg(chunkColor));
-    }
-  } else {
-    if (m_spaceInfoLabel) {
-      m_spaceInfoLabel->setText(tr("💾 无法获取磁盘信息"));
-    }
-    if (m_spaceProgressBar) {
-      m_spaceProgressBar->setValue(0);
-    }
+  if (m_logDirEdit && !m_logDirEdit->text().isEmpty()) {
+    service->setPath(StoragePathType::Log, m_logDirEdit->text());
   }
+  
+  // 更新显示
+  updateStorageInfoWidgets();
 }
 
-QString StorageSettingsPage::formatSize(qint64 bytes) const {
-  const qint64 KB = 1024;
-  const qint64 MB = KB * 1024;
-  const qint64 GB = MB * 1024;
-  const qint64 TB = GB * 1024;
-
-  if (bytes >= TB) {
-    return QString("%1 TB").arg(bytes / static_cast<double>(TB), 0, 'f', 2);
-  } else if (bytes >= GB) {
-    return QString("%1 GB").arg(bytes / static_cast<double>(GB), 0, 'f', 2);
-  } else if (bytes >= MB) {
-    return QString("%1 MB").arg(bytes / static_cast<double>(MB), 0, 'f', 2);
-  } else if (bytes >= KB) {
-    return QString("%1 KB").arg(bytes / static_cast<double>(KB), 0, 'f', 2);
+void StorageSettingsPage::createStorageInfoWidget(QVBoxLayout* layout, const QString& name, const StorageInfo& info) {
+  auto* frame = new QFrame();
+  frame->setFrameShape(QFrame::StyledPanel);
+  frame->setStyleSheet(R"(
+    QFrame {
+      background-color: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 8px;
+    }
+  )");
+  
+  auto* frameLayout = new QVBoxLayout(frame);
+  frameLayout->setContentsMargins(12, 10, 12, 10);
+  frameLayout->setSpacing(8);
+  
+  // 标题行：名称 + 驱动器
+  auto* titleLayout = new QHBoxLayout();
+  auto* nameLabel = new QLabel(QString("<b>%1</b>").arg(name));
+  nameLabel->setStyleSheet("font-size: 13px; color: #333;");
+  titleLayout->addWidget(nameLabel);
+  
+  auto* driveLabel = new QLabel(info.isValid ? info.rootPath : tr("不可用"));
+  driveLabel->setStyleSheet("font-size: 12px; color: #666;");
+  titleLayout->addWidget(driveLabel);
+  titleLayout->addStretch();
+  
+  // 状态标签
+  if (info.isValid) {
+    QString statusText;
+    QString statusColor;
+    if (info.usagePercent >= 95) {
+      statusText = tr("危险");
+      statusColor = "#ef4444";
+    } else if (info.usagePercent >= 85) {
+      statusText = tr("警告");
+      statusColor = "#f59e0b";
+    } else {
+      statusText = tr("正常");
+      statusColor = "#10b981";
+    }
+    auto* statusLabel = new QLabel(statusText);
+    statusLabel->setStyleSheet(QString("font-size: 11px; color: white; background-color: %1; "
+                                        "padding: 2px 8px; border-radius: 3px;").arg(statusColor));
+    titleLayout->addWidget(statusLabel);
+  }
+  frameLayout->addLayout(titleLayout);
+  
+  if (info.isValid) {
+    // 进度条
+    auto* progressBar = new QProgressBar();
+    progressBar->setRange(0, 100);
+    progressBar->setValue(info.usagePercent);
+    progressBar->setTextVisible(true);
+    progressBar->setFormat(tr("%1% 已使用").arg(info.usagePercent));
+    progressBar->setFixedHeight(20);
+    
+    QString chunkColor = (info.usagePercent >= 95) ? "#ef4444" :
+                         (info.usagePercent >= 85) ? "#f59e0b" : "#10b981";
+    progressBar->setStyleSheet(QString(R"(
+      QProgressBar {
+        border: 1px solid #d0d0d0;
+        border-radius: 3px;
+        background-color: #e8e8e8;
+        text-align: center;
+        font-size: 11px;
+      }
+      QProgressBar::chunk {
+        background-color: %1;
+        border-radius: 2px;
+      }
+    )").arg(chunkColor));
+    frameLayout->addWidget(progressBar);
+    
+    // 空间信息
+    auto* spaceLabel = new QLabel(tr("已用: %1 / 总计: %2 | 可用: %3")
+        .arg(StorageService::formatSize(info.usedBytes))
+        .arg(StorageService::formatSize(info.totalBytes))
+        .arg(StorageService::formatSize(info.freeBytes)));
+    spaceLabel->setStyleSheet("font-size: 11px; color: #666;");
+    frameLayout->addWidget(spaceLabel);
   } else {
-    return QString("%1 B").arg(bytes);
+    auto* errorLabel = new QLabel(tr("路径不存在或无法访问"));
+    errorLabel->setStyleSheet("font-size: 12px; color: #999;");
+    frameLayout->addWidget(errorLabel);
+  }
+  
+  layout->addWidget(frame);
+  m_storageWidgets[name] = frame;
+}
+
+void StorageSettingsPage::updateStorageInfoWidgets() {
+  // 清除旧的widgets
+  for (auto* widget : m_storageWidgets.values()) {
+    m_storageInfoLayout->removeWidget(widget);
+    widget->deleteLater();
+  }
+  m_storageWidgets.clear();
+  
+  // 获取所有监控路径的存储信息
+  auto infoList = StorageService::instance()->getAllMonitoredStorageInfo();
+  
+  for (const auto& info : infoList) {
+    createStorageInfoWidget(m_storageInfoLayout, info.name, info);
   }
 }

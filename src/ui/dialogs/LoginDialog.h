@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * LoginDialog.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：登录对话框接口定义
+ * 描述：用户登录对话框，输入用户名密码进行身份验证
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef LOGINDIALOG_H
 #define LOGINDIALOG_H
 
@@ -48,7 +63,7 @@ private:
     // 数据
     DatabaseManager* m_dbManager = nullptr;
     int m_loginAttempts = 0;
-    static const int MAX_LOGIN_ATTEMPTS = 5;
+    static constexpr int MAX_LOGIN_ATTEMPTS = 5;
 };
 
 #endif // LOGINDIALOG_H

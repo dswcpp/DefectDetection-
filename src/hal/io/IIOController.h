@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * IIOController.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：IO控制器接口基类定义
+ * 描述：数字IO控制器抽象接口，定义输入读取、输出控制方法
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IIOCONTROLLER_H
 #define IIOCONTROLLER_H
 

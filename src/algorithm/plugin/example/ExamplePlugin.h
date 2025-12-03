@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ExamplePlugin.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：示例插件实现
+ * 描述：检测器插件示例代码，演示如何实现IDetectorPlugin接口，
+ *       可作为开发新插件的模板
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef EXAMPLEPLUGIN_H
 #define EXAMPLEPLUGIN_H
 

@@ -1,4 +1,5 @@
 #include "ImageView.h"
+#include "common/Logger.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>
@@ -62,9 +63,11 @@ ImageView::~ImageView()
 void ImageView::setImage(const cv::Mat& image)
 {
   if (image.empty()) {
+    LOG_DEBUG("ImageView::setImage - Empty cv::Mat, clearing view");
     clear();
     return;
   }
+  LOG_DEBUG("ImageView::setImage - cv::Mat {}x{}, channels={}", image.cols, image.rows, image.channels());
   const QImage qimg = cvMatToQImage(image);
   setImage(qimg);
 }
@@ -83,6 +86,7 @@ void ImageView::setImage(const QImage& image)
   // 确保缩放因子在合理范围内（0.1到50倍）
   m_zoomFactor = std::clamp(m_zoomFactor, 0.1, 50.0);
 
+  LOG_DEBUG("ImageView::setImage - QImage {}x{}, zoom={:.2f}", image.width(), image.height(), m_zoomFactor);
   emit zoomChanged(m_zoomFactor);
 }
 

@@ -36,6 +36,7 @@ HEADERS += \
     mainwindow.h \
     models/DefectTableModel.h \
     models/HistoryTableModel.h \
+    services/StorageService.h \
     services/UserManager.h \
     ui_global.h \
     views/DetectView.h \
@@ -70,6 +71,7 @@ SOURCES += \
     mainwindow.cpp \
     models/DefectTableModel.cpp \
     models/HistoryTableModel.cpp \
+    services/StorageService.cpp \
     services/UserManager.cpp \
     views/DetectView.cpp \
     views/HistoryView.cpp \

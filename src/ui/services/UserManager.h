@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * UserManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：用户管理服务接口定义
+ * 描述：用户会话管理服务，处理登录验证、权限检查、会话超时等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef USERMANAGER_H
 #define USERMANAGER_H
 

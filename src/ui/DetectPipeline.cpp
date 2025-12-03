@@ -358,9 +358,27 @@ DetectResult DetectPipeline::runDetection(const cv::Mat& frame) {
   double detectTimeMs = m_detectTimer.elapsedMs();
   m_detectStats.record(detectTimeMs);
   result.cycleTimeMs = static_cast<int>(detectTimeMs);
-
-  LOG_DEBUG("Detection completed in {:.2f}ms (avg: {:.2f}ms), defects: {}",
-            detectTimeMs, m_detectStats.avg(), result.defects.size());
+  
+  // 详细日志
+  if (result.isOK) {
+    LOG_INFO("DetectPipeline: OK - image={}, time={:.1f}ms (avg:{:.1f}ms, max:{:.1f}ms)",
+             m_currentImagePath.toStdString(), detectTimeMs, m_detectStats.avg(), m_detectStats.max());
+  } else {
+    // 统计各类缺陷数量
+    std::map<int, int> defectCounts;
+    for (const auto& d : result.defects) {
+      defectCounts[d.classId]++;
+    }
+    std::string countStr;
+    for (const auto& [id, count] : defectCounts) {
+      if (!countStr.empty()) countStr += ", ";
+      countStr += "class" + std::to_string(id) + ":" + std::to_string(count);
+    }
+    
+    LOG_WARN("DetectPipeline: NG - image={}, type={}, severity={:.2f}, defects={} [{}], time={:.1f}ms",
+             m_currentImagePath.toStdString(), result.defectType.toStdString(), 
+             result.severity, result.defects.size(), countStr, detectTimeMs);
+  }
 
   return result;
 }

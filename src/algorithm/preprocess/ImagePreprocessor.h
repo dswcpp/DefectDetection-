@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ImagePreprocessor.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：图像预处理模块接口定义
+ * 描述：图像预处理器，提供去噪、对比度增强、亮度调整、
+ *       Gamma校正、ROI裁剪等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef IMAGEPREPROCESSOR_H
 #define IMAGEPREPROCESSOR_H
 

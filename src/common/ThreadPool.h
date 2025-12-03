@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ThreadPool.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：线程池模块接口定义
+ * 描述：基于std::thread的线程池实现，支持任务队列、动态线程数量、
+ *       异步任务提交和future结果获取
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 

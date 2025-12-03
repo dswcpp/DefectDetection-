@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * Utils.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：通用工具函数接口定义
+ * 描述：提供常用工具函数：字符串处理、文件操作、时间格式化、UUID生成等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef UTILS_H
 #define UTILS_H
 

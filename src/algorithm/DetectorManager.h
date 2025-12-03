@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DetectorManager.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：检测器管理模块接口定义
+ * 描述：管理多个检测器的生命周期和执行，支持串行/并行检测、
+ *       结果合并、配置同步等功能
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DETECTORMANAGER_H
 #define DETECTORMANAGER_H
 

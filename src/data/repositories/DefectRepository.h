@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * DefectRepository.h
+ *
+ * 初始版本：1.0
+ * 作者：Vere
+ * 创建日期：2025年12月03日
+ * 摘要：缺陷数据仓储接口定义
+ * 描述：缺陷记录数据访问层，存储缺陷位置、类型、严重度、置信度等
+ *
+ * 当前版本：1.0
+ */
+
 #ifndef DEFECTREPOSITORY_H
 #define DEFECTREPOSITORY_H
 

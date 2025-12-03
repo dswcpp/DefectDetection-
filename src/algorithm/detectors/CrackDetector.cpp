@@ -1,4 +1,5 @@
 #include "CrackDetector.h"
+#include "../common/Logger.h"
 #include <QElapsedTimer>
 
 CrackDetector::CrackDetector() {
@@ -58,21 +59,37 @@ DetectionResult CrackDetector::detect(const cv::Mat& image) {
   timer.start();
 
   if (image.empty()) {
+    LOG_ERROR("CrackDetector::detect - Input image is empty");
     return makeErrorResult("Empty input image");
   }
 
   updateParameters();
+  
+  LOG_DEBUG("CrackDetector::detect - Input: {}x{}, params: threshold={}, minArea={}, morphKernel={}",
+            image.cols, image.rows, m_threshold, m_minArea, m_morphKernelSize);
 
   // 预处理
   cv::Mat binary = preprocessImage(image);
 
   // 查找裂纹
   std::vector<DefectInfo> defects = findCracks(binary, image);
+  size_t beforeFilter = defects.size();
 
   // 过滤低置信度
   defects = filterByConfidence(defects);
 
   double timeMs = timer.elapsed();
+  
+  // 统计信息
+  double totalArea = 0, maxComplexity = 0;
+  for (const auto& d : defects) {
+    if (d.attributes.contains("area")) totalArea += d.attributes.value("area").toDouble();
+    if (d.attributes.contains("complexity")) maxComplexity = std::max(maxComplexity, d.attributes.value("complexity").toDouble());
+  }
+  
+  LOG_INFO("CrackDetector::detect - Result: {} cracks (filtered:{}/{}), totalArea={:.0f}px, maxComplexity={:.1f}, time:{:.1f}ms",
+           defects.size(), defects.size(), beforeFilter, totalArea, maxComplexity, timeMs);
+  
   return makeSuccessResult(defects, timeMs);
 }
 
