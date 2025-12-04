@@ -31,7 +31,7 @@ void UserSettingsPage::setupUI() {
   auto* avatar = new QLabel("👤");
   avatar->setFixedSize(64, 64);
   avatar->setStyleSheet(R"(
-    QLabel { background-color: #e0e7ff; border-radius: 32px; font-size: 32px; }
+    QLabel { background-color: #48484A; border-radius: 32px; font-size: 32px; }
   )");
   avatar->setAlignment(Qt::AlignCenter);
   userLayout->addWidget(avatar);
@@ -43,15 +43,15 @@ void UserSettingsPage::setupUI() {
 
   auto* userMgr = UserManager::instance();
   auto* userName = new QLabel(userMgr->currentUsername().isEmpty() ? tr("未登录") : userMgr->currentUsername());
-  userName->setStyleSheet("font-size: 16px; font-weight: 500;");
+  userName->setStyleSheet("font-size: 16px; font-weight: 500; color: #E0E0E0;");
   infoLayout->addWidget(userName);
 
   auto* userRole = new QLabel(userMgr->currentDisplayName() + " - " + userMgr->currentRole());
-  userRole->setStyleSheet("color: #666666;");
+  userRole->setStyleSheet("color: #ADADAD;");
   infoLayout->addWidget(userRole);
 
   auto* lastLogin = new QLabel(tr("登录中..."));
-  lastLogin->setStyleSheet("color: #999999; font-size: 12px;");
+  lastLogin->setStyleSheet("color: #888; font-size: 12px;");
   infoLayout->addWidget(lastLogin);
 
   userLayout->addWidget(userInfo);
@@ -76,8 +76,8 @@ void UserSettingsPage::setupUI() {
   auto* addUserBtn = new QPushButton(tr("+ 新增用户"));
   addUserBtn->setMinimumHeight(32);
   addUserBtn->setStyleSheet(R"(
-    QPushButton { padding: 0 16px; background-color: #3b82f6; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #2563eb; }
+    QPushButton { padding: 0 16px; background-color: #4CAF50; border: none; border-radius: 4px; color: white; }
+    QPushButton:hover { background-color: #43A047; }
   )");
   btnBarLayout->addWidget(addUserBtn);
 
@@ -119,7 +119,7 @@ void UserSettingsPage::setupUI() {
 
   for (int i = 0; i < permissions.size(); ++i) {
     auto* label = new QLabel(permissions[i]);
-    label->setStyleSheet("color: #666;");
+    label->setStyleSheet("color: #ADADAD;");
     permLayout->addWidget(label, i / 3, i % 3);
   }
 

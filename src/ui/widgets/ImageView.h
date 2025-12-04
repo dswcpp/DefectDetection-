@@ -124,11 +124,17 @@ public:
   // 显示模式
   enum class DisplayMode { Original, Annotated, SideBySide };
   void setDisplayMode(DisplayMode mode);
+  DisplayMode displayMode() const { return m_displayMode; }
+
+  // ROI显示控制
+  void setShowROI(bool show);
+  bool isShowROI() const { return m_showROI; }
 
   // 显示控制
   void setShowSeverityLabels(bool show) { m_showSeverityLabels = show; updateDisplay(); }
   void setShowConfidence(bool show) { m_showConfidence = show; updateDisplay(); }
   void setHighlightSeverity(DefectSeverity severity, bool highlight);
+  void setShowAnnotations(bool show);
 
   // 缩放
   void zoomIn();
@@ -206,6 +212,8 @@ private:
   // 显示选项
   bool m_showSeverityLabels = true;
   bool m_showConfidence = true;
+  bool m_showROI = false;
+  bool m_showAnnotations = true;
   QSet<DefectSeverity> m_highlightedSeverities;
 
   // 右键菜单

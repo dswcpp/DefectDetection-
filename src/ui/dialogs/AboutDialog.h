@@ -16,14 +16,14 @@
 #ifndef ABOUTDIALOG_H
 #define ABOUTDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 
 QT_BEGIN_NAMESPACE
 class QLabel;
 class QPushButton;
 QT_END_NAMESPACE
 
-class AboutDialog : public QDialog {
+class AboutDialog : public FramelessDialog {
     Q_OBJECT
 
 public:

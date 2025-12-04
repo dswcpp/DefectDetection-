@@ -51,8 +51,8 @@ void CameraSettingsPage::setupUI() {
   auto* scanBtn = new QPushButton(tr("扫描"));
   scanBtn->setMinimumHeight(32);
   scanBtn->setStyleSheet(R"(
-    QPushButton { padding: 0 16px; background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { padding: 0 16px; background-color: #3C3C3E; border: 1px solid #555; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #48484A; }
   )");
   ipLayout->addWidget(scanBtn);
   configLayout->addWidget(ipContainer, 1, 1);
@@ -70,8 +70,8 @@ void CameraSettingsPage::setupUI() {
   auto* browseBtn = new QPushButton(tr("浏览"));
   browseBtn->setMinimumHeight(32);
   browseBtn->setStyleSheet(R"(
-    QPushButton { padding: 0 16px; background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { padding: 0 16px; background-color: #3C3C3E; border: 1px solid #555; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #48484A; }
   )");
   connect(browseBtn, &QPushButton::clicked, this, &CameraSettingsPage::onBrowseImageDir);
   dirLayout->addWidget(browseBtn);
@@ -159,7 +159,7 @@ void CameraSettingsPage::setupUI() {
   auto* previewArea = new QLabel();
   previewArea->setFixedHeight(280);
   previewArea->setStyleSheet(R"(
-    QLabel { background-color: #1a1f2e; border: 1px solid #d0d0d0; border-radius: 4px; color: #666666; }
+    QLabel { background-color: #1a1f2e; border: 1px solid #48484A; border-radius: 4px; color: #ADADAD; }
   )");
   previewArea->setAlignment(Qt::AlignCenter);
   previewArea->setText(tr("未连接\n请先连接相机以查看预览"));
@@ -173,16 +173,16 @@ void CameraSettingsPage::setupUI() {
   auto* connectBtn = new QPushButton(tr("📷 连接测试"));
   connectBtn->setMinimumHeight(36);
   connectBtn->setStyleSheet(R"(
-    QPushButton { padding: 0 20px; background-color: #3b82f6; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #2563eb; }
+    QPushButton { padding: 0 20px; background-color: #4CAF50; border: none; border-radius: 4px; color: white; }
+    QPushButton:hover { background-color: #43A047; }
   )");
   btnLayout->addWidget(connectBtn);
 
   auto* captureBtn = new QPushButton(tr("🔄 抓取一帧"));
   captureBtn->setMinimumHeight(36);
   captureBtn->setStyleSheet(R"(
-    QPushButton { padding: 0 20px; background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { padding: 0 20px; background-color: #3C3C3E; border: 1px solid #555; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #48484A; }
   )");
   btnLayout->addWidget(captureBtn);
   btnLayout->addStretch();

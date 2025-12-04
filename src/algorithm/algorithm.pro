@@ -79,30 +79,15 @@ win32-g++ {
     QMAKE_LIBS += -lopencv_world460
 }
 
-LIBS += -L$$OUT_PWD/../common -lcommon
+# 所有库都在 bin 目录
+LIBS += -L$$BIN_DIR -lcommon -ldata -lhal
 
 INCLUDEPATH += $$PWD/../common
-DEPENDPATH += $$PWD/../common
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/common.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-
-
-LIBS += -L$$OUT_PWD/../data -ldata
-
 INCLUDEPATH += $$PWD/../data
-DEPENDPATH += $$PWD/../data
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/data.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
-
-LIBS += -L$$OUT_PWD/../hal -lhal
-
 INCLUDEPATH += $$PWD/../hal
+
+DEPENDPATH += $$PWD/../common
+DEPENDPATH += $$PWD/../data
 DEPENDPATH += $$PWD/../hal
 
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
+# PRE_TARGETDEPS 在子目录构建时由 qmake ordered 配置处理

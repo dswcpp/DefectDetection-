@@ -16,13 +16,13 @@
 #ifndef HISTORYDIALOG_H
 #define HISTORYDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include "ui_global.h"
 
 class HistoryView;
 class DatabaseManager;
 
-class UI_LIBRARY HistoryDialog : public QDialog {
+class UI_LIBRARY HistoryDialog : public FramelessDialog {
   Q_OBJECT
 public:
   explicit HistoryDialog(DatabaseManager* dbManager, QWidget *parent = nullptr);

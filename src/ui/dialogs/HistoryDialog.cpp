@@ -4,12 +4,13 @@
 #include <QVBoxLayout>
 
 HistoryDialog::HistoryDialog(DatabaseManager* dbManager, QWidget *parent)
-    : QDialog(parent) {
-  setWindowTitle(tr("历史记录"));
-  setMinimumSize(1200, 700);
-  resize(1400, 800);
+    : FramelessDialog(parent) {
+  setDialogTitle(tr("历史记录"));
+  setShowMaxButton(true);
+  setMinimumSize(1200, 750);
+  resize(1400, 850);
 
-  auto* layout = new QVBoxLayout(this);
+  auto* layout = contentLayout();
   layout->setContentsMargins(0, 0, 0, 0);
 
   m_historyView = new HistoryView(this);

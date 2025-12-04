@@ -17,7 +17,7 @@
 #ifndef IMAGEPREVIEWDIALOG_H
 #define IMAGEPREVIEWDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include <QImage>
 #include <vector>
 #include "ui_global.h"
@@ -36,7 +36,7 @@ struct DefectAnnotation;
 
 // 增强版图片预览对话框
 // 支持缺陷标注显示、ROI编辑、手动标注添加/编辑/删除
-class UI_LIBRARY ImagePreviewDialog : public QDialog {
+class UI_LIBRARY ImagePreviewDialog : public FramelessDialog {
   Q_OBJECT
 public:
   explicit ImagePreviewDialog(QWidget *parent = nullptr);

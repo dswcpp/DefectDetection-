@@ -16,7 +16,7 @@
 #ifndef USERMANAGEMENTDIALOG_H
 #define USERMANAGEMENTDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include "ui_global.h"
 #include "data/repositories/UserRepository.h"
 
@@ -27,7 +27,7 @@ class QPushButton;
 class QCheckBox;
 class QGroupBox;
 
-class UI_LIBRARY UserManagementDialog : public QDialog {
+class UI_LIBRARY UserManagementDialog : public FramelessDialog {
     Q_OBJECT
 public:
     explicit UserManagementDialog(QWidget* parent = nullptr);

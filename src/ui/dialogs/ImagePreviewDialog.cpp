@@ -24,7 +24,9 @@
 #include <QStyle>
 
 ImagePreviewDialog::ImagePreviewDialog(QWidget *parent)
-    : QDialog(parent) {
+    : FramelessDialog(parent) {
+  setDialogTitle(tr("图片预览 - 缺陷标注"));
+  setShowMaxButton(true);
   setupUI();
 }
 
@@ -32,16 +34,13 @@ ImagePreviewDialog::~ImagePreviewDialog() {
 }
 
 void ImagePreviewDialog::setupUI() {
-  setWindowTitle(tr("图片预览 - 缺陷标注"));
-  setWindowFlags(Qt::Dialog | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-  
   // 设置窗口大小为屏幕的85%
   QScreen* screen = QGuiApplication::primaryScreen();
   QSize screenSize = screen->availableSize();
   resize(screenSize.width() * 0.85, screenSize.height() * 0.85);
 
   // 主布局
-  auto* mainLayout = new QVBoxLayout(this);
+  auto* mainLayout = contentLayout();
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(0);
 

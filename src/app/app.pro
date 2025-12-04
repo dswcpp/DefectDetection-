@@ -56,59 +56,24 @@ models.files = ../../models/*
 models.path = $$DESTDIR/models
 INSTALLS += models
 
-LIBS += -L$$OUT_PWD/../common -lcommon
+# 所有库都在 bin 目录
+LIBS += -L$$BIN_DIR -lcommon -ldata -lnetwork -lui -lalgorithm -lhal
 
 INCLUDEPATH += $$PWD/../common
-DEPENDPATH += $$PWD/../common
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/common.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-
-LIBS += -L$$OUT_PWD/../data -ldata
-
 INCLUDEPATH += $$PWD/../data
-DEPENDPATH += $$PWD/../data
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/data.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
-
-LIBS += -L$$OUT_PWD/../network -lnetwork
-
 INCLUDEPATH += $$PWD/../network
-DEPENDPATH += $$PWD/../network
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../network/libnetwork.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../network/network.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../network/libnetwork.a
-
-LIBS += -L$$OUT_PWD/../ui -lui
-
 INCLUDEPATH += $$PWD/../ui
-DEPENDPATH += $$PWD/../ui
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../ui/libui.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../ui/ui.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../ui/libui.a
-
-LIBS += -L$$OUT_PWD/../algorithm -lalgorithm
-
 INCLUDEPATH += $$PWD/../algorithm
-DEPENDPATH += $$PWD/../algorithm
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/algorithm.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../algorithm/libalgorithm.a
-
-LIBS += -L$$OUT_PWD/../hal -lhal
-
 INCLUDEPATH += $$PWD/../hal
+
+DEPENDPATH += $$PWD/../common
+DEPENDPATH += $$PWD/../data
+DEPENDPATH += $$PWD/../network
+DEPENDPATH += $$PWD/../ui
+DEPENDPATH += $$PWD/../algorithm
 DEPENDPATH += $$PWD/../hal
 
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
+# PRE_TARGETDEPS 在子目录构建时由 qmake ordered 配置处理
 
 # OpenCV 链接（MinGW）
 win32-g++ {
@@ -124,24 +89,3 @@ LIBS += -Wl,--start-group $$[QT_INSTALL_LIBS]/libQt6EntryPoint.a -lmingw32 -Wl,-
 
 RESOURCES += \
     resource.qrc
-
-# ------------------ 自动复制 DLL 和配置文件 ------------------
-win32 {
-    # 复制项目模块 DLL 到 exe 目录
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../common/common.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../data/data.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../hal/hal.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../algorithm/algorithm.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../network/network.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OUT_PWD/../ui/ui.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    
-    # 复制 OpenCV DLL
-    OPENCV_DLL_DIR = $$PWD/../../third_party/opencv/x64/mingw/bin
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$OPENCV_DLL_DIR/libopencv_world460.dll\" \"$$OUT_PWD\" $$escape_expand(\\n\\t)
-    
-    # 复制配置文件目录
-    CONFIG_SRC_DIR = $$shell_path($$PWD/../../config)
-    CONFIG_DST_DIR = $$shell_path($$OUT_PWD/config)
-    QMAKE_POST_LINK += $(MKDIR) \"$$CONFIG_DST_DIR\" 2>NUL || echo . $$escape_expand(\\n\\t)
-    QMAKE_POST_LINK += $$QMAKE_COPY \"$$CONFIG_SRC_DIR\\app.json\" \"$$CONFIG_DST_DIR\" $$escape_expand(\\n\\t)
-}

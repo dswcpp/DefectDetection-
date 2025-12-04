@@ -75,7 +75,7 @@ void LightSettingsPage::setupUI() {
   strobeLayout->setSpacing(16);
 
   auto* enableStrobe = new QCheckBox(tr("启用频闪模式"));
-  enableStrobe->setStyleSheet("QCheckBox { font-size: 14px; }");
+  enableStrobe->setStyleSheet("QCheckBox { font-size: 14px; color: #E0E0E0; }");
   strobeLayout->addWidget(enableStrobe);
 
   auto* freqContainer = new QWidget();
@@ -105,8 +105,8 @@ void LightSettingsPage::setupUI() {
   openBtn->setMinimumHeight(36);
   openBtn->setMinimumWidth(120);
   openBtn->setStyleSheet(R"(
-    QPushButton { background-color: #f59e0b; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #d97706; }
+    QPushButton { background-color: #FF9800; border: none; border-radius: 4px; color: white; }
+    QPushButton:hover { background-color: #F57C00; }
   )");
   btnLayout->addWidget(openBtn);
 
@@ -114,8 +114,8 @@ void LightSettingsPage::setupUI() {
   closeBtn->setMinimumHeight(36);
   closeBtn->setMinimumWidth(120);
   closeBtn->setStyleSheet(R"(
-    QPushButton { background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { background-color: #3C3C3E; border: 1px solid #555; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #48484A; }
   )");
   btnLayout->addWidget(closeBtn);
   btnLayout->addStretch();

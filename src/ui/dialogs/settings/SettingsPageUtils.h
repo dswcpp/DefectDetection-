@@ -32,19 +32,24 @@ inline QGroupBox* createStyledGroupBox(const QString& title, QWidget* parent = n
   group->setStyleSheet(R"(
     QGroupBox {
       font-weight: normal;
-      border: 1px solid #d0d0d0;
+      border: 1px solid #48484A;
       border-radius: 4px;
       margin-top: 12px;
       padding-top: 8px;
-      background-color: #ffffff;
+      background-color: #2C2C2E;
+      color: #E0E0E0;
     }
     QGroupBox::title {
       subcontrol-origin: margin;
       left: 12px;
       padding: 0 8px;
-      background-color: #f5f5f5;
-      border: 1px solid #d0d0d0;
+      background-color: #3C3C3E;
+      border: 1px solid #48484A;
       border-radius: 2px;
+      color: #E0E0E0;
+    }
+    QLabel {
+      color: #E0E0E0;
     }
   )");
   return group;
@@ -66,7 +71,7 @@ inline QWidget* createSpinBoxWithUnit(int min, int max, int value, const QString
 
   if (!suffix.isEmpty()) {
     auto* label = new QLabel(suffix, container);
-    label->setStyleSheet("color: #666666;");
+    label->setStyleSheet("color: #ADADAD;");
     layout->addWidget(label);
   }
 
@@ -96,7 +101,7 @@ inline QWidget* createSliderGroup(int min, int max, int value, const QString& su
 
   if (!suffix.isEmpty()) {
     auto* label = new QLabel(suffix, container);
-    label->setStyleSheet("color: #666666;");
+    label->setStyleSheet("color: #ADADAD;");
     layout->addWidget(label);
   }
 

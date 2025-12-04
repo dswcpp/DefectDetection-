@@ -285,6 +285,7 @@ void ImageView::drawSingleDetectionBox(const DetectionBox& box)
 void ImageView::setROI(const cv::Rect& roi)
 {
   if (roi.width <= 0 || roi.height <= 0) {
+    m_roiItem->setRect(QRectF());
     m_roiItem->setVisible(false);
     return;
   }
@@ -292,7 +293,7 @@ void ImageView::setROI(const cv::Rect& roi)
   QRectF rect(roi.x, roi.y, roi.width, roi.height);
   rect = rect.intersected(m_scene->sceneRect());
   m_roiItem->setRect(rect);
-  m_roiItem->setVisible(true);
+  m_roiItem->setVisible(m_showROI);  // 根据显示设置决定是否可见
   emit roiChanged(rect.toRect());
 }
 
@@ -316,8 +317,47 @@ void ImageView::enableROIEdit(bool enable)
 
 void ImageView::setDisplayMode(DisplayMode mode)
 {
+  if (m_displayMode == mode) return;
+  
   m_displayMode = mode;
+  
+  // 根据模式控制标注显示
+  if (mode == DisplayMode::Original) {
+    // 原图模式：隐藏所有标注
+    setShowAnnotations(false);
+  } else if (mode == DisplayMode::Annotated) {
+    // 标注图模式：显示所有标注
+    setShowAnnotations(true);
+  }
+  
   updateDisplay();
+}
+
+void ImageView::setShowROI(bool show)
+{
+  m_showROI = show;
+  m_roiItem->setVisible(show && m_roiItem->rect().isValid());
+}
+
+void ImageView::setShowAnnotations(bool show)
+{
+  m_showAnnotations = show;
+  
+  // 显示或隐藏所有标注图形项
+  for (auto* item : m_annotationGraphicsItems) {
+    if (item) item->setVisible(show);
+  }
+  for (auto* label : m_annotationLabels) {
+    if (label) label->setVisible(show);
+  }
+  
+  // 旧版兼容的缺陷项
+  for (auto* item : m_defectItems) {
+    if (item) item->setVisible(show);
+  }
+  for (auto* label : m_labelItems) {
+    if (label) label->setVisible(show);
+  }
 }
 
 // 缩放功能
@@ -801,6 +841,7 @@ void ImageView::drawAnnotation(const DefectAnnotation& annotation)
   }
 
   if (item) {
+    item->setVisible(m_showAnnotations);  // 根据显示模式设置可见性
     m_scene->addItem(item);
     m_annotationGraphicsItems[annotation.id] = item;
 
@@ -832,6 +873,9 @@ void ImageView::drawAnnotation(const DefectAnnotation& annotation)
       bgRect->setPos(rect.x(), rect.y() - textRect.height() - 2);
       textItem->setPos(rect.x() + 2, rect.y() - textRect.height() - 2);
 
+      bgRect->setVisible(m_showAnnotations);  // 根据显示模式设置可见性
+      textItem->setVisible(m_showAnnotations);  // 根据显示模式设置可见性
+      
       m_scene->addItem(bgRect);
       m_scene->addItem(textItem);
       m_annotationGraphicsItems[annotation.id + 10000] = bgRect; // 使用偏移ID存储背景

@@ -17,7 +17,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include "widgets/FramelessMainWindow.h"
 #include "Types.h"
 #include "ui_global.h"
 #include "Timer.h"
@@ -35,7 +35,7 @@ class DetectPipeline;
 class DatabaseManager;
 class DefectTableModel;
 
-class UI_LIBRARY MainWindow : public QMainWindow {
+class UI_LIBRARY MainWindow : public FramelessMainWindow {
   Q_OBJECT
 public:
   explicit MainWindow(QWidget* parent = nullptr);

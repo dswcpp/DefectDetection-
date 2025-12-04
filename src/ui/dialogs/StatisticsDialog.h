@@ -16,7 +16,7 @@
 #ifndef STATISTICSDIALOG_H
 #define STATISTICSDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include <QDateTime>
 #include <QString>
 #include <QVector>
@@ -34,7 +34,7 @@ class QMenu;
 class QAction;
 class DatabaseManager;
 
-class UI_LIBRARY StatisticsDialog : public QDialog {
+class UI_LIBRARY StatisticsDialog : public FramelessDialog {
   Q_OBJECT
 public:
   explicit StatisticsDialog(DatabaseManager* dbManager = nullptr, QWidget* parent = nullptr);

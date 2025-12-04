@@ -14,19 +14,19 @@
 #include <QDateTime>
 #include <QGroupBox>
 
-AlarmDialog::AlarmDialog(QWidget* parent) : QDialog(parent) {
+AlarmDialog::AlarmDialog(QWidget* parent) : FramelessDialog(parent) {
+    setDialogTitle(tr("报警记录"));
+    setShowMaxButton(true);
     setupUI();
     updateStatistics();
 }
 
 void AlarmDialog::setupUI() {
-    setWindowTitle(tr("报警记录"));
-    setMinimumSize(900, 600);
-    resize(1000, 700);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setMinimumSize(900, 650);
+    resize(1000, 750);
 
     // 主布局
-    auto* mainLayout = new QVBoxLayout(this);
+    auto* mainLayout = contentLayout();
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(10);
 
@@ -51,7 +51,7 @@ void AlarmDialog::setupUI() {
     auto* statsLayout = new QHBoxLayout(statsGroup);
 
     m_totalLabel = new QLabel(tr("总计: 0"));
-    m_totalLabel->setStyleSheet("font-weight: bold; color: #333;");
+    m_totalLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     statsLayout->addWidget(m_totalLabel);
 
     m_unackedLabel = new QLabel(tr("未确认: 0"));
@@ -138,20 +138,25 @@ void AlarmDialog::setupUI() {
 
     m_alarmTable->setStyleSheet(R"(
         QTableWidget {
-            border: 1px solid #ddd;
-            background-color: white;
+            border: 1px solid #555;
+            background-color: #2C2C2E;
+            alternate-background-color: #333335;
+            gridline-color: #555;
+            color: #E0E0E0;
         }
         QTableWidget::item {
             padding: 5px;
         }
         QTableWidget::item:selected {
-            background-color: #e3f2fd;
+            background-color: #4CAF50;
+            color: white;
         }
         QHeaderView::section {
-            background-color: #f5f5f5;
+            background-color: #3C3C3E;
             padding: 5px;
             border: none;
             font-weight: bold;
+            color: #E0E0E0;
         }
     )");
 

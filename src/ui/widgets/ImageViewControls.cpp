@@ -35,12 +35,12 @@ void ImageViewControls::setupUI()
   m_displayModeGroup = new QButtonGroup(this);
 
   m_originalButton = new QRadioButton(tr("原图"), this);
-  m_originalButton->setChecked(true);
   m_originalButton->setObjectName(QStringLiteral("originalModeButton"));
   m_displayModeGroup->addButton(m_originalButton, 0);
   modeLayout->addWidget(m_originalButton);
 
   m_annotatedButton = new QRadioButton(tr("标注图"), this);
+  m_annotatedButton->setChecked(true);  // 默认显示标注图
   m_annotatedButton->setObjectName(QStringLiteral("annotatedModeButton"));
   m_displayModeGroup->addButton(m_annotatedButton, 1);
   modeLayout->addWidget(m_annotatedButton);
@@ -130,4 +130,18 @@ void ImageViewControls::setupUI()
 void ImageViewControls::setZoomLevel(double zoom)
 {
   m_zoomLabel->setText(QString::number(static_cast<int>(zoom * 100)) + "%");
+}
+
+void ImageViewControls::setDisplayMode(int mode)
+{
+  if (mode == 0) {
+    m_originalButton->setChecked(true);
+  } else {
+    m_annotatedButton->setChecked(true);
+  }
+}
+
+void ImageViewControls::setShowROI(bool show)
+{
+  m_showROICheck->setChecked(show);
 }

@@ -17,6 +17,7 @@
 #include <QDateEdit>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QIcon>
 #include <QGroupBox>
 #include <QSplitter>
 #include <QHeaderView>
@@ -33,9 +34,10 @@
 #include <QTextStream>
 
 StatisticsDialog::StatisticsDialog(DatabaseManager* dbManager, QWidget* parent)
-    : QDialog{parent}, m_dbManager(dbManager) {
+    : FramelessDialog{parent}, m_dbManager(dbManager) {
   setModal(true);
-  setWindowTitle(tr("检测记录统计"));
+  setDialogTitle(tr("检测记录统计"));
+  setShowMaxButton(true);
   setupUI();
   setupContextMenu();
   loadFromDatabase();
@@ -44,17 +46,17 @@ StatisticsDialog::StatisticsDialog(DatabaseManager* dbManager, QWidget* parent)
 
 void StatisticsDialog::setupUI() {
   // 设置对话框大小
-  setMinimumSize(1400, 800);
-  resize(1600, 900);
+  setMinimumSize(1400, 850);
+  resize(1600, 950);
 
   // 主布局
-  auto* mainLayout = new QVBoxLayout(this);
+  auto* mainLayout = contentLayout();
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(0);
 
   // 筛选区域
   auto* filterWidget = new QWidget();
-  filterWidget->setStyleSheet("background-color: white; border-bottom: 1px solid #dee2e6;");
+  filterWidget->setStyleSheet("background-color: #3C3C3E; border-bottom: 1px solid #555;");
   auto* filterLayout = new QHBoxLayout(filterWidget);
   filterLayout->setContentsMargins(24, 16, 24, 16);
   filterLayout->setSpacing(16);
@@ -65,7 +67,7 @@ void StatisticsDialog::setupUI() {
   startDateLayout->setContentsMargins(0, 0, 0, 0);
   startDateLayout->setSpacing(4);
   auto* startDateLabel = new QLabel(tr("开始日期"));
-  startDateLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  startDateLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   startDateLayout->addWidget(startDateLabel);
   m_startDateEdit = new QDateEdit(QDate::currentDate().addDays(-30));
   m_startDateEdit->setCalendarPopup(true);
@@ -74,30 +76,31 @@ void StatisticsDialog::setupUI() {
   m_startDateEdit->setMinimumWidth(130);
   m_startDateEdit->setStyleSheet(R"(
     QDateEdit {
-      border: 1px solid #ced4da;
+      border: 1px solid #555;
       border-radius: 4px;
       padding: 4px 8px;
-      background-color: white;
+      background-color: #3C3C3E;
+      color: #E0E0E0;
       font-size: 13px;
     }
     QDateEdit:hover {
-      border-color: #adb5bd;
+      border-color: #666;
     }
     QDateEdit:focus {
-      border-color: #80bdff;
+      border-color: #4CAF50;
       outline: none;
     }
     QDateEdit::drop-down {
       subcontrol-origin: padding;
       subcontrol-position: top right;
       width: 20px;
-      border-left: 1px solid #ced4da;
+      border-left: 1px solid #555;
       border-top-right-radius: 4px;
       border-bottom-right-radius: 4px;
-      background-color: #f8f9fa;
+      background-color: #4a4a4c;
     }
     QDateEdit::drop-down:hover {
-      background-color: #e9ecef;
+      background-color: #555;
     }
     QDateEdit::down-arrow {
       image: url(:/icons/calendar.svg);
@@ -109,20 +112,20 @@ void StatisticsDialog::setupUI() {
       left: 1px;
     }
     QDateEdit QCalendarWidget {
-      background-color: white;
-      border: 1px solid #dee2e6;
+      background-color: #3C3C3E;
+      border: 1px solid #555;
       border-radius: 4px;
     }
     QDateEdit QCalendarWidget QToolButton {
       background-color: transparent;
-      color: #495057;
+      color: #E0E0E0;
       font-size: 13px;
       border: none;
       border-radius: 4px;
       padding: 4px;
     }
     QDateEdit QCalendarWidget QToolButton:hover {
-      background-color: #e9ecef;
+      background-color: #555;
     }
     QDateEdit QCalendarWidget QToolButton#qt_calendar_prevmonth,
     QDateEdit QCalendarWidget QToolButton#qt_calendar_nextmonth {
@@ -140,12 +143,12 @@ void StatisticsDialog::setupUI() {
       qproperty-text: ">";
     }
     QDateEdit QCalendarWidget QWidget#qt_calendar_navigationbar {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #dee2e6;
+      background-color: #4a4a4c;
+      border-bottom: 1px solid #555;
       padding: 4px;
     }
     QDateEdit QCalendarWidget QAbstractItemView {
-      selection-background-color: #007bff;
+      selection-background-color: #4CAF50;
       selection-color: white;
       font-size: 12px;
       outline: none;
@@ -167,7 +170,7 @@ void StatisticsDialog::setupUI() {
   endDateLayout->setContentsMargins(0, 0, 0, 0);
   endDateLayout->setSpacing(4);
   auto* endDateLabel = new QLabel(tr("结束日期"));
-  endDateLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  endDateLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   endDateLayout->addWidget(endDateLabel);
   m_endDateEdit = new QDateEdit(QDate::currentDate());
   m_endDateEdit->setCalendarPopup(true);
@@ -184,7 +187,7 @@ void StatisticsDialog::setupUI() {
   resultLayout->setContentsMargins(0, 0, 0, 0);
   resultLayout->setSpacing(4);
   auto* resultLabel = new QLabel(tr("结果"));
-  resultLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  resultLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   resultLayout->addWidget(resultLabel);
   m_resultCombo = new QComboBox();
   m_resultCombo->addItems({tr("全部"), tr("OK"), tr("NG")});
@@ -192,33 +195,34 @@ void StatisticsDialog::setupUI() {
   m_resultCombo->setMinimumWidth(100);
   m_resultCombo->setStyleSheet(R"(
     QComboBox {
-      border: 1px solid #ced4da;
+      border: 1px solid #555;
       border-radius: 4px;
       padding: 4px 8px;
-      background-color: white;
+      background-color: #3C3C3E;
+      color: #E0E0E0;
       font-size: 13px;
     }
     QComboBox:hover {
-      border-color: #adb5bd;
+      border-color: #666;
     }
     QComboBox:focus {
-      border-color: #80bdff;
+      border-color: #4CAF50;
       outline: none;
     }
     QComboBox::drop-down {
       subcontrol-origin: padding;
       subcontrol-position: top right;
       width: 20px;
-      border-left: 1px solid #ced4da;
+      border-left: 1px solid #555;
       border-top-right-radius: 4px;
       border-bottom-right-radius: 4px;
-      background-color: #f8f9fa;
+      background-color: #4a4a4c;
     }
     QComboBox::drop-down:hover {
-      background-color: #e9ecef;
+      background-color: #555;
     }
     QComboBox::down-arrow {
-      image: url(:/icons/arrow-down.svg);
+      image: url(:/resources/icons/arrow-down.svg);
       width: 12px;
       height: 12px;
     }
@@ -227,9 +231,9 @@ void StatisticsDialog::setupUI() {
       left: 1px;
     }
     QComboBox QAbstractItemView {
-      border: 1px solid #dee2e6;
-      background-color: white;
-      selection-background-color: #007bff;
+      border: 1px solid #555;
+      background-color: #3C3C3E;
+      selection-background-color: #4CAF50;
       selection-color: white;
       outline: none;
       padding: 4px;
@@ -237,9 +241,10 @@ void StatisticsDialog::setupUI() {
     QComboBox QAbstractItemView::item {
       padding: 4px 8px;
       min-height: 24px;
+      color: #E0E0E0;
     }
     QComboBox QAbstractItemView::item:hover {
-      background-color: #e9ecef;
+      background-color: #555;
     }
   )");
   resultLayout->addWidget(m_resultCombo);
@@ -251,7 +256,7 @@ void StatisticsDialog::setupUI() {
   defectLayout->setContentsMargins(0, 0, 0, 0);
   defectLayout->setSpacing(4);
   auto* defectLabel = new QLabel(tr("缺陷类型"));
-  defectLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  defectLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   defectLayout->addWidget(defectLabel);
   m_defectTypeCombo = new QComboBox();
   m_defectTypeCombo->addItems({tr("全部"), tr("划痕"), tr("裂纹"), tr("异物"), tr("尺寸偏差")});
@@ -267,7 +272,7 @@ void StatisticsDialog::setupUI() {
   severityLayout->setContentsMargins(0, 0, 0, 0);
   severityLayout->setSpacing(4);
   auto* severityLabel = new QLabel(tr("严重度"));
-  severityLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  severityLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   severityLayout->addWidget(severityLabel);
   m_severityCombo = new QComboBox();
   m_severityCombo->addItems({tr("全部"), tr("轻微"), tr("中等"), tr("严重")});
@@ -283,7 +288,7 @@ void StatisticsDialog::setupUI() {
   keywordLayout->setContentsMargins(0, 0, 0, 0);
   keywordLayout->setSpacing(4);
   auto* keywordLabel = new QLabel(tr("关键词"));
-  keywordLabel->setStyleSheet("font-size: 12px; color: #6c757d;");
+  keywordLabel->setStyleSheet("font-size: 12px; color: #9E9E9E;");
   keywordLayout->addWidget(keywordLabel);
   m_keywordEdit = new QLineEdit();
   m_keywordEdit->setPlaceholderText(tr("产品ID、操作员..."));
@@ -291,13 +296,14 @@ void StatisticsDialog::setupUI() {
   m_keywordEdit->setMinimumWidth(200);
   m_keywordEdit->setStyleSheet(R"(
     QLineEdit {
-      border: 1px solid #ced4da;
+      border: 1px solid #555;
       border-radius: 4px;
       padding: 0 8px;
-      background-color: white;
+      background-color: #3C3C3E;
+      color: #E0E0E0;
     }
     QLineEdit:focus {
-      border-color: #80bdff;
+      border-color: #4CAF50;
     }
   )");
   keywordLayout->addWidget(m_keywordEdit);
@@ -324,7 +330,7 @@ void StatisticsDialog::setupUI() {
   m_searchBtn->setMinimumWidth(80);
   m_searchBtn->setStyleSheet(R"(
     QPushButton {
-      background-color: #007bff;
+      background-color: #2196F3;
       color: white;
       border: none;
       border-radius: 4px;
@@ -332,7 +338,7 @@ void StatisticsDialog::setupUI() {
       font-weight: 500;
     }
     QPushButton:hover {
-      background-color: #0056b3;
+      background-color: #1976D2;
     }
   )");
   connect(m_searchBtn, &QPushButton::clicked, this, &StatisticsDialog::onSearchClicked);
@@ -343,7 +349,7 @@ void StatisticsDialog::setupUI() {
   m_exportBtn->setMinimumWidth(80);
   m_exportBtn->setStyleSheet(R"(
     QPushButton {
-      background-color: #28a745;
+      background-color: #4CAF50;
       color: white;
       border: none;
       border-radius: 4px;
@@ -351,7 +357,7 @@ void StatisticsDialog::setupUI() {
       font-weight: 500;
     }
     QPushButton:hover {
-      background-color: #218838;
+      background-color: #45a049;
     }
   )");
   connect(m_exportBtn, &QPushButton::clicked, this, &StatisticsDialog::onExportClicked);
@@ -364,14 +370,14 @@ void StatisticsDialog::setupUI() {
 
   // 主内容区域（表格 + 详情面板）
   auto* contentWidget = new QWidget();
-  contentWidget->setStyleSheet("background-color: #f8f9fa;");
+  contentWidget->setStyleSheet("background-color: #2C2C2E;");
   auto* contentLayout = new QHBoxLayout(contentWidget);
   contentLayout->setContentsMargins(0, 0, 0, 0);
   contentLayout->setSpacing(0);
 
   // 左侧表格区域
   auto* tableWidget = new QWidget();
-  tableWidget->setStyleSheet("background-color: white;");
+  tableWidget->setStyleSheet("background-color: #2C2C2E;");
   auto* tableLayout = new QVBoxLayout(tableWidget);
   tableLayout->setContentsMargins(0, 0, 0, 0);
   tableLayout->setSpacing(0);
@@ -394,27 +400,29 @@ void StatisticsDialog::setupUI() {
   m_recordTable->setStyleSheet(R"(
     QTableWidget {
       border: none;
-      background-color: white;
-      gridline-color: #dee2e6;
+      background-color: #2C2C2E;
+      alternate-background-color: #333335;
+      gridline-color: #555;
+      color: #E0E0E0;
     }
     QTableWidget::item {
       padding: 8px;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid #555;
     }
     QTableWidget::item:selected {
-      background-color: #cfe2ff;
-      color: #084298;
+      background-color: #4CAF50;
+      color: white;
     }
     QTableWidget::item:hover {
-      background-color: #e7f1ff;
+      background-color: #3C3C3E;
     }
     QHeaderView::section {
-      background-color: #f8f9fa;
+      background-color: #3C3C3E;
       border: none;
-      border-bottom: 2px solid #dee2e6;
+      border-bottom: 2px solid #555;
       padding: 8px;
       font-weight: 500;
-      color: #495057;
+      color: #E0E0E0;
     }
   )");
 
@@ -431,26 +439,28 @@ void StatisticsDialog::setupUI() {
   // 分页控件
   auto* paginationWidget = new QWidget();
   paginationWidget->setFixedHeight(56);
-  paginationWidget->setStyleSheet("background-color: #f8f9fa; border-top: 1px solid #dee2e6;");
+  paginationWidget->setStyleSheet("background-color: #3C3C3E; border-top: 1px solid #555;");
   auto* paginationLayout = new QHBoxLayout(paginationWidget);
   paginationLayout->setContentsMargins(24, 0, 24, 0);
 
   m_paginationLabel = new QLabel();
-  m_paginationLabel->setStyleSheet("color: #6c757d; font-size: 14px;");
+  m_paginationLabel->setStyleSheet("color: #9E9E9E; font-size: 14px;");
   paginationLayout->addWidget(m_paginationLabel);
 
   paginationLayout->addStretch();
 
-  m_prevPageBtn = new QPushButton(tr("◀"));
+  m_prevPageBtn = new QPushButton();
+  m_prevPageBtn->setIcon(QIcon(":/resources/icons/arrow-left.svg"));
+  m_prevPageBtn->setIconSize(QSize(16, 16));
   m_prevPageBtn->setFixedSize(32, 32);
   m_prevPageBtn->setStyleSheet(R"(
     QPushButton {
-      background-color: white;
-      border: 1px solid #dee2e6;
+      background-color: #555;
+      border: 1px solid #666;
       border-radius: 4px;
     }
     QPushButton:hover:!disabled {
-      background-color: #e9ecef;
+      background-color: #666;
     }
     QPushButton:disabled {
       opacity: 0.5;
@@ -464,10 +474,12 @@ void StatisticsDialog::setupUI() {
   paginationLayout->addWidget(m_prevPageBtn);
 
   m_pageLabel = new QLabel();
-  m_pageLabel->setStyleSheet("padding: 0 16px; font-size: 14px;");
+  m_pageLabel->setStyleSheet("padding: 0 16px; font-size: 14px; color: #E0E0E0;");
   paginationLayout->addWidget(m_pageLabel);
 
-  m_nextPageBtn = new QPushButton(tr("▶"));
+  m_nextPageBtn = new QPushButton();
+  m_nextPageBtn->setIcon(QIcon(":/resources/icons/arrow-right.svg"));
+  m_nextPageBtn->setIconSize(QSize(16, 16));
   m_nextPageBtn->setFixedSize(32, 32);
   m_nextPageBtn->setStyleSheet(m_prevPageBtn->styleSheet());
   connect(m_nextPageBtn, &QPushButton::clicked, [this]() {
@@ -486,9 +498,9 @@ void StatisticsDialog::setupUI() {
   m_detailPanel->setFixedWidth(400);
   m_detailPanel->setStyleSheet(R"(
     QGroupBox {
-      background-color: #f8f9fa;
+      background-color: #2C2C2E;
       border: none;
-      border-left: 1px solid #dee2e6;
+      border-left: 1px solid #555;
     }
   )");
 
@@ -498,21 +510,21 @@ void StatisticsDialog::setupUI() {
 
   // 图像预览区域
   auto* imageContainer = new QWidget();
-  imageContainer->setStyleSheet("background-color: white; border-bottom: 1px solid #dee2e6;");
+  imageContainer->setStyleSheet("background-color: #3C3C3E; border-bottom: 1px solid #555;");
   auto* imageLayout = new QVBoxLayout(imageContainer);
   imageLayout->setContentsMargins(16, 16, 16, 16);
 
   auto* imageTitle = new QLabel(tr("图像预览"));
-  imageTitle->setStyleSheet("font-weight: 500; margin-bottom: 12px;");
+  imageTitle->setStyleSheet("font-weight: 500; margin-bottom: 12px; color: #E0E0E0;");
   imageLayout->addWidget(imageTitle);
 
   m_imagePreview = new QLabel();
   m_imagePreview->setFixedHeight(250);
   m_imagePreview->setStyleSheet(R"(
     QLabel {
-      background-color: #212529;
+      background-color: #1a1a1c;
       border-radius: 4px;
-      color: #6c757d;
+      color: #9E9E9E;
     }
   )");
   m_imagePreview->setAlignment(Qt::AlignCenter);
@@ -525,7 +537,7 @@ void StatisticsDialog::setupUI() {
   // 详细信息区域
   auto* infoScrollArea = new QScrollArea();
   infoScrollArea->setWidgetResizable(true);
-  infoScrollArea->setStyleSheet("QScrollArea { border: none; background-color: #f8f9fa; }");
+  infoScrollArea->setStyleSheet("QScrollArea { border: none; background-color: #2C2C2E; }");
 
   auto* infoContainer = new QWidget();
   auto* infoLayout = new QVBoxLayout(infoContainer);
@@ -533,7 +545,7 @@ void StatisticsDialog::setupUI() {
   infoLayout->setSpacing(12);
 
   auto* detailTitle = new QLabel(tr("详细信息"));
-  detailTitle->setStyleSheet("font-weight: 500; margin-bottom: 8px;");
+  detailTitle->setStyleSheet("font-weight: 500; margin-bottom: 8px; color: #E0E0E0;");
   infoLayout->addWidget(detailTitle);
 
   // 创建信息卡片的辅助函数
@@ -541,8 +553,8 @@ void StatisticsDialog::setupUI() {
     auto* card = new QWidget();
     card->setStyleSheet(R"(
       QWidget {
-        background-color: white;
-        border: 1px solid #dee2e6;
+        background-color: #3C3C3E;
+        border: 1px solid #555;
         border-radius: 4px;
       }
     )");
@@ -551,11 +563,11 @@ void StatisticsDialog::setupUI() {
     cardLayout->setSpacing(4);
 
     auto* labelWidget = new QLabel(label);
-    labelWidget->setStyleSheet("color: #6c757d; font-size: 12px;");
+    labelWidget->setStyleSheet("color: #9E9E9E; font-size: 12px;");
     cardLayout->addWidget(labelWidget);
 
     valueLabel = new QLabel("-");
-    valueLabel->setStyleSheet("font-size: 14px; color: #212529;");
+    valueLabel->setStyleSheet("font-size: 14px; color: #E0E0E0;");
     cardLayout->addWidget(valueLabel);
 
     return card;

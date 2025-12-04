@@ -44,6 +44,8 @@ signals:
 
 public slots:
   void setZoomLevel(double zoom);
+  void setDisplayMode(int mode);  // 0=原图, 1=标注图
+  void setShowROI(bool show);
 
 private:
   void setupUI();

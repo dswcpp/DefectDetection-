@@ -33,9 +33,11 @@ void PLCSettingsPage::setupUI() {
   protocolCombo->setMinimumWidth(200);
   commLayout->addWidget(protocolCombo);
 
-  commLayout->addWidget(new QLabel(tr("连接状态")));
+  auto* connStatusTitle = new QLabel(tr("连接状态"));
+  connStatusTitle->setStyleSheet("color: #E0E0E0;");
+  commLayout->addWidget(connStatusTitle);
   auto* statusLabel = new QLabel(tr("● 未连接"));
-  statusLabel->setStyleSheet("color: #ef4444; background-color: #fee; padding: 6px 12px; border-radius: 4px;");
+  statusLabel->setStyleSheet("color: #ef4444; background-color: #3C2020; padding: 6px 12px; border-radius: 4px;");
   commLayout->addWidget(statusLabel);
   commLayout->addStretch();
 
@@ -118,8 +120,8 @@ void PLCSettingsPage::setupUI() {
   testBtn->setMinimumHeight(36);
   testBtn->setMinimumWidth(120);
   testBtn->setStyleSheet(R"(
-    QPushButton { background-color: #3b82f6; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #2563eb; }
+    QPushButton { background-color: #5C6BC0; border: none; border-radius: 4px; color: white; }
+    QPushButton:hover { background-color: #3F51B5; }
   )");
   btnLayout->addWidget(testBtn);
 
@@ -127,8 +129,8 @@ void PLCSettingsPage::setupUI() {
   connectBtn->setMinimumHeight(36);
   connectBtn->setMinimumWidth(120);
   connectBtn->setStyleSheet(R"(
-    QPushButton { background-color: #10b981; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #059669; }
+    QPushButton { background-color: #4CAF50; border: none; border-radius: 4px; color: white; }
+    QPushButton:hover { background-color: #43A047; }
   )");
   btnLayout->addWidget(connectBtn);
 
@@ -136,8 +138,8 @@ void PLCSettingsPage::setupUI() {
   disconnectBtn->setMinimumHeight(36);
   disconnectBtn->setMinimumWidth(120);
   disconnectBtn->setStyleSheet(R"(
-    QPushButton { background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { background-color: #3C3C3E; border: 1px solid #555; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #48484A; }
   )");
   btnLayout->addWidget(disconnectBtn);
   btnLayout->addStretch();

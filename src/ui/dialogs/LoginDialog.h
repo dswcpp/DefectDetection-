@@ -16,7 +16,7 @@
 #ifndef LOGINDIALOG_H
 #define LOGINDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include "ui_global.h"
 
 QT_BEGIN_NAMESPACE
@@ -28,7 +28,7 @@ QT_END_NAMESPACE
 
 class DatabaseManager;
 
-class UI_LIBRARY LoginDialog : public QDialog {
+class UI_LIBRARY LoginDialog : public FramelessDialog {
     Q_OBJECT
 
 public:

@@ -59,24 +59,16 @@ void ParamPanel::setupUI()
   rootLayout->addWidget(scrollArea);
 
   // 创建划痕检测参数组
-  auto* scratchWidget = createCollapsibleSection(tr("划痕检测"),
-                                                 createScratchParams(),
-                                                 true);
+  createCollapsibleSection(tr("划痕检测"), createScratchParams(), true);
 
   // 创建裂纹检测参数组
-  auto* crackWidget = createCollapsibleSection(tr("裂纹检测"),
-                                               createCrackParams(),
-                                               false);
+  createCollapsibleSection(tr("裂纹检测"), createCrackParams(), false);
 
   // 创建异物检测参数组
-  auto* foreignWidget = createCollapsibleSection(tr("异物检测"),
-                                                 createForeignParams(),
-                                                 false);
+  createCollapsibleSection(tr("异物检测"), createForeignParams(), false);
 
   // 创建尺寸测量参数组
-  auto* dimensionWidget = createCollapsibleSection(tr("尺寸测量"),
-                                                   createDimensionParams(),
-                                                   false);
+  createCollapsibleSection(tr("尺寸测量"), createDimensionParams(), false);
 
   // 添加弹性空间
   m_mainLayout->addStretch();
@@ -281,7 +273,7 @@ QWidget* ParamPanel::createDimensionParams()
   return widget;
 }
 
-QSlider* ParamPanel::createSlider(const QString& detector, const QString& key,
+QSlider* ParamPanel::createSlider(const QString& detector, const QString& /*key*/,
                                   int min, int max, int value, QLabel* valueLabel)
 {
   auto* slider = new QSlider(Qt::Horizontal, this);

@@ -16,7 +16,7 @@
 #ifndef SETTINGSDIALOG_H
 #define SETTINGSDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 
 class QStackedWidget;
 class QLabel;
@@ -28,7 +28,7 @@ class StorageSettingsPage;
 class DetectionSettingsPage;
 class UserSettingsPage;
 
-class SettingsDialog : public QDialog {
+class SettingsDialog : public FramelessDialog {
   Q_OBJECT
 public:
   explicit SettingsDialog(QWidget* parent = nullptr);

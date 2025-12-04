@@ -31,7 +31,7 @@ cv::Mat PreprocessCache::getOrCompute(const cv::Mat& input,
   locker.relock();
   
   // 如果缓存已满，移除最旧的
-  if (m_cache.size() >= m_maxSize) {
+  if (static_cast<size_t>(m_cache.size()) >= m_maxSize) {
     evictOldest();
   }
   
@@ -55,7 +55,7 @@ void PreprocessCache::clear() {
 void PreprocessCache::setMaxSize(size_t size) {
   QMutexLocker locker(&m_mutex);
   m_maxSize = size;
-  while (m_cache.size() > m_maxSize) {
+  while (static_cast<size_t>(m_cache.size()) > m_maxSize) {
     evictOldest();
   }
 }

@@ -6,25 +6,25 @@
 #include <QPixmap>
 #include <QApplication>
 
-AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent) {
+AboutDialog::AboutDialog(QWidget* parent) : FramelessDialog(parent) {
+    setDialogTitle(tr("关于"));
+    setResizeable(false);
     setupUI();
 }
 
 void AboutDialog::setupUI() {
-    setWindowTitle(tr("关于"));
-    setFixedSize(450, 400);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setFixedSize(450, 440);
 
-    // 主布局
-    auto* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(30, 30, 30, 20);
+    // 使用 FramelessDialog 提供的内容布局
+    auto* mainLayout = contentLayout();
+    mainLayout->setContentsMargins(30, 20, 30, 20);
     mainLayout->setSpacing(10);
 
     // Logo（可以用应用图标或者文字代替）
     auto* logoLabel = new QLabel();
     logoLabel->setAlignment(Qt::AlignCenter);
     // 如果有logo图片，可以设置：
-    // logoLabel->setPixmap(QPixmap(":/icons/logo.svg").scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // logoLabel->setPixmap(QPixmap(":/resources/icons/logo.svg").scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     // 暂时用文字代替
     logoLabel->setText("🔍");
     logoLabel->setStyleSheet("font-size: 48px;");
@@ -38,7 +38,7 @@ void AboutDialog::setupUI() {
     titleLabel->setStyleSheet(R"(
         font-size: 20px;
         font-weight: bold;
-        color: #333;
+        color: #E0E0E0;
     )");
     mainLayout->addWidget(titleLabel);
 
@@ -47,7 +47,7 @@ void AboutDialog::setupUI() {
     versionLabel->setAlignment(Qt::AlignCenter);
     versionLabel->setStyleSheet(R"(
         font-size: 14px;
-        color: #666;
+        color: #9E9E9E;
     )");
     mainLayout->addWidget(versionLabel);
 
@@ -59,7 +59,7 @@ void AboutDialog::setupUI() {
     descLabel->setWordWrap(true);
     descLabel->setStyleSheet(R"(
         font-size: 13px;
-        color: #555;
+        color: #B0B0B0;
         line-height: 1.5;
     )");
     mainLayout->addWidget(descLabel);
@@ -71,8 +71,9 @@ void AboutDialog::setupUI() {
     techLabel->setAlignment(Qt::AlignCenter);
     techLabel->setStyleSheet(R"(
         font-size: 12px;
-        color: #777;
-        background-color: #f8f9fa;
+        color: #9E9E9E;
+        background-color: #3C3C3E;
+        border: 1px solid #555;
         padding: 8px;
         border-radius: 4px;
     )");
@@ -85,7 +86,7 @@ void AboutDialog::setupUI() {
     copyrightLabel->setAlignment(Qt::AlignCenter);
     copyrightLabel->setStyleSheet(R"(
         font-size: 11px;
-        color: #999;
+        color: #888;
     )");
     mainLayout->addWidget(copyrightLabel);
 
@@ -96,18 +97,19 @@ void AboutDialog::setupUI() {
     closeBtn->setFixedWidth(100);
     closeBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             padding: 6px 16px;
             font-size: 13px;
+            font-weight: bold;
         }
         QPushButton:hover {
-            background-color: #0056b3;
+            background-color: #45a049;
         }
         QPushButton:pressed {
-            background-color: #004085;
+            background-color: #3d8b40;
         }
     )");
 

@@ -70,7 +70,7 @@ void AnnotationPanel::setupUI() {
     // 标题
     auto* titleLabel = new QLabel(tr("缺陷标注"));
     titleLabel->setObjectName("panelTitle");
-    titleLabel->setStyleSheet("font-size: 14px; font-weight: bold; color: #1e293b;");
+    titleLabel->setStyleSheet("font-size: 14px; font-weight: bold; color: #E0E0E0;");
     mainLayout->addWidget(titleLabel);
 
     // 标注模式开关
@@ -79,7 +79,7 @@ void AnnotationPanel::setupUI() {
     m_annotateBtn->setObjectName("primaryButton");
     m_annotateBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #3b82f6;
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 6px;
@@ -87,13 +87,13 @@ void AnnotationPanel::setupUI() {
             font-weight: bold;
         }
         QPushButton:hover {
-            background-color: #2563eb;
+            background-color: #43A047;
         }
         QPushButton:checked {
-            background-color: #dc2626;
+            background-color: #e53935;
         }
         QPushButton:checked:hover {
-            background-color: #b91c1c;
+            background-color: #d32f2f;
         }
     )");
     mainLayout->addWidget(m_annotateBtn);
@@ -106,7 +106,7 @@ void AnnotationPanel::setupUI() {
 
     // 形状选择组
     auto* shapeGroup = new QGroupBox(tr("标注形状"));
-    shapeGroup->setStyleSheet("QGroupBox { font-weight: bold; }");
+    shapeGroup->setStyleSheet("QGroupBox { font-weight: bold; color: #E0E0E0; }");
     auto* shapeLayout = new QVBoxLayout();
 
     auto* buttonGroup = new QButtonGroup(this);
@@ -127,7 +127,7 @@ void AnnotationPanel::setupUI() {
 
     // 缺陷类型选择
     auto* typeLabel = new QLabel(tr("缺陷类型:"));
-    typeLabel->setStyleSheet("font-weight: bold;");
+    typeLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     mainLayout->addWidget(typeLabel);
 
     m_typeCombo = new QComboBox();
@@ -135,23 +135,29 @@ void AnnotationPanel::setupUI() {
                           tr("异物"), tr("变形"), tr("色差"), tr("其他")});
     m_typeCombo->setStyleSheet(R"(
         QComboBox {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #555;
             border-radius: 4px;
             padding: 5px;
-            background: white;
+            background: #3C3C3E;
+            color: #E0E0E0;
         }
         QComboBox:hover {
-            border-color: #3b82f6;
+            border-color: #4CAF50;
         }
         QComboBox::drop-down {
             border: none;
+        }
+        QComboBox QAbstractItemView {
+            background: #3C3C3E;
+            color: #E0E0E0;
+            selection-background-color: #4CAF50;
         }
     )");
     mainLayout->addWidget(m_typeCombo);
 
     // 严重等级选择
     auto* severityLabel = new QLabel(tr("严重等级:"));
-    severityLabel->setStyleSheet("font-weight: bold;");
+    severityLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     mainLayout->addWidget(severityLabel);
 
     m_severityCombo = new QComboBox();
@@ -161,13 +167,19 @@ void AnnotationPanel::setupUI() {
     // 为不同严重等级设置不同颜色的样式
     m_severityCombo->setStyleSheet(R"(
         QComboBox {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #555;
             border-radius: 4px;
             padding: 5px;
-            background: white;
+            background: #3C3C3E;
+            color: #E0E0E0;
         }
         QComboBox:hover {
-            border-color: #3b82f6;
+            border-color: #4CAF50;
+        }
+        QComboBox QAbstractItemView {
+            background: #3C3C3E;
+            color: #E0E0E0;
+            selection-background-color: #4CAF50;
         }
     )");
     mainLayout->addWidget(m_severityCombo);
@@ -180,27 +192,28 @@ void AnnotationPanel::setupUI() {
 
     // 标注列表
     auto* listLabel = new QLabel(tr("标注列表:"));
-    listLabel->setStyleSheet("font-weight: bold;");
+    listLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     mainLayout->addWidget(listLabel);
 
     m_annotationList = new QListWidget();
     m_annotationList->setMaximumHeight(150);
     m_annotationList->setStyleSheet(R"(
         QListWidget {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #555;
             border-radius: 4px;
-            background: white;
+            background: #3C3C3E;
+            color: #E0E0E0;
         }
         QListWidget::item {
             padding: 4px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #555;
         }
         QListWidget::item:selected {
-            background-color: #dbeafe;
-            color: #1e40af;
+            background-color: #4CAF50;
+            color: white;
         }
         QListWidget::item:hover {
-            background-color: #f3f4f6;
+            background-color: #48484A;
         }
     )");
     mainLayout->addWidget(m_annotationList);
@@ -211,40 +224,41 @@ void AnnotationPanel::setupUI() {
 
     // 保存/加载按钮（水平排列）
     auto* fileButtonLayout = new QHBoxLayout();
-
     m_saveBtn = new QPushButton(tr("保存"));
-    m_saveBtn->setIcon(QIcon(":/icons/save.svg"));
+    m_saveBtn->setIcon(QIcon(":/resources/icons/save.svg"));
     m_saveBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #10b981;
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             padding: 6px 12px;
         }
         QPushButton:hover {
-            background-color: #059669;
+            background-color: #43A047;
         }
         QPushButton:disabled {
-            background-color: #9ca3af;
+            background-color: #555;
+            color: #888;
         }
     )");
 
     m_loadBtn = new QPushButton(tr("加载"));
-    m_loadBtn->setIcon(QIcon(":/icons/open.svg"));
+    m_loadBtn->setIcon(QIcon(":/resources/icons/open.svg"));
     m_loadBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #6366f1;
+            background-color: #5C6BC0;
             color: white;
             border: none;
             border-radius: 4px;
             padding: 6px 12px;
         }
         QPushButton:hover {
-            background-color: #4f46e5;
+            background-color: #3F51B5;
         }
         QPushButton:disabled {
-            background-color: #9ca3af;
+            background-color: #555;
+            color: #888;
         }
     )");
 
@@ -256,38 +270,40 @@ void AnnotationPanel::setupUI() {
     auto* actionButtonLayout = new QHBoxLayout();
 
     m_exportBtn = new QPushButton(tr("导出"));
-    m_exportBtn->setIcon(QIcon(":/icons/export.svg"));
+    m_exportBtn->setIcon(QIcon(":/resources/icons/export.svg"));
     m_exportBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #f59e0b;
+            background-color: #FF9800;
             color: white;
             border: none;
             border-radius: 4px;
             padding: 6px 12px;
         }
         QPushButton:hover {
-            background-color: #d97706;
+            background-color: #F57C00;
         }
         QPushButton:disabled {
-            background-color: #9ca3af;
+            background-color: #555;
+            color: #888;
         }
     )");
 
     m_clearBtn = new QPushButton(tr("清除"));
-    m_clearBtn->setIcon(QIcon(":/icons/delete.svg"));
+    m_clearBtn->setIcon(QIcon(":/resources/icons/delete.svg"));
     m_clearBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #ef4444;
+            background-color: #e53935;
             color: white;
             border: none;
             border-radius: 4px;
             padding: 6px 12px;
         }
         QPushButton:hover {
-            background-color: #dc2626;
+            background-color: #d32f2f;
         }
         QPushButton:disabled {
-            background-color: #9ca3af;
+            background-color: #555;
+            color: #888;
         }
     )");
 
@@ -299,7 +315,7 @@ void AnnotationPanel::setupUI() {
 
     // 提示信息
     auto* hintLabel = new QLabel(tr("提示: ESC取消绘制, Delete删除选中"));
-    hintLabel->setStyleSheet("color: #6b7280; font-size: 11px;");
+    hintLabel->setStyleSheet("color: #ADADAD; font-size: 11px;");
     hintLabel->setWordWrap(true);
     mainLayout->addWidget(hintLabel);
 
@@ -309,11 +325,11 @@ void AnnotationPanel::setupUI() {
     scrollArea->setWidget(contentWidget);
     rootLayout->addWidget(scrollArea);
 
-    // 设置整体样式
+    // 设置整体样式 - 暗黑风格
     setStyleSheet(R"(
         AnnotationPanel {
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background-color: #2C2C2E;
+            border: 1px solid #48484A;
             border-radius: 8px;
         }
         QScrollArea {
@@ -321,6 +337,16 @@ void AnnotationPanel::setupUI() {
         }
         QScrollArea > QWidget > QWidget {
             background: transparent;
+        }
+        QRadioButton {
+            color: #E0E0E0;
+        }
+        QRadioButton::indicator {
+            width: 14px;
+            height: 14px;
+        }
+        QFrame[frameShape="4"] {
+            background-color: #48484A;
         }
     )");
 }
@@ -539,9 +565,10 @@ void AnnotationPanel::onAnnotationItemClicked() {
     // 可以添加选中标注的功能
     auto* item = m_annotationList->currentItem();
     if (item) {
-        int id = item->data(Qt::UserRole).toInt();
+        // int id = item->data(Qt::UserRole).toInt();
         // 可以高亮显示选中的标注
         // m_imageView->selectAnnotation(id);
+        Q_UNUSED(item)
     }
 }
 

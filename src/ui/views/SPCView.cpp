@@ -226,31 +226,42 @@ void SPCView::setupUI() {
 
     // 统计指标组
     auto* statsGroup = new QGroupBox(tr("统计指标"));
+    statsGroup->setStyleSheet("QGroupBox { color: #E0E0E0; font-weight: bold; } QGroupBox::title { color: #E0E0E0; }");
     auto* statsLayout = new QGridLayout();
 
     // 基本统计
-    statsLayout->addWidget(new QLabel(tr("均值:")), 0, 0);
+    auto* meanLabelTitle = new QLabel(tr("均值:"));
+    meanLabelTitle->setStyleSheet("color: #ADADAD;");
+    statsLayout->addWidget(meanLabelTitle, 0, 0);
     m_meanLabel = new QLabel("--");
-    m_meanLabel->setStyleSheet("font-weight: bold;");
+    m_meanLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     statsLayout->addWidget(m_meanLabel, 0, 1);
 
-    statsLayout->addWidget(new QLabel(tr("标准差:")), 1, 0);
+    auto* stdDevLabelTitle = new QLabel(tr("标准差:"));
+    stdDevLabelTitle->setStyleSheet("color: #ADADAD;");
+    statsLayout->addWidget(stdDevLabelTitle, 1, 0);
     m_stdDevLabel = new QLabel("--");
-    m_stdDevLabel->setStyleSheet("font-weight: bold;");
+    m_stdDevLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     statsLayout->addWidget(m_stdDevLabel, 1, 1);
 
     // 控制限
-    statsLayout->addWidget(new QLabel(tr("UCL:")), 2, 0);
+    auto* uclLabelTitle = new QLabel(tr("UCL:"));
+    uclLabelTitle->setStyleSheet("color: #ADADAD;");
+    statsLayout->addWidget(uclLabelTitle, 2, 0);
     m_uclLabel = new QLabel("--");
     m_uclLabel->setStyleSheet("color: #f44336; font-weight: bold;");
     statsLayout->addWidget(m_uclLabel, 2, 1);
 
-    statsLayout->addWidget(new QLabel(tr("CL:")), 3, 0);
+    auto* clLabelTitle = new QLabel(tr("CL:"));
+    clLabelTitle->setStyleSheet("color: #ADADAD;");
+    statsLayout->addWidget(clLabelTitle, 3, 0);
     m_clLabel = new QLabel("--");
     m_clLabel->setStyleSheet("color: #4CAF50; font-weight: bold;");
     statsLayout->addWidget(m_clLabel, 3, 1);
 
-    statsLayout->addWidget(new QLabel(tr("LCL:")), 4, 0);
+    auto* lclLabelTitle = new QLabel(tr("LCL:"));
+    lclLabelTitle->setStyleSheet("color: #ADADAD;");
+    statsLayout->addWidget(lclLabelTitle, 4, 0);
     m_lclLabel = new QLabel("--");
     m_lclLabel->setStyleSheet("color: #f44336; font-weight: bold;");
     statsLayout->addWidget(m_lclLabel, 4, 1);
@@ -260,26 +271,35 @@ void SPCView::setupUI() {
 
     // 过程能力指标组
     auto* capabilityGroup = new QGroupBox(tr("过程能力指标"));
+    capabilityGroup->setStyleSheet("QGroupBox { color: #E0E0E0; font-weight: bold; } QGroupBox::title { color: #E0E0E0; }");
     auto* capabilityLayout = new QGridLayout();
 
-    capabilityLayout->addWidget(new QLabel(tr("Cp:")), 0, 0);
+    auto* cpLabelTitle = new QLabel(tr("Cp:"));
+    cpLabelTitle->setStyleSheet("color: #ADADAD;");
+    capabilityLayout->addWidget(cpLabelTitle, 0, 0);
     m_cpLabel = new QLabel("--");
-    m_cpLabel->setStyleSheet("font-weight: bold;");
+    m_cpLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     capabilityLayout->addWidget(m_cpLabel, 0, 1);
 
-    capabilityLayout->addWidget(new QLabel(tr("Cpk:")), 1, 0);
+    auto* cpkLabelTitle = new QLabel(tr("Cpk:"));
+    cpkLabelTitle->setStyleSheet("color: #ADADAD;");
+    capabilityLayout->addWidget(cpkLabelTitle, 1, 0);
     m_cpkLabel = new QLabel("--");
-    m_cpkLabel->setStyleSheet("font-weight: bold;");
+    m_cpkLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     capabilityLayout->addWidget(m_cpkLabel, 1, 1);
 
-    capabilityLayout->addWidget(new QLabel(tr("Pp:")), 2, 0);
+    auto* ppLabelTitle = new QLabel(tr("Pp:"));
+    ppLabelTitle->setStyleSheet("color: #ADADAD;");
+    capabilityLayout->addWidget(ppLabelTitle, 2, 0);
     m_ppLabel = new QLabel("--");
-    m_ppLabel->setStyleSheet("font-weight: bold;");
+    m_ppLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     capabilityLayout->addWidget(m_ppLabel, 2, 1);
 
-    capabilityLayout->addWidget(new QLabel(tr("Ppk:")), 3, 0);
+    auto* ppkLabelTitle = new QLabel(tr("Ppk:"));
+    ppkLabelTitle->setStyleSheet("color: #ADADAD;");
+    capabilityLayout->addWidget(ppkLabelTitle, 3, 0);
     m_ppkLabel = new QLabel("--");
-    m_ppkLabel->setStyleSheet("font-weight: bold;");
+    m_ppkLabel->setStyleSheet("font-weight: bold; color: #E0E0E0;");
     capabilityLayout->addWidget(m_ppkLabel, 3, 1);
 
     capabilityGroup->setLayout(capabilityLayout);

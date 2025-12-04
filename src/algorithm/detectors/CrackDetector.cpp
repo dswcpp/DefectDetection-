@@ -93,7 +93,7 @@ DetectionResult CrackDetector::detect(const cv::Mat& image) {
   return makeSuccessResult(defects, timeMs);
 }
 
-std::vector<DefectInfo> CrackDetector::findCracks(const cv::Mat& binary, const cv::Mat& original) {
+std::vector<DefectInfo> CrackDetector::findCracks(const cv::Mat& binary, const cv::Mat& /*original*/) {
   std::vector<DefectInfo> defects;
 
   // 查找轮廓

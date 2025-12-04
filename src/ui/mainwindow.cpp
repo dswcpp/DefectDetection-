@@ -46,7 +46,7 @@
 #include <algorithm>
 #include "common/Logger.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent} {
+MainWindow::MainWindow(QWidget *parent) : FramelessMainWindow(parent) {
   setupUI();
 
   // 初始化数据库

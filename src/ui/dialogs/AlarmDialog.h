@@ -16,7 +16,7 @@
 #ifndef ALARMDIALOG_H
 #define ALARMDIALOG_H
 
-#include <QDialog>
+#include "widgets/FramelessDialog.h"
 #include <QDateTime>
 #include "../../common/Types.h"
 
@@ -36,7 +36,7 @@ struct AlarmEntry {
     bool acknowledged;
 };
 
-class AlarmDialog : public QDialog {
+class AlarmDialog : public FramelessDialog {
     Q_OBJECT
 
 public:

@@ -3406,5 +3406,27 @@
         <file>resources/icons/user.svg</file>
         <file>../../resources/icons/history.svg</file>
         <file>resources/icons/history.svg</file>
+        <file>resources/icons/arrow-downward.svg</file>
+        <file>resources/icons/person-done.svg</file>
+        <file>resources/icons/person-delete.svg</file>
+        <file>resources/icons/person-add.svg</file>
+        <file>resources/icons/person-remove.svg</file>
+        <file>resources/icons/person.svg</file>
+        <file>resources/icons/eye.svg</file>
+        <file>resources/icons/eye-off.svg</file>
+        <file>resources/icons/eye-off-2.svg</file>
+        <file>resources/icons/arrow-right.svg</file>
+        <file>resources/icons/arrow-left.svg</file>
+        <file>resources/icons/arrow-up.svg</file>
+        <file>resources/icons/arrow-down.svg</file>
+        <file>resources/icons/maximize_20_max.svg</file>
+        <file>resources/icons/maximize_20_normal.svg</file>
+        <file>resources/icons/minimize_20.svg</file>
+        <file>resources/icons/close_20.svg</file>
+        <file>resources/styles/dark-theme.qss</file>
+        <file>resources/icons/save.svg</file>
+        <file>resources/icons/open.svg</file>
+        <file>resources/icons/export.svg</file>
+        <file>resources/icons/delete.svg</file>
     </qresource>
 </RCC>

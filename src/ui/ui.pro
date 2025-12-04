@@ -44,6 +44,9 @@ HEADERS += \
     views/SPCView.h \
     views/StatisticsView.h \
     widgets/AnnotationPanel.h \
+    widgets/FramelessDialog.h \
+    widgets/FramelessMainWindow.h \
+    widgets/FramelessWindow.h \
     widgets/ImageView.h \
     widgets/ImageViewControls.h \
     widgets/ParamPanel.h \
@@ -78,6 +81,9 @@ SOURCES += \
     views/SPCView.cpp \
     views/StatisticsView.cpp \
     widgets/AnnotationPanel.cpp \
+    widgets/FramelessDialog.cpp \
+    widgets/FramelessMainWindow.cpp \
+    widgets/FramelessWindow.cpp \
     widgets/ImageView.cpp \
     widgets/ImageViewControls.cpp \
     widgets/ParamPanel.cpp \
@@ -108,40 +114,20 @@ win32-g++ {
     QMAKE_LIBS += -lopencv_world460
 }
 
-LIBS += -LF:/Code/QT/DefectDetection/third_party/opencv/x64/mingw/lib -lopencv_world460
-QMAKE_LIBDIR += F:/Code/QT/DefectDetection/third_party/opencv/x64/mingw/lib
-QMAKE_LIBS += -lopencv_world460
-message("UI LIBS after OpenCV: $$LIBS")
-
-LIBS += -L$$OUT_PWD/../common -lcommon
+# 所有库都在 bin 目录
+LIBS += -L$$BIN_DIR -lcommon -lalgorithm -lhal -ldata
 
 INCLUDEPATH += $$PWD/../common
-DEPENDPATH += $$PWD/../common
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/common.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-
-LIBS += -L$$OUT_PWD/../algorithm/ -lalgorithm
-
 INCLUDEPATH += $$PWD/../algorithm
-DEPENDPATH += $$PWD/../algorithm
-
-# hal 模块 (FileCamera)
 INCLUDEPATH += $$PWD/../hal
-LIBS += -L$$OUT_PWD/../hal -lhal
-
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../hal/hal.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../hal/libhal.a
-
-# data 模块 (DatabaseManager, Repositories)
 INCLUDEPATH += $$PWD/../data
-LIBS += -L$$OUT_PWD/../data -ldata
 
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../data/data.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../data/libdata.a
+DEPENDPATH += $$PWD/../common
+DEPENDPATH += $$PWD/../algorithm
+DEPENDPATH += $$PWD/../hal
+DEPENDPATH += $$PWD/../data
+
+# PRE_TARGETDEPS 在子目录构建时由 qmake ordered 配置处理
 
 RESOURCES += \
     resource.qrc

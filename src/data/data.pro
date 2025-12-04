@@ -51,11 +51,10 @@ SOURCES += \
 target.path = $$DESTDIR/lib
 INSTALLS += target
 
-LIBS += -L$$OUT_PWD/../common -lcommon
+# 所有库都在 bin 目录
+LIBS += -L$$BIN_DIR -lcommon
 
 INCLUDEPATH += $$PWD/../common
 DEPENDPATH += $$PWD/../common
 
-win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
-else:win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../common/common.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../common/libcommon.a
+# PRE_TARGETDEPS 在子目录构建时由 qmake ordered 配置处理

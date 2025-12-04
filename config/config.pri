@@ -31,7 +31,9 @@ THIRD_PARTY_DIR = $$ROOT_DIR/third_party
 EXTERNAL_DIR = $$ROOT_DIR/external
 
 # ------------------ 构建输出目录 ------------------
-DESTDIR = $$OUT_PWD
+# 所有动态库和可执行程序都输出到 bin 目录
+BIN_DIR = $$ROOT_DIR/bin
+DESTDIR = $$BIN_DIR
 OBJECTS_DIR = $$OUT_PWD/obj
 MOC_DIR = $$OUT_PWD/moc
 RCC_DIR = $$OUT_PWD/rcc

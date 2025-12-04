@@ -17,19 +17,20 @@
 #include <QInputDialog>
 
 UserManagementDialog::UserManagementDialog(QWidget* parent)
-    : QDialog(parent) {
+    : FramelessDialog(parent) {
+    setDialogTitle(tr("用户管理"));
+    setShowMaxButton(true);
     setupUI();
     refreshUserList();
 }
 
 void UserManagementDialog::setupUI() {
-    setWindowTitle(tr("用户管理"));
-    setMinimumSize(900, 600);
-    resize(1000, 650);
+    setMinimumSize(900, 650);
+    resize(1000, 700);
 
-    auto* mainLayout = new QHBoxLayout(this);
+    auto* mainLayout = new QHBoxLayout(contentWidget());
     mainLayout->setSpacing(16);
-    mainLayout->setContentsMargins(16, 16, 16, 16);
+    mainLayout->setContentsMargins(16, 8, 16, 16);
 
     // ==================== 左侧：用户列表 ====================
     auto* leftPanel = new QWidget();
@@ -38,7 +39,7 @@ void UserManagementDialog::setupUI() {
     leftLayout->setSpacing(8);
 
     auto* listTitle = new QLabel(tr("用户列表"));
-    listTitle->setStyleSheet("font-weight: bold; font-size: 14px;");
+    listTitle->setStyleSheet("font-weight: bold; font-size: 14px; color: #E0E0E0;");
     leftLayout->addWidget(listTitle);
 
     m_userTable = new QTableWidget();
@@ -52,20 +53,24 @@ void UserManagementDialog::setupUI() {
     m_userTable->verticalHeader()->setVisible(false);
     m_userTable->setStyleSheet(R"(
         QTableWidget {
-            border: 1px solid #dee2e6;
+            border: 1px solid #555;
             border-radius: 4px;
-            background-color: white;
+            background-color: #2C2C2E;
+            alternate-background-color: #333335;
+            gridline-color: #555;
+            color: #E0E0E0;
         }
         QTableWidget::item:selected {
-            background-color: #cfe2ff;
-            color: #084298;
+            background-color: #4CAF50;
+            color: white;
         }
         QHeaderView::section {
-            background-color: #f8f9fa;
+            background-color: #3C3C3E;
             padding: 8px;
             border: none;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid #555;
             font-weight: 500;
+            color: #E0E0E0;
         }
     )");
     connect(m_userTable, &QTableWidget::itemSelectionChanged, this, &UserManagementDialog::onUserSelected);
@@ -75,8 +80,8 @@ void UserManagementDialog::setupUI() {
     auto* btnBar = new QHBoxLayout();
     m_addBtn = new QPushButton(tr("新增用户"));
     m_addBtn->setStyleSheet(R"(
-        QPushButton { background-color: #28a745; color: white; border: none; border-radius: 4px; padding: 8px 16px; }
-        QPushButton:hover { background-color: #218838; }
+        QPushButton { background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 8px 16px; }
+        QPushButton:hover { background-color: #45a049; }
     )");
     connect(m_addBtn, &QPushButton::clicked, this, &UserManagementDialog::onAddUser);
     btnBar->addWidget(m_addBtn);
@@ -84,9 +89,9 @@ void UserManagementDialog::setupUI() {
     m_deleteBtn = new QPushButton(tr("删除用户"));
     m_deleteBtn->setEnabled(false);
     m_deleteBtn->setStyleSheet(R"(
-        QPushButton { background-color: #dc3545; color: white; border: none; border-radius: 4px; padding: 8px 16px; }
-        QPushButton:hover { background-color: #c82333; }
-        QPushButton:disabled { background-color: #f5c6cb; }
+        QPushButton { background-color: #e53935; color: white; border: none; border-radius: 4px; padding: 8px 16px; }
+        QPushButton:hover { background-color: #c62828; }
+        QPushButton:disabled { background-color: #555; color: #888; }
     )");
     connect(m_deleteBtn, &QPushButton::clicked, this, &UserManagementDialog::onDeleteUser);
     btnBar->addWidget(m_deleteBtn);
@@ -94,9 +99,9 @@ void UserManagementDialog::setupUI() {
     m_resetPwdBtn = new QPushButton(tr("重置密码"));
     m_resetPwdBtn->setEnabled(false);
     m_resetPwdBtn->setStyleSheet(R"(
-        QPushButton { background-color: #ffc107; color: #212529; border: none; border-radius: 4px; padding: 8px 16px; }
-        QPushButton:hover { background-color: #e0a800; }
-        QPushButton:disabled { background-color: #fff3cd; }
+        QPushButton { background-color: #ff9800; color: white; border: none; border-radius: 4px; padding: 8px 16px; }
+        QPushButton:hover { background-color: #f57c00; }
+        QPushButton:disabled { background-color: #555; color: #888; }
     )");
     connect(m_resetPwdBtn, &QPushButton::clicked, this, &UserManagementDialog::onResetPassword);
     btnBar->addWidget(m_resetPwdBtn);
@@ -111,10 +116,11 @@ void UserManagementDialog::setupUI() {
     m_editGroup->setStyleSheet(R"(
         QGroupBox {
             font-weight: bold;
-            border: 1px solid #dee2e6;
+            border: 1px solid #555;
             border-radius: 4px;
             margin-top: 10px;
             padding-top: 10px;
+            color: #E0E0E0;
         }
         QGroupBox::title {
             subcontrol-origin: margin;
@@ -133,7 +139,7 @@ void UserManagementDialog::setupUI() {
     formLayout->addWidget(new QLabel(tr("用户名:")), 0, 0);
     m_usernameEdit = new QLineEdit();
     m_usernameEdit->setPlaceholderText(tr("登录用户名"));
-    m_usernameEdit->setStyleSheet("QLineEdit { padding: 6px; border: 1px solid #ced4da; border-radius: 4px; }");
+    m_usernameEdit->setStyleSheet("QLineEdit { padding: 6px; border: 1px solid #555; border-radius: 4px; background-color: #3C3C3E; color: #E0E0E0; }");
     formLayout->addWidget(m_usernameEdit, 0, 1);
 
     // 显示名
@@ -157,7 +163,7 @@ void UserManagementDialog::setupUI() {
     m_roleCombo->addItem(tr("管理员"), "admin");
     m_roleCombo->addItem(tr("操作员"), "operator");
     m_roleCombo->addItem(tr("观察员"), "viewer");
-    m_roleCombo->setStyleSheet("QComboBox { padding: 6px; border: 1px solid #ced4da; border-radius: 4px; }");
+    m_roleCombo->setStyleSheet("QComboBox { padding: 6px; border: 1px solid #555; border-radius: 4px; background-color: #3C3C3E; color: #E0E0E0; }");
     connect(m_roleCombo, &QComboBox::currentTextChanged, this, &UserManagementDialog::onRoleChanged);
     formLayout->addWidget(m_roleCombo, 3, 1);
 
@@ -170,7 +176,7 @@ void UserManagementDialog::setupUI() {
 
     // 权限区域
     auto* permGroup = new QGroupBox(tr("权限设置"));
-    permGroup->setStyleSheet("QGroupBox { font-weight: normal; }");
+    permGroup->setStyleSheet("QGroupBox { font-weight: normal; color: #E0E0E0; }");
     auto* permLayout = new QGridLayout(permGroup);
     permLayout->setSpacing(8);
 

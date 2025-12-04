@@ -18,18 +18,19 @@
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
-SettingsDialog::SettingsDialog(QWidget* parent) : QDialog{parent} {
+SettingsDialog::SettingsDialog(QWidget* parent) : FramelessDialog{parent} {
   setModal(true);
-  setWindowTitle(tr("系统设置"));
+  setDialogTitle(tr("系统设置"));
+  setShowMaxButton(true);
   setupUI();
   loadSettings();
 }
 
 void SettingsDialog::setupUI() {
-  setMinimumSize(1200, 700);
-  resize(1280, 760);
+  setMinimumSize(1200, 750);
+  resize(1280, 800);
 
-  auto* mainLayout = new QVBoxLayout(this);
+  auto* mainLayout = contentLayout();
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(0);
 
@@ -41,22 +42,22 @@ void SettingsDialog::setupUI() {
   // 左侧导航
   auto* navWidget = new QWidget(contentWidget);
   navWidget->setFixedWidth(240);
-  navWidget->setStyleSheet("background-color: #f5f5f5; border-right: 1px solid #e0e0e0;");
+  navWidget->setStyleSheet("background-color: #3C3C3E; border-right: 1px solid #555;");
   auto* navLayout = new QVBoxLayout(navWidget);
   navLayout->setContentsMargins(0, 20, 0, 20);
   navLayout->setSpacing(0);
 
   auto* navLabel = new QLabel(tr("导航列表"), navWidget);
-  navLabel->setStyleSheet("padding: 0 20px 12px 20px; font-size: 12px; color: #999999;");
+  navLabel->setStyleSheet("padding: 0 20px 12px 20px; font-size: 12px; color: #888;");
   navLayout->addWidget(navLabel);
 
   m_navListWidget = new QListWidget(navWidget);
   m_navListWidget->setFrameShape(QFrame::NoFrame);
   m_navListWidget->setStyleSheet(R"(
     QListWidget { background-color: transparent; outline: none; }
-    QListWidget::item { height: 48px; padding: 0 20px; border: none; color: #666666; }
-    QListWidget::item:hover { background-color: #ebebeb; color: #333333; }
-    QListWidget::item:selected { background-color: #3b82f6; color: white; }
+    QListWidget::item { height: 48px; padding: 0 20px; border: none; color: #B0B0B0; }
+    QListWidget::item:hover { background-color: #4a4a4c; color: #E0E0E0; }
+    QListWidget::item:selected { background-color: #4CAF50; color: white; }
   )");
 
   QStringList navItems = {
@@ -71,7 +72,7 @@ void SettingsDialog::setupUI() {
 
   // 右侧内容区域
   auto* rightWidget = new QWidget(contentWidget);
-  rightWidget->setStyleSheet("background-color: white;");
+  rightWidget->setStyleSheet("background-color: #2C2C2E;");
   auto* rightLayout = new QVBoxLayout(rightWidget);
   rightLayout->setContentsMargins(0, 0, 0, 0);
   rightLayout->setSpacing(0);
@@ -79,7 +80,7 @@ void SettingsDialog::setupUI() {
   // 页面标题栏
   auto* pageTitleWidget = new QWidget(rightWidget);
   pageTitleWidget->setFixedHeight(60);
-  pageTitleWidget->setStyleSheet("background-color: #fafafa; border-bottom: 1px solid #e0e0e0;");
+  pageTitleWidget->setStyleSheet("background-color: #3C3C3E; border-bottom: 1px solid #555;");
   auto* pageTitleLayout = new QHBoxLayout(pageTitleWidget);
   pageTitleLayout->setContentsMargins(30, 0, 30, 0);
 
@@ -88,7 +89,7 @@ void SettingsDialog::setupUI() {
   pageTitleLayout->addWidget(m_pageIconLabel);
 
   m_pageTitleLabel = new QLabel(tr("相机设置"), pageTitleWidget);
-  m_pageTitleLabel->setStyleSheet("font-size: 16px; font-weight: 500; color: #333333; margin-left: 8px;");
+  m_pageTitleLabel->setStyleSheet("font-size: 16px; font-weight: 500; color: #E0E0E0; margin-left: 8px;");
   pageTitleLayout->addWidget(m_pageTitleLabel);
   pageTitleLayout->addStretch();
 
@@ -98,25 +99,25 @@ void SettingsDialog::setupUI() {
   auto* scrollArea = new QScrollArea(rightWidget);
   scrollArea->setFrameShape(QFrame::NoFrame);
   scrollArea->setWidgetResizable(true);
-  scrollArea->setStyleSheet("QScrollArea { background-color: white; border: none; }");
+  scrollArea->setStyleSheet("QScrollArea { background-color: #2C2C2E; border: none; }");
 
   m_stackedWidget = new QStackedWidget();
-  m_stackedWidget->setStyleSheet("background-color: white;");
+  m_stackedWidget->setStyleSheet("background-color: #2C2C2E;");
   scrollArea->setWidget(m_stackedWidget);
   rightLayout->addWidget(scrollArea, 1);
 
   // 底部按钮栏
   auto* buttonBar = new QWidget(rightWidget);
   buttonBar->setFixedHeight(70);
-  buttonBar->setStyleSheet("background-color: #fafafa; border-top: 1px solid #e0e0e0;");
+  buttonBar->setStyleSheet("background-color: #3C3C3E; border-top: 1px solid #555;");
   auto* buttonLayout = new QHBoxLayout(buttonBar);
   buttonLayout->setContentsMargins(30, 0, 30, 0);
 
   auto* restoreBtn = new QPushButton(tr("恢复默认"), buttonBar);
   restoreBtn->setFixedSize(100, 36);
   restoreBtn->setStyleSheet(R"(
-    QPushButton { background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; color: #666666; }
-    QPushButton:hover { border-color: #3b82f6; color: #3b82f6; }
+    QPushButton { background-color: #555; border: 1px solid #666; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { border-color: #4CAF50; color: #4CAF50; }
   )");
   connect(restoreBtn, &QPushButton::clicked, this, &SettingsDialog::onRestoreDefaultClicked);
   buttonLayout->addWidget(restoreBtn);
@@ -125,8 +126,8 @@ void SettingsDialog::setupUI() {
   auto* applyBtn = new QPushButton(tr("应用"), buttonBar);
   applyBtn->setFixedSize(80, 36);
   applyBtn->setStyleSheet(R"(
-    QPushButton { background-color: #3b82f6; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #2563eb; }
+    QPushButton { background-color: #2196F3; border: none; border-radius: 4px; color: white; font-weight: bold; }
+    QPushButton:hover { background-color: #1976D2; }
   )");
   connect(applyBtn, &QPushButton::clicked, this, &SettingsDialog::onApplyClicked);
   buttonLayout->addWidget(applyBtn);
@@ -134,8 +135,8 @@ void SettingsDialog::setupUI() {
   auto* cancelBtn = new QPushButton(tr("取消"), buttonBar);
   cancelBtn->setFixedSize(80, 36);
   cancelBtn->setStyleSheet(R"(
-    QPushButton { background-color: white; border: 1px solid #d0d0d0; border-radius: 4px; color: #666666; }
-    QPushButton:hover { background-color: #f5f5f5; }
+    QPushButton { background-color: #555; border: 1px solid #666; border-radius: 4px; color: #E0E0E0; }
+    QPushButton:hover { background-color: #666; }
   )");
   connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
   buttonLayout->addWidget(cancelBtn);
@@ -143,8 +144,8 @@ void SettingsDialog::setupUI() {
   auto* okBtn = new QPushButton(tr("确定"), buttonBar);
   okBtn->setFixedSize(80, 36);
   okBtn->setStyleSheet(R"(
-    QPushButton { background-color: #10b981; border: none; border-radius: 4px; color: white; }
-    QPushButton:hover { background-color: #059669; }
+    QPushButton { background-color: #4CAF50; border: none; border-radius: 4px; color: white; font-weight: bold; }
+    QPushButton:hover { background-color: #45a049; }
   )");
   connect(okBtn, &QPushButton::clicked, this, [this] {
     saveSettings();

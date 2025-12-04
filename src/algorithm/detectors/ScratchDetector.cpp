@@ -139,7 +139,7 @@ DetectionResult ScratchDetector::detect(const cv::Mat& image) {
   return makeSuccessResult(allDefects, timeMs);
 }
 
-std::vector<DefectInfo> ScratchDetector::detectLinesHough(const cv::Mat& edges, const cv::Mat& original) {
+std::vector<DefectInfo> ScratchDetector::detectLinesHough(const cv::Mat& edges, const cv::Mat& /*original*/) {
   std::vector<DefectInfo> defects;
   
   // 概率 Hough 变换检测线段
@@ -200,7 +200,7 @@ std::vector<DefectInfo> ScratchDetector::nmsDefects(const std::vector<DefectInfo
   return result;
 }
 
-std::vector<DefectInfo> ScratchDetector::findScratches(const cv::Mat& edges, const cv::Mat& original) {
+std::vector<DefectInfo> ScratchDetector::findScratches(const cv::Mat& edges, const cv::Mat& /*original*/) {
   std::vector<DefectInfo> defects;
 
   // 查找轮廓

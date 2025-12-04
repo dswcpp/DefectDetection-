@@ -9,13 +9,16 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QPixmap>
+#include <QIcon>
 #include <QSettings>
 #include <QTimer>
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
 #include <QMessageBox>
 
-LoginDialog::LoginDialog(QWidget* parent) : QDialog(parent) {
+LoginDialog::LoginDialog(QWidget* parent) : FramelessDialog(parent) {
+    setDialogTitle(tr("系统登录"));
+    setResizeable(false);
     setupUI();
     loadSettings();
 }
@@ -35,38 +38,11 @@ QString LoginDialog::getRole() const {
 }
 
 void LoginDialog::setupUI() {
-    setWindowTitle(tr("系统登录"));
-    setFixedSize(420, 560);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setFixedSize(420, 600);
 
-    // 设置整体样式
-    setStyleSheet(R"(
-        QDialog {
-            background-color: #f5f5f5;
-        }
-        QLineEdit {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background-color: white;
-        }
-        QLineEdit:focus {
-            border-color: #2196F3;
-            outline: none;
-        }
-        QPushButton {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-    )");
-
-    auto* mainLayout = new QVBoxLayout(this);
+    auto* mainLayout = contentLayout();
     mainLayout->setSpacing(20);
-    mainLayout->setContentsMargins(50, 40, 50, 40);
+    mainLayout->setContentsMargins(50, 20, 50, 30);
 
     // Logo和标题区域
     auto* headerWidget = new QWidget();
@@ -87,7 +63,7 @@ void LoginDialog::setupUI() {
     titleLabel->setStyleSheet(R"(
         font-size: 20px;
         font-weight: bold;
-        color: #333;
+        color: #E0E0E0;
         margin-bottom: 5px;
     )");
     headerLayout->addWidget(titleLabel);
@@ -97,7 +73,7 @@ void LoginDialog::setupUI() {
     subtitleLabel->setAlignment(Qt::AlignCenter);
     subtitleLabel->setStyleSheet(R"(
         font-size: 12px;
-        color: #666;
+        color: #9E9E9E;
     )");
     headerLayout->addWidget(subtitleLabel);
 
@@ -107,17 +83,17 @@ void LoginDialog::setupUI() {
     auto* formWidget = new QWidget();
     formWidget->setMinimumHeight(280);
     formWidget->setStyleSheet(R"(
-        background-color: white;
+        background-color: #3C3C3E;
         border-radius: 10px;
     )");
 
-    // 添加阴影效果
-    auto* shadow = new QGraphicsDropShadowEffect();
-    shadow->setBlurRadius(20);
-    shadow->setXOffset(0);
-    shadow->setYOffset(2);
-    shadow->setColor(QColor(0, 0, 0, 30));
-    formWidget->setGraphicsEffect(shadow);
+    // 暂时禁用阴影效果
+    // auto* shadow = new QGraphicsDropShadowEffect();
+    // shadow->setBlurRadius(20);
+    // shadow->setXOffset(0);
+    // shadow->setYOffset(4);
+    // shadow->setColor(QColor(0, 0, 0, 100));
+    // formWidget->setGraphicsEffect(shadow);
 
     auto* formLayout = new QVBoxLayout(formWidget);
     formLayout->setSpacing(15);
@@ -161,28 +137,26 @@ void LoginDialog::setupUI() {
     passLayout->addWidget(m_password);
 
     // 显示/隐藏密码按钮
-    auto* togglePassBtn = new QPushButton("👁");
+    auto* togglePassBtn = new QPushButton();
     togglePassBtn->setFixedSize(32, 32);
     togglePassBtn->setCursor(Qt::PointingHandCursor);
     togglePassBtn->setCheckable(true);
-    togglePassBtn->setToolTip(tr("显示/隐藏密码"));
+    togglePassBtn->setToolTip(tr("显示密码"));
+    togglePassBtn->setIcon(QIcon(":/resources/icons/eye-off-2.svg"));
+    togglePassBtn->setIconSize(QSize(20, 20));
     togglePassBtn->setStyleSheet(R"(
         QPushButton {
             background-color: transparent;
             border: none;
-            font-size: 16px;
         }
         QPushButton:hover {
-            background-color: #f0f0f0;
+            background-color: #555;
             border-radius: 4px;
-        }
-        QPushButton:checked {
-            color: #2196F3;
         }
     )");
     connect(togglePassBtn, &QPushButton::toggled, this, [this, togglePassBtn](bool checked) {
         m_password->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
-        togglePassBtn->setText(checked ? "🙈" : "👁");
+        togglePassBtn->setIcon(QIcon(checked ? ":/resources/icons/eye.svg" : ":/resources/icons/eye-off-2.svg"));
         togglePassBtn->setToolTip(checked ? tr("隐藏密码") : tr("显示密码"));
     });
     passLayout->addWidget(togglePassBtn);
@@ -193,7 +167,7 @@ void LoginDialog::setupUI() {
     m_rememberMe = new QCheckBox(tr("记住用户名"));
     m_rememberMe->setStyleSheet(R"(
         QCheckBox {
-            color: #666;
+            color: #B0B0B0;
             font-size: 13px;
         }
         QCheckBox::indicator {
@@ -207,10 +181,11 @@ void LoginDialog::setupUI() {
     m_errorLabel = new QLabel();
     m_errorLabel->setAlignment(Qt::AlignCenter);
     m_errorLabel->setStyleSheet(R"(
-        color: #f44336;
+        color: #ff6b6b;
         font-size: 12px;
         padding: 5px;
-        background-color: #ffebee;
+        background-color: rgba(244, 67, 54, 0.15);
+        border: 1px solid #f44336;
         border-radius: 4px;
     )");
     m_errorLabel->setVisible(false);
@@ -227,18 +202,21 @@ void LoginDialog::setupUI() {
     m_loginBtn->setCursor(Qt::PointingHandCursor);
     m_loginBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #2196F3;
+            background-color: #4CAF50;
             color: white;
             min-height: 38px;
+            font-weight: bold;
+            border-radius: 6px;
         }
         QPushButton:hover {
-            background-color: #1976D2;
+            background-color: #45a049;
         }
         QPushButton:pressed {
-            background-color: #0D47A1;
+            background-color: #3d8b40;
         }
         QPushButton:disabled {
-            background-color: #BBDEFB;
+            background-color: #555;
+            color: #888;
         }
     )");
     connect(m_loginBtn, &QPushButton::clicked, this, &LoginDialog::onLoginClicked);
@@ -248,15 +226,17 @@ void LoginDialog::setupUI() {
     m_cancelBtn->setCursor(Qt::PointingHandCursor);
     m_cancelBtn->setStyleSheet(R"(
         QPushButton {
-            background-color: #757575;
-            color: white;
+            background-color: #555;
+            color: #E0E0E0;
             min-height: 38px;
+            font-weight: bold;
+            border-radius: 6px;
         }
         QPushButton:hover {
-            background-color: #616161;
+            background-color: #666;
         }
         QPushButton:pressed {
-            background-color: #424242;
+            background-color: #444;
         }
     )");
     connect(m_cancelBtn, &QPushButton::clicked, this, &LoginDialog::onCancelClicked);
@@ -271,7 +251,7 @@ void LoginDialog::setupUI() {
     auto* footerLabel = new QLabel(tr("© 2025 缺陷检测系统 v1.0"));
     footerLabel->setAlignment(Qt::AlignCenter);
     footerLabel->setStyleSheet(R"(
-        color: #999;
+        color: #888;
         font-size: 11px;
     )");
     mainLayout->addWidget(footerLabel);

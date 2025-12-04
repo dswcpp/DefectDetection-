@@ -222,8 +222,8 @@ void StorageSettingsPage::createStorageInfoWidget(QVBoxLayout* layout, const QSt
   frame->setFrameShape(QFrame::StyledPanel);
   frame->setStyleSheet(R"(
     QFrame {
-      background-color: #fafafa;
-      border: 1px solid #e0e0e0;
+      background-color: #3C3C3E;
+      border: 1px solid #48484A;
       border-radius: 6px;
       padding: 8px;
     }
@@ -236,11 +236,11 @@ void StorageSettingsPage::createStorageInfoWidget(QVBoxLayout* layout, const QSt
   // 标题行：名称 + 驱动器
   auto* titleLayout = new QHBoxLayout();
   auto* nameLabel = new QLabel(QString("<b>%1</b>").arg(name));
-  nameLabel->setStyleSheet("font-size: 13px; color: #333;");
+  nameLabel->setStyleSheet("font-size: 13px; color: #E0E0E0;");
   titleLayout->addWidget(nameLabel);
   
   auto* driveLabel = new QLabel(info.isValid ? info.rootPath : tr("不可用"));
-  driveLabel->setStyleSheet("font-size: 12px; color: #666;");
+  driveLabel->setStyleSheet("font-size: 12px; color: #ADADAD;");
   titleLayout->addWidget(driveLabel);
   titleLayout->addStretch();
   
@@ -278,11 +278,12 @@ void StorageSettingsPage::createStorageInfoWidget(QVBoxLayout* layout, const QSt
                          (info.usagePercent >= 85) ? "#f59e0b" : "#10b981";
     progressBar->setStyleSheet(QString(R"(
       QProgressBar {
-        border: 1px solid #d0d0d0;
+        border: 1px solid #555;
         border-radius: 3px;
-        background-color: #e8e8e8;
+        background-color: #2C2C2E;
         text-align: center;
         font-size: 11px;
+        color: #E0E0E0;
       }
       QProgressBar::chunk {
         background-color: %1;
@@ -296,11 +297,11 @@ void StorageSettingsPage::createStorageInfoWidget(QVBoxLayout* layout, const QSt
         .arg(StorageService::formatSize(info.usedBytes))
         .arg(StorageService::formatSize(info.totalBytes))
         .arg(StorageService::formatSize(info.freeBytes)));
-    spaceLabel->setStyleSheet("font-size: 11px; color: #666;");
+    spaceLabel->setStyleSheet("font-size: 11px; color: #ADADAD;");
     frameLayout->addWidget(spaceLabel);
   } else {
     auto* errorLabel = new QLabel(tr("路径不存在或无法访问"));
-    errorLabel->setStyleSheet("font-size: 12px; color: #999;");
+    errorLabel->setStyleSheet("font-size: 12px; color: #888;");
     frameLayout->addWidget(errorLabel);
   }
   

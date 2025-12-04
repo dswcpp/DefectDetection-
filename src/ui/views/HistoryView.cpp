@@ -166,20 +166,20 @@ void HistoryView::setupUI() {
 
   // ==================== 右侧：记录列表 ====================
   auto* listPanel = new QWidget();
-  listPanel->setStyleSheet("background-color: #f8f9fa; border-left: 1px solid #dee2e6;");
+  listPanel->setStyleSheet("background-color: #2C2C2E; border-left: 1px solid #48484A;");
   auto* listLayout = new QVBoxLayout(listPanel);
   listLayout->setContentsMargins(0, 0, 0, 0);
   listLayout->setSpacing(0);
 
   // 筛选区域（精简版）
   auto* filterWidget = new QWidget();
-  filterWidget->setStyleSheet("background-color: white; border-bottom: 1px solid #dee2e6;");
+  filterWidget->setStyleSheet("background-color: #3C3C3E; border-bottom: 1px solid #48484A;");
   auto* filterLayout = new QVBoxLayout(filterWidget);
   filterLayout->setContentsMargins(12, 12, 12, 12);
   filterLayout->setSpacing(8);
 
   auto* filterTitle = new QLabel(tr("筛选条件"));
-  filterTitle->setStyleSheet("font-weight: 500; font-size: 13px; color: #495057;");
+  filterTitle->setStyleSheet("font-weight: 500; font-size: 13px; color: #E0E0E0;");
   filterLayout->addWidget(filterTitle);
 
   // 时间范围（单行）
@@ -188,10 +188,12 @@ void HistoryView::setupUI() {
   m_startTimeEdit->setCalendarPopup(true);
   m_startTimeEdit->setDisplayFormat("MM/dd hh:mm");
   m_startTimeEdit->setFixedHeight(28);
-  m_startTimeEdit->setStyleSheet("QDateTimeEdit { border: 1px solid #ced4da; border-radius: 3px; padding: 2px 6px; font-size: 12px; }");
+  m_startTimeEdit->setStyleSheet("QDateTimeEdit { border: 1px solid #555; border-radius: 3px; padding: 2px 6px; font-size: 12px; background: #2C2C2E; color: #E0E0E0; }");
   timeRow->addWidget(m_startTimeEdit);
   
-  timeRow->addWidget(new QLabel("-"));
+  auto* timeSeparator = new QLabel("-");
+  timeSeparator->setStyleSheet("color: #E0E0E0;");
+  timeRow->addWidget(timeSeparator);
   
   m_endTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime());
   m_endTimeEdit->setCalendarPopup(true);
@@ -208,22 +210,22 @@ void HistoryView::setupUI() {
   m_resultCombo->addItem(tr("OK"), "OK");
   m_resultCombo->addItem(tr("NG"), "NG");
   m_resultCombo->setFixedHeight(28);
-  m_resultCombo->setStyleSheet("QComboBox { border: 1px solid #ced4da; border-radius: 3px; padding: 2px 6px; font-size: 12px; }");
+  m_resultCombo->setStyleSheet("QComboBox { border: 1px solid #555; border-radius: 3px; padding: 2px 6px; font-size: 12px; background: #2C2C2E; color: #E0E0E0; }");
   actionRow->addWidget(m_resultCombo);
 
   m_searchBtn = new QPushButton(tr("查询"));
   m_searchBtn->setFixedHeight(28);
   m_searchBtn->setStyleSheet(R"(
-    QPushButton { background-color: #007bff; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
-    QPushButton:hover { background-color: #0056b3; }
+    QPushButton { background-color: #4CAF50; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
+    QPushButton:hover { background-color: #43A047; }
   )");
   actionRow->addWidget(m_searchBtn);
 
   m_resetBtn = new QPushButton(tr("重置"));
   m_resetBtn->setFixedHeight(28);
   m_resetBtn->setStyleSheet(R"(
-    QPushButton { background-color: #6c757d; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
-    QPushButton:hover { background-color: #5a6268; }
+    QPushButton { background-color: #555; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
+    QPushButton:hover { background-color: #666; }
   )");
   actionRow->addWidget(m_resetBtn);
 
@@ -231,9 +233,9 @@ void HistoryView::setupUI() {
   m_deleteBtn->setFixedHeight(28);
   m_deleteBtn->setEnabled(false);
   m_deleteBtn->setStyleSheet(R"(
-    QPushButton { background-color: #dc3545; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
-    QPushButton:hover { background-color: #c82333; }
-    QPushButton:disabled { background-color: #f5c6cb; color: #721c24; }
+    QPushButton { background-color: #e53935; color: white; border: none; border-radius: 3px; padding: 0 12px; font-size: 12px; }
+    QPushButton:hover { background-color: #d32f2f; }
+    QPushButton:disabled { background-color: #555; color: #888; }
   )");
   // 只有有删除权限才显示
   m_deleteBtn->setVisible(UserManager::instance()->hasPermission(Permission::DeleteHistory));
@@ -265,28 +267,29 @@ void HistoryView::setupUI() {
   m_tableView->setStyleSheet(R"(
     QTableView {
       border: none;
-      background-color: white;
+      background-color: #2C2C2E;
+      color: #E0E0E0;
       font-size: 12px;
     }
     QTableView::item {
       padding: 6px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid #48484A;
     }
     QTableView::item:selected {
-      background-color: #007bff;
+      background-color: #4CAF50;
       color: white;
     }
     QTableView::item:hover:!selected {
-      background-color: #e7f1ff;
+      background-color: #3C3C3E;
     }
     QHeaderView::section {
-      background-color: #f8f9fa;
+      background-color: #3C3C3E;
       border: none;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid #48484A;
       padding: 6px;
       font-size: 11px;
       font-weight: 500;
-      color: #6c757d;
+      color: #ADADAD;
     }
   )");
   listLayout->addWidget(m_tableView, 1);
@@ -294,12 +297,12 @@ void HistoryView::setupUI() {
   // 分页
   auto* pageWidget = new QWidget();
   pageWidget->setFixedHeight(40);
-  pageWidget->setStyleSheet("background-color: white; border-top: 1px solid #dee2e6;");
+  pageWidget->setStyleSheet("background-color: #3C3C3E; border-top: 1px solid #48484A;");
   auto* pageLayout = new QHBoxLayout(pageWidget);
   pageLayout->setContentsMargins(8, 0, 8, 0);
 
   m_pageInfoLabel = new QLabel(tr("0 条"));
-  m_pageInfoLabel->setStyleSheet("color: #6c757d; font-size: 11px;");
+  m_pageInfoLabel->setStyleSheet("color: #ADADAD; font-size: 11px;");
   pageLayout->addWidget(m_pageInfoLabel);
 
   pageLayout->addStretch();
@@ -309,13 +312,13 @@ void HistoryView::setupUI() {
   m_pageSizeBox->setValue(50);
   m_pageSizeBox->setFixedWidth(60);
   m_pageSizeBox->setFixedHeight(24);
-  m_pageSizeBox->setStyleSheet("QSpinBox { border: 1px solid #ced4da; border-radius: 3px; font-size: 11px; }");
+  m_pageSizeBox->setStyleSheet("QSpinBox { border: 1px solid #555; border-radius: 3px; font-size: 11px; background: #2C2C2E; color: #E0E0E0; }");
   pageLayout->addWidget(m_pageSizeBox);
 
   m_prevPageBtn = new QPushButton("<");
   m_prevPageBtn->setFixedSize(24, 24);
   m_prevPageBtn->setEnabled(false);
-  m_prevPageBtn->setStyleSheet("QPushButton { border: 1px solid #dee2e6; border-radius: 3px; } QPushButton:hover:!disabled { background-color: #e9ecef; }");
+  m_prevPageBtn->setStyleSheet("QPushButton { border: 1px solid #555; border-radius: 3px; background: #2C2C2E; color: #E0E0E0; } QPushButton:hover:!disabled { background-color: #48484A; }");
   pageLayout->addWidget(m_prevPageBtn);
 
   m_nextPageBtn = new QPushButton(">");
