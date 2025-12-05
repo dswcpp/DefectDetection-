@@ -3428,5 +3428,9 @@
         <file>resources/icons/open.svg</file>
         <file>resources/icons/export.svg</file>
         <file>resources/icons/delete.svg</file>
+        <file>resources/icons/info.svg</file>
+        <file>resources/icons/check.svg</file>
+        <file>resources/icons/warn.svg</file>
+        <file>resources/icons/error.svg</file>
     </qresource>
 </RCC>

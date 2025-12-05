@@ -47,12 +47,15 @@ private:
 
 private:
     // 标题栏组件
-    QWidget* m_titleBar = nullptr;
+    QWidget* m_titleBarWidget = nullptr;
     QLabel* m_iconLabel = nullptr;
     QLabel* m_titleLabel = nullptr;
     QPushButton* m_minButton = nullptr;
     QPushButton* m_maxButton = nullptr;
     QPushButton* m_closeButton = nullptr;
+
+    // 初始化标志
+    bool m_initialized = false;
 
     // 拖动和缩放状态
     bool m_leftPressed = false;

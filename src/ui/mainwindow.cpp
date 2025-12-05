@@ -145,16 +145,18 @@ void MainWindow::onSettingsClicked()
     SettingsDialog dialog(this);
 
     // 监听配置变更信号，动态更新 Pipeline
-    connect(&dialog, &SettingsDialog::settingsChanged, this, [this]() {
-        if (m_pipeline) {
-            auto camCfg = gConfig.cameraConfig();
-            m_pipeline->setImageDir(camCfg.imageDir);
-            m_pipeline->setCaptureInterval(camCfg.captureIntervalMs);
-            LOG_INFO("Pipeline updated: imageDir={}, interval={}ms",
-                     camCfg.imageDir, camCfg.captureIntervalMs);
-            statusBar()->showMessage(tr("配置已更新"), 2000);
-        }
-    });
+    // 注意：暂时禁用此连接来测试崩溃问题
+    // connect(&dialog, &SettingsDialog::settingsChanged, this, [this]() {
+    //     LOG_INFO("MainWindow: settingsChanged signal received");
+    //     if (m_pipeline) {
+    //         auto camCfg = gConfig.cameraConfig();
+    //         m_pipeline->setImageDir(camCfg.imageDir);
+    //         m_pipeline->setCaptureInterval(camCfg.captureIntervalMs);
+    //         LOG_INFO("Pipeline updated: imageDir={}, interval={}ms",
+    //                  camCfg.imageDir, camCfg.captureIntervalMs);
+    //     }
+    //     LOG_INFO("MainWindow: settingsChanged handler done");
+    // });
 
     dialog.exec();
 }

@@ -12,7 +12,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
-#include <QMessageBox>
+#include "widgets/MessageBox.h"
+#include "widgets/Toast.h"
 #include <QPushButton>
 #include <QScrollArea>
 #include <QStackedWidget>
@@ -181,12 +182,13 @@ void SettingsDialog::createPages() {
   m_stackedWidget->addWidget(m_userPage);
 
   // 连接信号
-  connect(m_cameraPage, &CameraSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
-  connect(m_lightPage, &LightSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
-  connect(m_plcPage, &PLCSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
-  connect(m_storagePage, &StorageSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
-  connect(m_detectionPage, &DetectionSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
-  connect(m_userPage, &UserSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // 暂时禁用信号连接测试崩溃
+  // connect(m_cameraPage, &CameraSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // connect(m_lightPage, &LightSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // connect(m_plcPage, &PLCSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // connect(m_storagePage, &StorageSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // connect(m_detectionPage, &DetectionSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
+  // connect(m_userPage, &UserSettingsPage::settingsChanged, this, &SettingsDialog::settingsChanged);
 }
 
 void SettingsDialog::loadSettings() {
@@ -201,12 +203,13 @@ void SettingsDialog::loadSettings() {
 
 void SettingsDialog::saveSettings() {
   LOG_INFO("SettingsDialog::saveSettings - Saving all settings pages");
-  if (m_cameraPage) m_cameraPage->saveSettings();
-  if (m_lightPage) m_lightPage->saveSettings();
-  if (m_plcPage) m_plcPage->saveSettings();
-  if (m_storagePage) m_storagePage->saveSettings();
-  if (m_detectionPage) m_detectionPage->saveSettings();
-  if (m_userPage) m_userPage->saveSettings();
+  if (m_cameraPage) { LOG_INFO("Saving camera..."); m_cameraPage->saveSettings(); }
+  if (m_lightPage) { LOG_INFO("Saving light..."); m_lightPage->saveSettings(); }
+  if (m_plcPage) { LOG_INFO("Saving plc..."); m_plcPage->saveSettings(); }
+  if (m_storagePage) { LOG_INFO("Saving storage..."); m_storagePage->saveSettings(); }
+  if (m_detectionPage) { LOG_INFO("Saving detection..."); m_detectionPage->saveSettings(); }
+  if (m_userPage) { LOG_INFO("Saving user..."); m_userPage->saveSettings(); }
+  LOG_INFO("Calling gConfig.save()...");
   gConfig.save();
   LOG_INFO("SettingsDialog::saveSettings - Settings saved to config file");
 }
@@ -229,13 +232,15 @@ void SettingsDialog::onPageChanged(int index) {
 }
 
 void SettingsDialog::onRestoreDefaultClicked() {
-  const auto reply = QMessageBox::question(this, tr("提示"), tr("确认恢复默认设置？"));
-  if (reply == QMessageBox::Yes) {
-    QMessageBox::information(this, tr("提示"), tr("已恢复默认设置"));
+  const auto reply = DroidMessageBox::question(this, tr("提示"), tr("确认恢复默认设置？"));
+  if (reply == DroidMessageBox::Yes) {
+    Toast::success(this, tr("已恢复默认设置"));
   }
 }
 
 void SettingsDialog::onApplyClicked() {
+  LOG_INFO("SettingsDialog::onApplyClicked - Start");
   saveSettings();
-  QMessageBox::information(this, tr("提示"), tr("设置已应用"));
+  LOG_INFO("SettingsDialog::onApplyClicked - Settings saved");
+  // Toast::success(this, tr("设置已应用"));  // 暂时禁用测试崩溃
 }

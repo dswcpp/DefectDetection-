@@ -49,7 +49,9 @@ HEADERS += \
     widgets/FramelessWindow.h \
     widgets/ImageView.h \
     widgets/ImageViewControls.h \
+    widgets/MessageBox.h \
     widgets/ParamPanel.h \
+    widgets/Toast.h \
     widgets/ROIEditor.h \
     widgets/ResultCard.h \
     widgets/SeverityBar.h
@@ -86,7 +88,9 @@ SOURCES += \
     widgets/FramelessWindow.cpp \
     widgets/ImageView.cpp \
     widgets/ImageViewControls.cpp \
+    widgets/MessageBox.cpp \
     widgets/ParamPanel.cpp \
+    widgets/Toast.cpp \
     widgets/ROIEditor.cpp \
     widgets/ResultCard.cpp \
     widgets/SeverityBar.cpp

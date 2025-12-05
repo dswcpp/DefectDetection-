@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QFile>
 #include <QDebug>
+#include <cstdio>
 #include "config/ConfigManager.h"
 #include "Logger.h"
 #include "data/DatabaseManager.h"
@@ -84,7 +85,11 @@ int main(int argc, char* argv[]) {
 
         // 显示登录对话框（内部会初始化 UserManager）
         qDebug() << "[INIT] Creating login dialog...";
+        qDebug().nospace() << "[INIT] About to construct LoginDialog";
+        std::fflush(stdout);
+        std::fflush(stderr);
         LoginDialog loginDialog;
+        qDebug() << "[INIT] LoginDialog constructed";
         loginDialog.setDatabaseManager(&dbManager);
         qDebug() << "[INIT] Showing login dialog...";
         if (loginDialog.exec() != QDialog::Accepted) {

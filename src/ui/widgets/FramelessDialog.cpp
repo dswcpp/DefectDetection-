@@ -10,6 +10,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QPalette>
 #include <QDebug>
+#include <cstdio>
 
 static const int TITLE_BAR_HEIGHT = 36;
 static const int BUTTON_SIZE = 36;
@@ -17,7 +18,9 @@ static const int BUTTON_SIZE = 36;
 FramelessDialog::FramelessDialog(QWidget* parent)
     : QDialog(parent)
 {
-    qDebug() << "[FramelessDialog] Constructor start";
+    qDebug() << "[FramelessDialog] Constructor start, parent=" << parent;
+    std::fflush(stdout);
+    std::fflush(stderr);
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     qDebug() << "[FramelessDialog] Window flags set";
@@ -78,6 +81,7 @@ void FramelessDialog::setupFramelessUI()
     // 标题
     m_titleLabel = new QLabel(this);
     m_titleLabel->setObjectName("framelessDialogTitle");
+    m_titleLabel->setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: 500;");
     titleLayout->addWidget(m_titleLabel);
     
     titleLayout->addStretch();

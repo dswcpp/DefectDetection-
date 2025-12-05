@@ -48,8 +48,39 @@ inline QGroupBox* createStyledGroupBox(const QString& title, QWidget* parent = n
       border-radius: 2px;
       color: #E0E0E0;
     }
-    QLabel {
+    QGroupBox QLabel {
       color: #E0E0E0;
+      background: transparent;
+    }
+    QGroupBox QCheckBox {
+      color: #E0E0E0;
+    }
+    QGroupBox QRadioButton {
+      color: #E0E0E0;
+    }
+    QGroupBox QLineEdit {
+      color: #FFFFFF;
+      background-color: #1C1C1E;
+      border: 1px solid #48484A;
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+    QGroupBox QLineEdit:focus {
+      border-color: #007AFF;
+    }
+    QGroupBox QComboBox {
+      color: #FFFFFF;
+      background-color: #1C1C1E;
+      border: 1px solid #48484A;
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+    QGroupBox QSpinBox, QGroupBox QDoubleSpinBox {
+      color: #FFFFFF;
+      background-color: #1C1C1E;
+      border: 1px solid #48484A;
+      border-radius: 4px;
+      padding: 4px 8px;
     }
   )");
   return group;

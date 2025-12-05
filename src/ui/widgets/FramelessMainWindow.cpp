@@ -19,25 +19,23 @@ FramelessMainWindow::FramelessMainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
-    
-    setupTitleBar();
     installEventFilter(this);
 }
 
 void FramelessMainWindow::setupTitleBar()
 {
     // 创建标题栏容器
-    m_titleBar = new QWidget(this);
-    m_titleBar->setObjectName("framelessMainWindowTitleBar");
-    m_titleBar->setFixedHeight(TITLE_BAR_HEIGHT);
-    m_titleBar->setStyleSheet(R"(
+    m_titleBarWidget = new QWidget(this);
+    m_titleBarWidget->setObjectName("framelessMainWindowTitleBar");
+    m_titleBarWidget->setFixedHeight(TITLE_BAR_HEIGHT);
+    m_titleBarWidget->setStyleSheet(R"(
         #framelessMainWindowTitleBar {
             background-color: #1C1C1E;
             border-bottom: 1px solid #3C3C3E;
         }
     )");
     
-    auto* titleLayout = new QHBoxLayout(m_titleBar);
+    auto* titleLayout = new QHBoxLayout(m_titleBarWidget);
     titleLayout->setContentsMargins(8, 0, 0, 0);
     titleLayout->setSpacing(0);
     
@@ -53,7 +51,7 @@ void FramelessMainWindow::setupTitleBar()
     // 标题
     m_titleLabel = new QLabel(this);
     m_titleLabel->setObjectName("framelessMainWindowTitle");
-    m_titleLabel->setStyleSheet("color: #E0E0E0; font-size: 13px; font-weight: 500;");
+    m_titleLabel->setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 500;");
     titleLayout->addWidget(m_titleLabel);
     
     titleLayout->addStretch();
@@ -96,11 +94,8 @@ void FramelessMainWindow::setupTitleBar()
     connect(m_closeButton, &QPushButton::clicked, this, &QMainWindow::close);
     titleLayout->addWidget(m_closeButton);
     
-    // 使用 setMenuWidget 将标题栏放在菜单栏位置上方
-    // 但这会替换掉菜单栏，所以我们改用其他方法
-    
-    // 设置可拖动的标题栏组件
-    m_titlebarWidgets = {m_titleBar, m_iconLabel, m_titleLabel};
+    // 设置可拖动的组件
+    m_titlebarWidgets = {m_titleBarWidget, m_iconLabel, m_titleLabel};
 }
 
 void FramelessMainWindow::setWindowTitle(const QString& title)
@@ -123,48 +118,64 @@ void FramelessMainWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
     
-    // 在首次显示时，将标题栏添加到布局顶部
-    static bool initialized = false;
-    if (!initialized && m_titleBar) {
-        initialized = true;
+    // 首次显示时插入标题栏
+    if (!m_initialized && !m_titleBarWidget) {
+        m_initialized = true;
         
-        // 获取中央部件的父级，将标题栏插入到顶部
-        if (auto* centralWidget = this->centralWidget()) {
-            // 创建一个新的容器来包含标题栏和原有内容
-            auto* container = new QWidget(this);
-            auto* containerLayout = new QVBoxLayout(container);
-            containerLayout->setContentsMargins(0, 0, 0, 0);
-            containerLayout->setSpacing(0);
-            
-            // 先移除原中央部件
-            centralWidget->setParent(nullptr);
-            
-            // 添加标题栏
-            containerLayout->addWidget(m_titleBar);
-            
-            // 添加菜单栏（如果有）
-            if (auto* mb = menuBar()) {
-                mb->setParent(nullptr);
-                containerLayout->addWidget(mb);
-            }
-            
-            // 添加原中央部件
-            containerLayout->addWidget(centralWidget, 1);
-            
-            // 设置新容器为中央部件
-            setCentralWidget(container);
+        // 创建标题栏
+        setupTitleBar();
+        
+        if (!m_titleBarWidget) {
+            qWarning() << "FramelessMainWindow: Failed to create title bar";
+            return;
         }
+        
+        // 创建组合菜单容器：标题栏 + 菜单栏
+        auto* menuContainer = new QWidget(this);
+        auto* menuContainerLayout = new QVBoxLayout(menuContainer);
+        menuContainerLayout->setContentsMargins(0, 0, 0, 0);
+        menuContainerLayout->setSpacing(0);
+        
+        // 添加标题栏
+        menuContainerLayout->addWidget(m_titleBarWidget);
+        
+        // 获取原有菜单栏并添加
+        QMenuBar* mb = menuBar();
+        if (mb) {
+            mb->setStyleSheet(R"(
+                QMenuBar {
+                    background-color: #2C2C2E;
+                    color: #E0E0E0;
+                    border-bottom: 1px solid #3C3C3E;
+                    padding: 4px 0;
+                }
+                QMenuBar::item {
+                    background: transparent;
+                    padding: 6px 12px;
+                }
+                QMenuBar::item:selected {
+                    background-color: #3C3C3E;
+                    border-radius: 4px;
+                }
+            )");
+            menuContainerLayout->addWidget(mb);
+        }
+        
+        // 设置组合菜单容器
+        setMenuWidget(menuContainer);
     }
 }
 
 void FramelessMainWindow::updateMaximizeButton()
 {
-    if (isMaximized()) {
-        m_maxButton->setIcon(QIcon(":/resources/icons/maximize_20_max.svg"));
-        m_maxButton->setToolTip(tr("还原"));
-    } else {
-        m_maxButton->setIcon(QIcon(":/resources/icons/maximize_20_normal.svg"));
-        m_maxButton->setToolTip(tr("最大化"));
+    if (m_maxButton) {
+        if (isMaximized()) {
+            m_maxButton->setIcon(QIcon(":/resources/icons/maximize_20_max.svg"));
+            m_maxButton->setToolTip(tr("还原"));
+        } else {
+            m_maxButton->setIcon(QIcon(":/resources/icons/maximize_20_normal.svg"));
+            m_maxButton->setToolTip(tr("最大化"));
+        }
     }
 }
 
@@ -352,7 +363,6 @@ void FramelessMainWindow::mouseMoveEvent(QMouseEvent* event)
         setGeometry(rMove);
     } else if (m_leftPressedInTitle) {
         if (isMaximized()) {
-            // 从最大化状态拖动：恢复窗口并保持鼠标相对位置
             float widthRatio = float(globalPos.x()) / float(width());
             setWindowState(Qt::WindowNoState);
             int offset = int(width() * widthRatio);

@@ -508,8 +508,8 @@ QTabBar::tab:last {
     margin-right: 0px;
 }
 
-/* ========== 表格 TableWidget ========== */
-QTableWidget {
+/* ========== 表格 TableWidget/TableView ========== */
+QTableWidget, QTableView {
     background-color: #2C2C2E;
     alternate-background-color: #333335;
     color: #E0E0E0;
@@ -520,12 +520,38 @@ QTableWidget {
     selection-color: #FFFFFF;
 }
 
-QTableWidget::item {
+QTableWidget::item, QTableView::item {
     padding: 5px;
 }
 
-QTableWidget::item:hover {
+QTableWidget::item:hover, QTableView::item:hover {
     background-color: #3C3C3E;
+}
+
+/* ========== 列表 ListWidget ========== */
+QListWidget, QListView {
+    background-color: #2C2C2E;
+    alternate-background-color: #333335;
+    color: #E0E0E0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    selection-background-color: #4CAF50;
+    selection-color: #FFFFFF;
+    outline: none;
+}
+
+QListWidget::item, QListView::item {
+    padding: 8px;
+    border-bottom: 1px solid #3C3C3E;
+}
+
+QListWidget::item:hover, QListView::item:hover {
+    background-color: #3C3C3E;
+}
+
+QListWidget::item:selected, QListView::item:selected {
+    background-color: #4CAF50;
+    color: #FFFFFF;
 }
 
 QHeaderView::section {

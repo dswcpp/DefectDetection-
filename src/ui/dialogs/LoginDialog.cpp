@@ -113,6 +113,18 @@ void LoginDialog::setupUI() {
     m_username = new QLineEdit();
     m_username->setPlaceholderText(tr("请输入用户名"));
     m_username->setMaxLength(20);
+    m_username->setStyleSheet(R"(
+        QLineEdit {
+            color: #FFFFFF;
+            background-color: #2C2C2E;
+            border: 1px solid #48484A;
+            border-radius: 4px;
+            padding: 8px;
+        }
+        QLineEdit:focus {
+            border-color: #007AFF;
+        }
+    )");
     connect(m_username, &QLineEdit::textChanged, this, &LoginDialog::onUsernameChanged);
     userLayout->addWidget(m_username);
 
@@ -133,6 +145,18 @@ void LoginDialog::setupUI() {
     m_password->setEchoMode(QLineEdit::Password);
     m_password->setPlaceholderText(tr("请输入密码"));
     m_password->setMaxLength(20);
+    m_password->setStyleSheet(R"(
+        QLineEdit {
+            color: #FFFFFF;
+            background-color: #2C2C2E;
+            border: 1px solid #48484A;
+            border-radius: 4px;
+            padding: 8px;
+        }
+        QLineEdit:focus {
+            border-color: #007AFF;
+        }
+    )");
     connect(m_password, &QLineEdit::textChanged, this, &LoginDialog::onPasswordChanged);
     passLayout->addWidget(m_password);
 
