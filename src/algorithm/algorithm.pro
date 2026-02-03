@@ -14,10 +14,15 @@ QT -= gui
 
 DEFINES += ALGORITHM_LIBRARY_BUILD
 
+# ------------------ 预编译头文件（加速编译 2-5 倍） ------------------
+CONFIG += precompile_header
+PRECOMPILED_HEADER = algorithm_pch.h
+
 # OpenCV 已在 config.pri 中配置
 INCLUDEPATH += $$PWD/../../config
 # ------------------ 头文件 ------------------
 HEADERS += \
+    algorithm_pch.h \
     BaseDetector.h \
     DetectorFactory.h \
     DetectorManager.h \

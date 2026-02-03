@@ -25,7 +25,7 @@
 #include "Types.h"
 #include "Timer.h"
 #include "ui_global.h"
-#include "opencv2/opencv.hpp"
+#include <opencv2/core.hpp>  // 只需要 cv::Mat
 
 class QTimer;
 class ICamera;

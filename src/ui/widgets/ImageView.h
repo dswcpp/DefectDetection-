@@ -23,7 +23,7 @@
 #include <QMenu>
 #include <QDateTime>
 #include "ui_global.h"
-#include "opencv2/opencv.hpp"
+#include <opencv2/core.hpp>  // 只需要 cv::Mat, cv::Rect
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;

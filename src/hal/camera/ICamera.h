@@ -18,7 +18,7 @@
 #define ICAMERA_H
 
 #include <QString>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>  // 只需要 cv::Mat
 #include "hal_global.h"
 
 struct HAL_EXPORT CameraConfig {

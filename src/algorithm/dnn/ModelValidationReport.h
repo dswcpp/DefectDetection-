@@ -18,7 +18,7 @@
 #define MODELVALIDATIONREPORT_H
 #include <QString>
 #include <QStringList>
-#include "opencv2/opencv.hpp"
+#include <opencv2/core.hpp>
 struct ModelValidationReport {
 
   bool ok = false;

@@ -19,7 +19,7 @@
 #include <QMetaType>
 #include <QString>
 #include <vector>
-#include "opencv2/opencv.hpp"
+#include <opencv2/core.hpp>  // 只需要 cv::Rect
 // src/common/Types.h
 
 struct DefectRegion {

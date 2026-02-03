@@ -11,6 +11,19 @@ CONFIG += c++17
 CONFIG += warn_on
 CONFIG -= debug_and_release  # 只构建当前配置，输出目录由下方自定义
 
+# ------------------ 编译加速选项 ------------------
+# 启用并行编译（MinGW/GCC）
+win32-g++ {
+    # 使用所有 CPU 核心并行编译
+    QMAKE_CXXFLAGS += -pipe
+    # 设置 make 并行数（需要在命令行使用 mingw32-make -j8）
+}
+
+# MSVC 并行编译
+win32-msvc* {
+    QMAKE_CXXFLAGS += /MP  # 多处理器编译
+}
+
 # 编译优化
 RELEASE {
     QMAKE_CXXFLAGS += -O2

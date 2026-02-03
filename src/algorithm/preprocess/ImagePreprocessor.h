@@ -18,7 +18,10 @@
 #define IMAGEPREPROCESSOR_H
 
 #include "../algorithm_global.h"
-#include <opencv2/opencv.hpp>
+// 只包含必要的 OpenCV 头文件
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/photo.hpp>  // for fastNlMeansDenoising
 #include <QRect>
 #include <vector>
 

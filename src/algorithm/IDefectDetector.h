@@ -22,7 +22,9 @@
 #include <QVariantMap>
 #include <vector>
 #include <memory>
-#include <opencv2/opencv.hpp>
+// 只包含必要的 OpenCV 头文件，避免全量包含
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 
 // 缺陷信息结构
 struct DefectInfo {
