@@ -39,13 +39,19 @@ private:
   int m_minArea = 20;            // 最小面积（像素²）
   int m_morphKernelSize = 3;     // 形态学核大小
   int m_binaryThreshold = 128;   // 二值化阈值
+  bool m_useGabor = true;        // 是否使用 Gabor 滤波
 
   // 内部方法
   void updateParameters();
   cv::Mat preprocessImage(const cv::Mat& input);
+  cv::Mat applyGaborFilter(const cv::Mat& gray);
+  cv::Mat skeletonize(const cv::Mat& binary);
   std::vector<DefectInfo> findCracks(const cv::Mat& binary, const cv::Mat& original);
+  std::vector<DefectInfo> analyzeSkeleton(const cv::Mat& skeleton, const cv::Mat& binary, const cv::Mat& original);
+  int countBranchPoints(const cv::Mat& skeleton, const cv::Rect& roi);
+  double measureSkeletonLength(const cv::Mat& skeleton, const cv::Rect& roi);
   bool isValidCrack(const std::vector<cv::Point>& contour);
-  double calculateSeverity(double area, double length);
+  double calculateSeverity(double area, double length, int branchCount);
 };
 
 #endif // CRACKDETECTOR_H

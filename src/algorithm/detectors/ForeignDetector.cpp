@@ -1,6 +1,25 @@
+/*
+ * Copyright (c) 2025.12
+ * All rights reserved.
+ *
+ * ForeignDetector.cpp
+ *
+ * 优化版本：1.1
+ * 作者：Vere
+ * 修改日期：2026年02月
+ * 摘要：异物检测器优化实现
+ * 描述：
+ *   - 添加 LBP 纹理分析检测不明显异物
+ *   - 添加形状特征分析（圆形度、凸包率等）
+ *   - 统一使用 NMSFilter 进行去重
+ *   - 优化颜色异常检测算法
+ */
+
 #include "ForeignDetector.h"
+#include "../postprocess/NMSFilter.h"
 #include "../common/Logger.h"
 #include <QElapsedTimer>
+#include <cmath>
 
 ForeignDetector::ForeignDetector() {
   m_confidenceThreshold = 0.5;
@@ -54,7 +73,7 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
 
   std::vector<DefectInfo> allDefects;
 
-  // 1. 灰度异物检测
+  // 1. 灰度异物检测（Top-hat/Black-hat）
   cv::Mat preprocessed = preprocessImage(image);
   cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(15, 15));
   
@@ -84,9 +103,17 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
     allDefects.insert(allDefects.end(), colorDefects.begin(), colorDefects.end());
   }
 
-  // NMS 去重
+  // 3. LBP 纹理异物检测
+  auto textureDefects = detectTextureAnomalies(preprocessed);
+  size_t textureCount = textureDefects.size();
+  allDefects.insert(allDefects.end(), textureDefects.begin(), textureDefects.end());
+
+  // 使用统一的 NMSFilter 去重
   size_t beforeNMS = allDefects.size();
-  allDefects = nmsDefects(allDefects, 0.5);
+  NMSFilter nmsFilter;
+  nmsFilter.setIoUThreshold(0.5);
+  nmsFilter.setConfidenceThreshold(0.0);
+  allDefects = nmsFilter.filter(allDefects);
 
   // 过滤低置信度
   size_t beforeFilter = allDefects.size();
@@ -102,11 +129,149 @@ DetectionResult ForeignDetector::detect(const cv::Mat& image) {
     if (d.attributes.contains("area")) totalArea += d.attributes.value("area").toDouble();
   }
   
-  LOG_INFO("ForeignDetector::detect - Result: {} foreign (gray:{}, color:{}), NMS:{}->{}, filter:{}->{}, totalArea={:.0f}px, maxContrast={:.2f}, time:{:.1f}ms",
-           allDefects.size(), grayCount, colorCount, beforeNMS, beforeFilter, beforeFilter, allDefects.size(),
+  LOG_INFO("ForeignDetector::detect - Result: {} foreign (gray:{}, color:{}, texture:{}), NMS:{}->{}, filter:{}->{}, totalArea={:.0f}px, maxContrast={:.2f}, time:{:.1f}ms",
+           allDefects.size(), grayCount, colorCount, textureCount, beforeNMS, beforeFilter, beforeFilter, allDefects.size(),
            totalArea, maxContrast, timeMs);
   
   return makeSuccessResult(allDefects, timeMs);
+}
+
+std::vector<DefectInfo> ForeignDetector::detectTextureAnomalies(const cv::Mat& gray) {
+  std::vector<DefectInfo> defects;
+  
+  // 计算 LBP (Local Binary Pattern) 纹理特征
+  int radius = 1;
+  int neighbors = 8;
+  
+  cv::Mat lbp = cv::Mat::zeros(gray.size(), CV_8UC1);
+  
+  for (int y = radius; y < gray.rows - radius; ++y) {
+    for (int x = radius; x < gray.cols - radius; ++x) {
+      uchar center = gray.at<uchar>(y, x);
+      uchar code = 0;
+      
+      // 8 邻域 LBP
+      code |= (gray.at<uchar>(y-1, x-1) >= center) << 7;
+      code |= (gray.at<uchar>(y-1, x) >= center) << 6;
+      code |= (gray.at<uchar>(y-1, x+1) >= center) << 5;
+      code |= (gray.at<uchar>(y, x+1) >= center) << 4;
+      code |= (gray.at<uchar>(y+1, x+1) >= center) << 3;
+      code |= (gray.at<uchar>(y+1, x) >= center) << 2;
+      code |= (gray.at<uchar>(y+1, x-1) >= center) << 1;
+      code |= (gray.at<uchar>(y, x-1) >= center) << 0;
+      
+      lbp.at<uchar>(y, x) = code;
+    }
+  }
+  
+  // 计算局部 LBP 直方图并检测异常
+  int blockSize = 32;
+  cv::Mat lbpMean, lbpStd;
+  
+  // 计算全局 LBP 直方图统计
+  cv::Scalar globalMean, globalStd;
+  cv::meanStdDev(lbp, globalMean, globalStd);
+  
+  // 滑动窗口检测局部纹理异常
+  for (int y = 0; y < gray.rows - blockSize; y += blockSize / 2) {
+    for (int x = 0; x < gray.cols - blockSize; x += blockSize / 2) {
+      cv::Rect roi(x, y, blockSize, blockSize);
+      cv::Mat block = lbp(roi);
+      
+      cv::Scalar localMean, localStd;
+      cv::meanStdDev(block, localMean, localStd);
+      
+      // 检查纹理偏差
+      double meanDiff = std::abs(localMean[0] - globalMean[0]);
+      double stdDiff = std::abs(localStd[0] - globalStd[0]);
+      
+      // 纹理异常判断
+      double anomalyScore = meanDiff / (globalStd[0] + 1.0) + stdDiff / (globalStd[0] + 1.0);
+      
+      if (anomalyScore > 2.0) {  // 阈值
+        // 在这个区域进行更精细的检测
+        cv::Mat grayBlock = gray(roi);
+        cv::Mat binary;
+        cv::threshold(grayBlock, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+        
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        
+        for (const auto& contour : contours) {
+          double area = cv::contourArea(contour);
+          if (area < m_minArea || area > blockSize * blockSize * 0.8) continue;
+          
+          DefectInfo defect;
+          cv::Rect bbox = cv::boundingRect(contour);
+          defect.bbox = cv::Rect(bbox.x + x, bbox.y + y, bbox.width, bbox.height);
+          
+          // 调整轮廓坐标
+          defect.contour = contour;
+          for (auto& pt : defect.contour) {
+            pt.x += x;
+            pt.y += y;
+          }
+          
+          defect.classId = 2;
+          defect.className = "Foreign";
+          defect.confidence = std::min(1.0, anomalyScore / 5.0);
+          defect.severity = std::min(1.0, area / 200.0);
+          defect.attributes["area"] = area;
+          defect.attributes["method"] = "LBP";
+          defect.attributes["textureAnomaly"] = anomalyScore;
+          
+          // 分析形状特征
+          analyzeShapeFeatures(defect, defect.contour);
+          
+          defects.push_back(defect);
+        }
+      }
+    }
+  }
+  
+  return defects;
+}
+
+void ForeignDetector::analyzeShapeFeatures(DefectInfo& defect, const std::vector<cv::Point>& contour) {
+  if (contour.size() < 5) return;
+  
+  double area = cv::contourArea(contour);
+  double perimeter = cv::arcLength(contour, true);
+  
+  // 圆形度: 4 * PI * area / perimeter^2，圆形为1
+  double circularity = (perimeter > 0) ? (4.0 * CV_PI * area) / (perimeter * perimeter) : 0.0;
+  
+  // 凸包
+  std::vector<cv::Point> hull;
+  cv::convexHull(contour, hull);
+  double hullArea = cv::contourArea(hull);
+  
+  // 凸包率（实心度）：area / hullArea
+  double solidity = (hullArea > 0) ? area / hullArea : 0.0;
+  
+  // 外接矩形
+  cv::RotatedRect rotRect = cv::minAreaRect(contour);
+  double rectArea = rotRect.size.width * rotRect.size.height;
+  
+  // 矩形度：area / rectArea
+  double rectangularity = (rectArea > 0) ? area / rectArea : 0.0;
+  
+  // 长宽比
+  double aspectRatio = (rotRect.size.height > 0) ? 
+      std::max(rotRect.size.width, rotRect.size.height) / 
+      std::min(rotRect.size.width, rotRect.size.height) : 1.0;
+  
+  // 存储形状特征
+  defect.attributes["circularity"] = circularity;
+  defect.attributes["solidity"] = solidity;
+  defect.attributes["rectangularity"] = rectangularity;
+  defect.attributes["aspectRatio"] = aspectRatio;
+  defect.attributes["perimeter"] = perimeter;
+  
+  // 根据形状特征调整置信度
+  // 异物通常形状不规则（低圆形度、低矩形度）
+  double shapeScore = (1.0 - circularity) * 0.3 + (1.0 - rectangularity) * 0.3 + solidity * 0.4;
+  defect.confidence = defect.confidence * 0.7 + shapeScore * 0.3;
 }
 
 std::vector<DefectInfo> ForeignDetector::detectColorAnomalies(const cv::Mat& image) {
@@ -160,42 +325,13 @@ std::vector<DefectInfo> ForeignDetector::detectColorAnomalies(const cv::Mat& ima
     defect.attributes["area"] = area;
     defect.attributes["method"] = "color";
     
+    // 分析形状特征
+    analyzeShapeFeatures(defect, contour);
+    
     defects.push_back(defect);
   }
   
   return defects;
-}
-
-std::vector<DefectInfo> ForeignDetector::nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold) {
-  if (defects.empty()) return defects;
-  
-  std::vector<DefectInfo> sorted = defects;
-  std::sort(sorted.begin(), sorted.end(), [](const DefectInfo& a, const DefectInfo& b) {
-    return a.confidence > b.confidence;
-  });
-  
-  std::vector<bool> suppressed(sorted.size(), false);
-  std::vector<DefectInfo> result;
-  
-  for (size_t i = 0; i < sorted.size(); ++i) {
-    if (suppressed[i]) continue;
-    result.push_back(sorted[i]);
-    
-    for (size_t j = i + 1; j < sorted.size(); ++j) {
-      if (suppressed[j]) continue;
-      
-      cv::Rect intersection = sorted[i].bbox & sorted[j].bbox;
-      if (intersection.area() == 0) continue;
-      
-      double iou = static_cast<double>(intersection.area()) / 
-                   (sorted[i].bbox.area() + sorted[j].bbox.area() - intersection.area());
-      if (iou > iouThreshold) {
-        suppressed[j] = true;
-      }
-    }
-  }
-  
-  return result;
 }
 
 std::vector<DefectInfo> ForeignDetector::findForeignObjects(const cv::Mat& binary, const cv::Mat& original) {
@@ -256,6 +392,10 @@ std::vector<DefectInfo> ForeignDetector::findForeignObjects(const cv::Mat& binar
     defect.attributes["area"] = area;
     defect.attributes["contrast"] = contrast;
     defect.attributes["meanBrightness"] = roiMean;
+    defect.attributes["method"] = "morphology";
+    
+    // 分析形状特征
+    analyzeShapeFeatures(defect, contour);
 
     defects.push_back(defect);
   }

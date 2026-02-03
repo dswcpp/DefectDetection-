@@ -45,7 +45,8 @@ private:
   cv::Mat preprocessImage(const cv::Mat& input);
   std::vector<DefectInfo> findScratches(const cv::Mat& edges, const cv::Mat& original);
   std::vector<DefectInfo> detectLinesHough(const cv::Mat& edges, const cv::Mat& original);
-  std::vector<DefectInfo> nmsDefects(const std::vector<DefectInfo>& defects, double iouThreshold);
+  std::vector<DefectInfo> detectLinesLSD(const cv::Mat& gray, const cv::Mat& original);
+  void analyzeGrayProfile(DefectInfo& defect, const cv::Mat& gray);
   bool isValidScratch(const std::vector<cv::Point>& contour);
   double calculateSeverity(double length, double avgWidth);
 };
