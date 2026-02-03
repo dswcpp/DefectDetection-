@@ -88,6 +88,7 @@ private:
   QHash<QString, SectionInfo> m_sections;
   QHash<QString, QHash<QString, ControlInfo>> m_controls;
   bool m_accordionMode = true;  // 默认为手风琴模式
+  bool m_loading = false;       // 防止加载时触发保存
 };
 
 #endif // PARAMPANEL_H

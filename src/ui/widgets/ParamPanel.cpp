@@ -27,17 +27,21 @@ ParamPanel::ParamPanel(QWidget* parent) : QWidget{parent}
   setupUI();
   loadFromConfig();
 
-  // 监听配置变化
-  connect(&gConfig, &ConfigManager::configChanged, this, [this](const QString& section) {
-    if (section.startsWith("detectors")) {
-      loadFromConfig();
-    }
-  });
+  // 暂时禁用配置变化监听来排查崩溃问题
+  // TODO: 在确认稳定后重新启用
+  // connect(&gConfig, &ConfigManager::configChanged, this, [this](const QString& section) {
+  //   if (section.startsWith("detectors")) {
+  //     loadFromConfig();
+  //   }
+  // });
 }
 
 void ParamPanel::setupUI()
 {
   setObjectName(QStringLiteral("ParamPanel"));
+  
+  // 设置背景色（确保暗色主题生效）
+  setAutoFillBackground(true);
 
   // 设置最小高度，确保有足够空间显示内容
   setMinimumHeight(500);
@@ -46,8 +50,10 @@ void ParamPanel::setupUI()
   auto* scrollArea = new QScrollArea(this);
   scrollArea->setWidgetResizable(true);
   scrollArea->setFrameShape(QFrame::NoFrame);
+  scrollArea->setStyleSheet(QStringLiteral("QScrollArea { background: transparent; border: none; }"));
 
   auto* scrollWidget = new QWidget();
+  scrollWidget->setStyleSheet(QStringLiteral("background: transparent;"));
   m_mainLayout = new QVBoxLayout(scrollWidget);
   m_mainLayout->setContentsMargins(12, 12, 12, 12);  // 增加边距
   m_mainLayout->setSpacing(8);  // 增加组之间的间距
@@ -78,6 +84,9 @@ QWidget* ParamPanel::createCollapsibleSection(const QString& title, QWidget* con
 {
   auto* container = new QWidget(this);
   container->setObjectName(QStringLiteral("paramSection"));
+  container->setStyleSheet(QStringLiteral(
+    "QWidget#paramSection { background-color: #232937; border-radius: 6px; }"
+  ));
 
   auto* layout = new QVBoxLayout(container);
   layout->setContentsMargins(0, 0, 0, 8);  // 增加底部边距
@@ -93,7 +102,11 @@ QWidget* ParamPanel::createCollapsibleSection(const QString& title, QWidget* con
   headerButton->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
   headerButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   headerButton->setMinimumHeight(36);  // 设置标题按钮最小高度
-  headerButton->setStyleSheet(QStringLiteral("QToolButton { text-align: left; padding: 10px; font-size: 14px; font-weight: 500; }"));
+  headerButton->setStyleSheet(QStringLiteral(
+    "QToolButton { text-align: left; padding: 10px; font-size: 14px; font-weight: 500; "
+    "background-color: #2d3445; border-radius: 6px; color: #e0e0e0; }"
+    "QToolButton:hover { background-color: #3a4254; }"
+  ));
 
   layout->addWidget(headerButton);
 
@@ -133,6 +146,7 @@ QWidget* ParamPanel::createScratchParams()
 {
   auto* widget = new QWidget(this);
   widget->setMinimumHeight(180);  // 设置最小高度
+  widget->setStyleSheet(QStringLiteral("background: transparent;"));
   auto* layout = new QFormLayout(widget);
   layout->setContentsMargins(20, 12, 12, 12);  // 增加内边距
   layout->setSpacing(16);  // 增加行间距
@@ -182,6 +196,7 @@ QWidget* ParamPanel::createCrackParams()
 {
   auto* widget = new QWidget(this);
   widget->setMinimumHeight(150);  // 设置最小高度
+  widget->setStyleSheet(QStringLiteral("background: transparent;"));
   auto* layout = new QFormLayout(widget);
   layout->setContentsMargins(20, 12, 12, 12);  // 增加内边距
   layout->setSpacing(16);  // 增加行间距
@@ -227,6 +242,7 @@ QWidget* ParamPanel::createForeignParams()
 {
   auto* widget = new QWidget(this);
   widget->setMinimumHeight(120);  // 设置最小高度
+  widget->setStyleSheet(QStringLiteral("background: transparent;"));
   auto* layout = new QFormLayout(widget);
   layout->setContentsMargins(20, 12, 12, 12);  // 增加内边距
   layout->setSpacing(16);  // 增加行间距
@@ -252,6 +268,7 @@ QWidget* ParamPanel::createDimensionParams()
 {
   auto* widget = new QWidget(this);
   widget->setMinimumHeight(120);  // 设置最小高度
+  widget->setStyleSheet(QStringLiteral("background: transparent;"));
   auto* layout = new QFormLayout(widget);
   layout->setContentsMargins(20, 12, 12, 12);  // 增加内边距
   layout->setSpacing(16);  // 增加行间距
@@ -361,6 +378,9 @@ void ParamPanel::registerControl(const QString& detector, const QString& key,
 
 void ParamPanel::emitParamsChanged(const QString& detector)
 {
+  // 防止在加载配置时触发保存，避免无限循环
+  if (m_loading) return;
+  
   emit paramsChanged(detector, getDetectorParams(detector));
   
   // 自动保存到配置
@@ -448,6 +468,10 @@ void ParamPanel::saveParams(const QString& configPath) const
 
 void ParamPanel::loadFromConfig()
 {
+  // 防止递归调用
+  if (m_loading) return;
+  m_loading = true;
+  
   // 划痕检测参数
   auto scratch = gConfig.scratchConfig();
   QVariantMap scratchParams;
@@ -480,10 +504,15 @@ void ParamPanel::loadFromConfig()
   dimensionParams["tolerance"] = dimension.tolerance;
   dimensionParams["calibration"] = dimension.calibration;
   setDetectorParams(kDimensionDetector, dimensionParams);
+  
+  m_loading = false;
 }
 
 void ParamPanel::saveToConfig()
 {
+  // 防止在加载期间保存
+  if (m_loading) return;
+  
   // 划痕检测参数
   auto scratchParams = getDetectorParams(kScratchDetector);
   ScratchDetectorConfig scratch;

@@ -9,8 +9,7 @@ include($$PWD/../../config/config.pri)
 TEMPLATE = lib
 TARGET = data
 
-QT += core sql
-QT -= gui
+QT += core sql gui concurrent
 
 DEFINES += DATA_LIBRARY_BUILD
 
@@ -27,7 +26,6 @@ HEADERS += \
     repositories/DefectRepository.h \
     repositories/IRepository.h \
     repositories/ImageRepository.h \
-    repositories/InspectionRepository.h \
     repositories/UserRepository.h \
     storage/BackupManager.h \
     storage/ImageStorage.h
@@ -42,7 +40,6 @@ SOURCES += \
     repositories/ConfigRepository.cpp \
     repositories/DefectRepository.cpp \
     repositories/ImageRepository.cpp \
-    repositories/InspectionRepository.cpp \
     repositories/UserRepository.cpp \
     storage/BackupManager.cpp \
     storage/ImageStorage.cpp

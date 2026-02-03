@@ -17,7 +17,7 @@
 #define IMAGEREPOSITORY_H
 
 #include "IRepository.h"
-#include "data_global.h"
+#include "../data_global.h"
 #include <QObject>
 #include <QDateTime>
 #include <QVector>
@@ -55,6 +55,8 @@ public:
   explicit ImageRepository(const QString& connectionName, QObject* parent = nullptr);
 
   QString name() const override { return "ImageRepository"; }
+  bool isReady() const override;
+  int totalCount() const override;
 
   // 插入图片记录，返回新记录ID
   qint64 insert(const ImageRecord& record);

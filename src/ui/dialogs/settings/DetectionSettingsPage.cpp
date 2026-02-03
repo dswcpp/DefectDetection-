@@ -151,6 +151,6 @@ void DetectionSettingsPage::saveSettings() {
   if (m_enableDetectionCheck) detCfg.enabled = m_enableDetectionCheck->isChecked();
   if (m_confidenceSpin) detCfg.confidenceThreshold = m_confidenceSpin->value() / 100.0;
   if (m_modelPathEdit) detCfg.modelPath = m_modelPathEdit->text();
-  gConfig.setDetectionConfig(detCfg);
+  gConfig.setDetectionConfig(detCfg, false);  // 不自动保存，由SettingsDialog统一保存
   emit settingsChanged();
 }

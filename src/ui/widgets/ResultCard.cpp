@@ -19,6 +19,12 @@ void ResultCard::setupUI()
   setObjectName(QStringLiteral("ResultCard"));
   setFrameShape(QFrame::NoFrame);
   setFrameShadow(QFrame::Plain);
+  setAutoFillBackground(true);
+  
+  // 设置暗色背景（确保样式生效）
+  setStyleSheet(QStringLiteral(
+    "ResultCard { background-color: #232937; border: 1px solid #3a4254; border-radius: 8px; }"
+  ));
 
   auto* rootLayout = new QVBoxLayout(this);
   rootLayout->setContentsMargins(16, 16, 16, 16);

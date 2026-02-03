@@ -187,13 +187,13 @@ void StorageSettingsPage::saveSettings() {
   if (m_dbPathEdit) dbCfg.path = m_dbPathEdit->text();
   if (m_maxRecordsSpin) dbCfg.maxRecords = m_maxRecordsSpin->value();
   if (m_autoCleanupCheck) dbCfg.autoCleanup = m_autoCleanupCheck->isChecked();
-  gConfig.setDatabaseConfig(dbCfg);
+  gConfig.setDatabaseConfig(dbCfg, false);  // 不自动保存，由SettingsDialog统一保存
 
   LogConfig logCfg = gConfig.logConfig();
   if (m_logDirEdit) logCfg.dir = m_logDirEdit->text();
   if (m_logMaxSizeSpin) logCfg.maxFileSizeMB = m_logMaxSizeSpin->value();
   if (m_logMaxCountSpin) logCfg.maxFileCount = m_logMaxCountSpin->value();
-  gConfig.setLogConfig(logCfg);
+  gConfig.setLogConfig(logCfg, false);  // 不自动保存，由SettingsDialog统一保存
 
   emit settingsChanged();
 }

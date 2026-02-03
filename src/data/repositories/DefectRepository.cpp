@@ -10,6 +10,21 @@ DefectRepository::DefectRepository(const QString& connectionName, QObject *paren
     : QObject{parent}
     , m_connectionName(connectionName) {}
 
+bool DefectRepository::isReady() const {
+  return isDatabaseOpen(m_connectionName);
+}
+
+int DefectRepository::totalCount() const {
+  QSqlDatabase db = getDatabase(m_connectionName);
+  if (!db.isOpen()) return 0;
+
+  QSqlQuery query(db);
+  if (query.exec("SELECT COUNT(*) FROM inspections") && query.next()) {
+    return query.value(0).toInt();
+  }
+  return 0;
+}
+
 qint64 DefectRepository::insertInspection(const InspectionRecord& record) {
   QSqlDatabase db = QSqlDatabase::database(m_connectionName);
   if (!db.isOpen()) {
@@ -145,19 +160,21 @@ bool DefectRepository::insertDefect(const DefectRecord& defect) {
 }
 
 bool DefectRepository::insertDefects(const QVector<DefectRecord>& defects) {
-  QSqlDatabase db = QSqlDatabase::database(m_connectionName);
-  if (!db.isOpen() || defects.isEmpty()) {
+  if (!isDatabaseOpen(m_connectionName) || defects.isEmpty()) {
     return false;
   }
 
-  db.transaction();
+  TransactionGuard guard(m_connectionName);
+  if (!guard.isActive()) {
+    return false;
+  }
+
   for (const auto& defect : defects) {
     if (!insertDefect(defect)) {
-      db.rollback();
-      return false;
+      return false; // guard 析构时自动回滚
     }
   }
-  return db.commit();
+  return guard.commit();
 }
 
 QVector<InspectionRecord> DefectRepository::queryInspections(const InspectionFilter& filter) {
@@ -185,7 +202,7 @@ QVector<InspectionRecord> DefectRepository::queryInspections(const InspectionFil
   }
 
   sql += " ORDER BY inspect_time DESC";
-  sql += QString(" LIMIT %1 OFFSET %2").arg(filter.limit).arg(filter.offset);
+  sql += " LIMIT ? OFFSET ?";
 
   QSqlQuery query(db);
   if (!query.prepare(sql)) {
@@ -203,6 +220,8 @@ QVector<InspectionRecord> DefectRepository::queryInspections(const InspectionFil
   if (!filter.result.isEmpty()) {
     query.addBindValue(filter.result);
   }
+  query.addBindValue(filter.limit);
+  query.addBindValue(filter.offset);
 
   if (!query.exec()) {
     LOG_ERROR("DefectRepository: Query exec failed: {}", query.lastError().text());
@@ -363,21 +382,129 @@ int DefectRepository::countByResult(const QString& result) {
   return countInspections(filter);
 }
 
-bool DefectRepository::deleteInspection(qint64 id) {
+QMap<QString, int> DefectRepository::getDefectTypeStatistics(const InspectionFilter& filter) {
+  QMap<QString, int> stats;
+
   QSqlDatabase db = QSqlDatabase::database(m_connectionName);
   if (!db.isOpen()) {
+    return stats;
+  }
+
+  QString sql = 
+    "SELECT d.defect_type, COUNT(*) as count "
+    "FROM defects d "
+    "INNER JOIN inspections i ON d.inspection_id = i.id "
+    "WHERE 1=1";
+
+  if (filter.startTime.isValid()) {
+    sql += " AND i.inspect_time >= ?";
+  }
+  if (filter.endTime.isValid()) {
+    sql += " AND i.inspect_time <= ?";
+  }
+  if (!filter.result.isEmpty()) {
+    sql += " AND i.result = ?";
+  }
+
+  sql += " GROUP BY d.defect_type ORDER BY count DESC";
+
+  QSqlQuery query(db);
+  if (!query.prepare(sql)) {
+    LOG_ERROR("DefectRepository: getDefectTypeStatistics prepare failed: {}", query.lastError().text());
+    return stats;
+  }
+
+  if (filter.startTime.isValid()) {
+    query.addBindValue(filter.startTime);
+  }
+  if (filter.endTime.isValid()) {
+    query.addBindValue(filter.endTime);
+  }
+  if (!filter.result.isEmpty()) {
+    query.addBindValue(filter.result);
+  }
+
+  if (!query.exec()) {
+    LOG_ERROR("DefectRepository: getDefectTypeStatistics exec failed: {}", query.lastError().text());
+    return stats;
+  }
+
+  while (query.next()) {
+    QString type = query.value("defect_type").toString();
+    int count = query.value("count").toInt();
+    if (!type.isEmpty()) {
+      stats[type] = count;
+    }
+  }
+
+  return stats;
+}
+
+QMap<QString, int> DefectRepository::getSeverityStatistics(const InspectionFilter& filter) {
+  QMap<QString, int> stats;
+
+  QSqlDatabase db = QSqlDatabase::database(m_connectionName);
+  if (!db.isOpen()) {
+    return stats;
+  }
+
+  QString sql = 
+    "SELECT severity_level, COUNT(*) as count "
+    "FROM inspections "
+    "WHERE result = 'NG'";
+
+  if (filter.startTime.isValid()) {
+    sql += " AND inspect_time >= ?";
+  }
+  if (filter.endTime.isValid()) {
+    sql += " AND inspect_time <= ?";
+  }
+
+  sql += " GROUP BY severity_level";
+
+  QSqlQuery query(db);
+  if (!query.prepare(sql)) {
+    return stats;
+  }
+
+  if (filter.startTime.isValid()) {
+    query.addBindValue(filter.startTime);
+  }
+  if (filter.endTime.isValid()) {
+    query.addBindValue(filter.endTime);
+  }
+
+  if (query.exec()) {
+    while (query.next()) {
+      QString level = query.value("severity_level").toString();
+      int count = query.value("count").toInt();
+      if (!level.isEmpty()) {
+        stats[level] = count;
+      }
+    }
+  }
+
+  return stats;
+}
+
+bool DefectRepository::deleteInspection(qint64 id) {
+  if (!isDatabaseOpen(m_connectionName)) {
     return false;
   }
 
-  db.transaction();
+  TransactionGuard guard(m_connectionName);
+  if (!guard.isActive()) {
+    return false;
+  }
+
+  QSqlDatabase db = getDatabase(m_connectionName);
 
   // 先删除关联的缺陷记录
   QSqlQuery deleteDefects(db);
   deleteDefects.prepare("DELETE FROM defects WHERE inspection_id = ?");
   deleteDefects.addBindValue(id);
   if (!deleteDefects.exec()) {
-    db.rollback();
-    return false;
+    return false; // guard 析构时自动回滚
   }
 
   // 删除检测记录
@@ -385,9 +512,24 @@ bool DefectRepository::deleteInspection(qint64 id) {
   deleteInsp.prepare("DELETE FROM inspections WHERE id = ?");
   deleteInsp.addBindValue(id);
   if (!deleteInsp.exec()) {
-    db.rollback();
     return false;
   }
 
-  return db.commit();
+  return guard.commit();
+}
+
+int DefectRepository::deleteInspections(const QVector<qint64>& ids) {
+  if (!isDatabaseOpen(m_connectionName) || ids.isEmpty()) {
+    return 0;
+  }
+
+  int deletedCount = 0;
+  for (qint64 id : ids) {
+    if (deleteInspection(id)) {
+      deletedCount++;
+    }
+  }
+  
+  LOG_INFO("DefectRepository::deleteInspections - Deleted {} of {} records", deletedCount, ids.size());
+  return deletedCount;
 }

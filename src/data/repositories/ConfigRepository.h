@@ -17,7 +17,7 @@
 #define CONFIGREPOSITORY_H
 
 #include "IRepository.h"
-#include "data_global.h"
+#include "../data_global.h"
 #include <QObject>
 #include <QString>
 #include <QVariant>

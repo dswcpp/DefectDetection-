@@ -1,5 +1,6 @@
 #include "ImageView.h"
 #include "common/Logger.h"
+#include <opencv2/imgproc.hpp>  // for cvtColor
 #include <QGraphicsPixmapItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsTextItem>

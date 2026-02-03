@@ -102,7 +102,7 @@ void SettingsDialog::setupUI() {
   scrollArea->setWidgetResizable(true);
   scrollArea->setStyleSheet("QScrollArea { background-color: #2C2C2E; border: none; }");
 
-  m_stackedWidget = new QStackedWidget();
+  m_stackedWidget = new QStackedWidget(this);
   m_stackedWidget->setStyleSheet("background-color: #2C2C2E;");
   scrollArea->setWidget(m_stackedWidget);
   rightLayout->addWidget(scrollArea, 1);
@@ -167,12 +167,13 @@ void SettingsDialog::setupUI() {
 }
 
 void SettingsDialog::createPages() {
-  m_cameraPage = new CameraSettingsPage();
-  m_lightPage = new LightSettingsPage();
-  m_plcPage = new PLCSettingsPage();
-  m_storagePage = new StorageSettingsPage();
-  m_detectionPage = new DetectionSettingsPage();
-  m_userPage = new UserSettingsPage();
+  // 创建页面时传入 this 作为父对象，确保内存管理正确
+  m_cameraPage = new CameraSettingsPage(this);
+  m_lightPage = new LightSettingsPage(this);
+  m_plcPage = new PLCSettingsPage(this);
+  m_storagePage = new StorageSettingsPage(this);
+  m_detectionPage = new DetectionSettingsPage(this);
+  m_userPage = new UserSettingsPage(this);
 
   m_stackedWidget->addWidget(m_cameraPage);
   m_stackedWidget->addWidget(m_lightPage);
@@ -192,26 +193,82 @@ void SettingsDialog::createPages() {
 }
 
 void SettingsDialog::loadSettings() {
-  LOG_DEBUG("SettingsDialog::loadSettings - Loading all settings pages");
+  LOG_INFO("SettingsDialog::loadSettings - Loading all settings pages");
+  
+  // 输出当前配置值用于调试
+  auto camCfg = gConfig.cameraConfig();
+  LOG_INFO("  Camera config: type={}, ip={}, imageDir={}", 
+           camCfg.type, camCfg.ip, camCfg.imageDir);
+  
   if (m_cameraPage) m_cameraPage->loadSettings();
   if (m_lightPage) m_lightPage->loadSettings();
   if (m_plcPage) m_plcPage->loadSettings();
   if (m_storagePage) m_storagePage->loadSettings();
   if (m_detectionPage) m_detectionPage->loadSettings();
   if (m_userPage) m_userPage->loadSettings();
+  
+  LOG_INFO("SettingsDialog::loadSettings - Done");
 }
 
 void SettingsDialog::saveSettings() {
-  LOG_INFO("SettingsDialog::saveSettings - Saving all settings pages");
-  if (m_cameraPage) { LOG_INFO("Saving camera..."); m_cameraPage->saveSettings(); }
-  if (m_lightPage) { LOG_INFO("Saving light..."); m_lightPage->saveSettings(); }
-  if (m_plcPage) { LOG_INFO("Saving plc..."); m_plcPage->saveSettings(); }
-  if (m_storagePage) { LOG_INFO("Saving storage..."); m_storagePage->saveSettings(); }
-  if (m_detectionPage) { LOG_INFO("Saving detection..."); m_detectionPage->saveSettings(); }
-  if (m_userPage) { LOG_INFO("Saving user..."); m_userPage->saveSettings(); }
-  LOG_INFO("Calling gConfig.save()...");
-  gConfig.save();
-  LOG_INFO("SettingsDialog::saveSettings - Settings saved to config file");
+  int currentIndex = m_stackedWidget ? m_stackedWidget->currentIndex() : -1;
+  LOG_INFO("SettingsDialog::saveSettings - Saving current page (index={})", currentIndex);
+  
+  try {
+    // 只保存当前显示的页面
+    switch (currentIndex) {
+      case 0:
+        if (m_cameraPage) {
+          LOG_INFO("Saving camera settings...");
+          m_cameraPage->saveSettings();
+          LOG_INFO("Camera settings saved, about to break");
+        }
+        LOG_INFO("After case 0 block");
+        break;
+      case 1:
+        if (m_lightPage) {
+          LOG_INFO("Saving light settings...");
+          m_lightPage->saveSettings();
+        }
+        break;
+      case 2:
+        if (m_plcPage) {
+          LOG_INFO("Saving PLC settings...");
+          m_plcPage->saveSettings();
+        }
+        break;
+      case 3:
+        if (m_storagePage) {
+          LOG_INFO("Saving storage settings...");
+          m_storagePage->saveSettings();
+        }
+        break;
+      case 4:
+        if (m_detectionPage) {
+          LOG_INFO("Saving detection settings...");
+          m_detectionPage->saveSettings();
+        }
+        break;
+      case 5:
+        if (m_userPage) {
+          LOG_INFO("Saving user settings...");
+          m_userPage->saveSettings();
+        }
+        break;
+      default:
+        LOG_WARN("SettingsDialog::saveSettings - Unknown page index: {}", currentIndex);
+        break;
+    }
+    
+    // 保存到配置文件
+    bool saved = gConfig.save();
+    LOG_INFO("SettingsDialog::saveSettings - gConfig.save() returned: {}", saved);
+    LOG_INFO("SettingsDialog::saveSettings - Config path: {}", gConfig.configPath());
+  } catch (const std::exception& e) {
+    LOG_ERROR("SettingsDialog::saveSettings - Exception: {}", e.what());
+  } catch (...) {
+    LOG_ERROR("SettingsDialog::saveSettings - Unknown exception");
+  }
 }
 
 void SettingsDialog::onPageChanged(int index) {

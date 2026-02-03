@@ -9,6 +9,21 @@ ImageRepository::ImageRepository(const QString& connectionName, QObject* parent)
     : QObject(parent)
     , m_connectionName(connectionName) {}
 
+bool ImageRepository::isReady() const {
+  return isDatabaseOpen(m_connectionName);
+}
+
+int ImageRepository::totalCount() const {
+  QSqlDatabase db = getDatabase(m_connectionName);
+  if (!db.isOpen()) return 0;
+
+  QSqlQuery query(db);
+  if (query.exec("SELECT COUNT(*) FROM images") && query.next()) {
+    return query.value(0).toInt();
+  }
+  return 0;
+}
+
 qint64 ImageRepository::insert(const ImageRecord& record) {
   QSqlDatabase db = QSqlDatabase::database(m_connectionName);
   if (!db.isOpen()) {
@@ -155,7 +170,7 @@ QVector<ImageRecord> ImageRepository::query(const ImageFilter& filter) {
   if (filter.batchId > 0) sql += " AND batch_id = :batch_id";
 
   sql += " ORDER BY capture_time DESC";
-  sql += QString(" LIMIT %1 OFFSET %2").arg(filter.limit).arg(filter.offset);
+  sql += " LIMIT :limit OFFSET :offset";
 
   QSqlQuery query(db);
   query.prepare(sql);
@@ -164,6 +179,8 @@ QVector<ImageRecord> ImageRepository::query(const ImageFilter& filter) {
   if (filter.endTime.isValid()) query.bindValue(":end_time", filter.endTime);
   if (!filter.sourceType.isEmpty()) query.bindValue(":source_type", filter.sourceType);
   if (filter.batchId > 0) query.bindValue(":batch_id", filter.batchId);
+  query.bindValue(":limit", filter.limit);
+  query.bindValue(":offset", filter.offset);
 
   if (!query.exec()) {
     LOG_ERROR("ImageRepository: Query failed: {}", query.lastError().text());

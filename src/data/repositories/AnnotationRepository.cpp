@@ -9,6 +9,21 @@ AnnotationRepository::AnnotationRepository(const QString& connectionName, QObjec
     : QObject(parent)
     , m_connectionName(connectionName) {}
 
+bool AnnotationRepository::isReady() const {
+  return isDatabaseOpen(m_connectionName);
+}
+
+int AnnotationRepository::totalCount() const {
+  QSqlDatabase db = getDatabase(m_connectionName);
+  if (!db.isOpen()) return 0;
+
+  QSqlQuery query(db);
+  if (query.exec("SELECT COUNT(*) FROM annotations") && query.next()) {
+    return query.value(0).toInt();
+  }
+  return 0;
+}
+
 QString AnnotationRepository::statusToString(AnnotationStatus status) const {
   switch (status) {
     case AnnotationStatus::Pending: return "pending";
@@ -141,7 +156,7 @@ QVector<AnnotationRecord> AnnotationRepository::query(const AnnotationFilter& fi
   if (filter.annotatorId > 0) sql += " AND annotator_id = :annotator_id";
 
   sql += " ORDER BY created_at DESC";
-  sql += QString(" LIMIT %1 OFFSET %2").arg(filter.limit).arg(filter.offset);
+  sql += " LIMIT :limit OFFSET :offset";
 
   QSqlQuery query(db);
   query.prepare(sql);
@@ -150,6 +165,8 @@ QVector<AnnotationRecord> AnnotationRepository::query(const AnnotationFilter& fi
   if (!filter.className.isEmpty()) query.bindValue(":class_name", filter.className);
   if (filter.filterByStatus) query.bindValue(":status", statusToString(filter.status));
   if (filter.annotatorId > 0) query.bindValue(":annotator_id", filter.annotatorId);
+  query.bindValue(":limit", filter.limit);
+  query.bindValue(":offset", filter.offset);
 
   if (!query.exec()) {
     LOG_ERROR("AnnotationRepository: Query failed: {}", query.lastError().text());
@@ -285,34 +302,32 @@ bool AnnotationRepository::reject(qint64 id, qint64 reviewerId, const QString& c
 
 bool AnnotationRepository::batchApprove(const QVector<qint64>& ids, qint64 reviewerId) {
   if (ids.isEmpty()) return true;
+  if (!isDatabaseOpen(m_connectionName)) return false;
 
-  QSqlDatabase db = QSqlDatabase::database(m_connectionName);
-  if (!db.isOpen()) return false;
+  TransactionGuard guard(m_connectionName);
+  if (!guard.isActive()) return false;
 
-  db.transaction();
   for (qint64 id : ids) {
     if (!approve(id, reviewerId)) {
-      db.rollback();
-      return false;
+      return false; // guard 析构时自动回滚
     }
   }
-  return db.commit();
+  return guard.commit();
 }
 
 bool AnnotationRepository::batchReject(const QVector<qint64>& ids, qint64 reviewerId, const QString& comment) {
   if (ids.isEmpty()) return true;
+  if (!isDatabaseOpen(m_connectionName)) return false;
 
-  QSqlDatabase db = QSqlDatabase::database(m_connectionName);
-  if (!db.isOpen()) return false;
+  TransactionGuard guard(m_connectionName);
+  if (!guard.isActive()) return false;
 
-  db.transaction();
   for (qint64 id : ids) {
     if (!reject(id, reviewerId, comment)) {
-      db.rollback();
-      return false;
+      return false; // guard 析构时自动回滚
     }
   }
-  return db.commit();
+  return guard.commit();
 }
 
 int AnnotationRepository::countByStatus(AnnotationStatus status) {

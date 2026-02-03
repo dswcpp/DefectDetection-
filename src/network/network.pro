@@ -1,6 +1,6 @@
 # =============================================================================
 # network - 网络通信层
-# 职责: HTTP 服务、WebSocket 推送、MES 对接
+# 职责: HTTP 服务、WebSocket 推送、MES 对接、MQTT 消息
 # 依赖: common
 # =============================================================================
 
@@ -23,6 +23,7 @@ HEADERS += \
     http/HttpServer.h \
     mes/MESClient.h \
     mes/MESProtocol.h \
+    mqtt/MQTTClient.h \
     network_global.h \
     websocket/WSServer.h
 
@@ -30,6 +31,7 @@ HEADERS += \
 SOURCES += \
     http/HttpServer.cpp \
     mes/MESClient.cpp \
+    mqtt/MQTTClient.cpp \
     websocket/WSServer.cpp
 
 # ------------------ 安装规则 ------------------

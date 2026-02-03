@@ -4,6 +4,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QCoreApplication>
+#include <opencv2/imgcodecs.hpp>  // for imdecode
+#include <opencv2/imgproc.hpp>    // for cvtColor
 
 bool FileCamera::open(const CameraConfig &cfg) {
   if (m_opened) {

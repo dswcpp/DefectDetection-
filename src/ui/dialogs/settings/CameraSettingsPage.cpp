@@ -1,8 +1,10 @@
 #include "CameraSettingsPage.h"
 #include "SettingsPageUtils.h"
 #include "config/ConfigManager.h"
+#include "common/Logger.h"
 
 #include <QCheckBox>
+#include <QDebug>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QGridLayout>
@@ -215,20 +217,40 @@ void CameraSettingsPage::loadSettings() {
 }
 
 void CameraSettingsPage::saveSettings() {
+  qDebug() << "CameraSettingsPage::saveSettings - Start";
+  
   CameraConfig camCfg = gConfig.cameraConfig();
+  
   if (m_cameraTypeCombo) {
     int idx = m_cameraTypeCombo->currentIndex();
     QStringList types = {"gige", "usb", "hik", "daheng", "file"};
-    if (idx >= 0 && idx < types.size()) camCfg.type = types[idx];
+    if (idx >= 0 && idx < types.size()) {
+      camCfg.type = types[idx];
+    }
   }
-  if (m_cameraIpEdit) camCfg.ip = m_cameraIpEdit->text();
-  if (m_imageDirEdit) camCfg.imageDir = m_imageDirEdit->text();
-  if (m_exposureSpin) camCfg.exposureUs = m_exposureSpin->value();
-  if (m_gainSpin) camCfg.gainDb = m_gainSpin->value();
-  if (m_captureIntervalSpin) camCfg.captureIntervalMs = m_captureIntervalSpin->value();
-  if (m_loopCheck) camCfg.loop = m_loopCheck->isChecked();
-  gConfig.setCameraConfig(camCfg);
-  emit settingsChanged();
+  if (m_cameraIpEdit) {
+    camCfg.ip = m_cameraIpEdit->text();
+  }
+  if (m_imageDirEdit) {
+    camCfg.imageDir = m_imageDirEdit->text();
+  }
+  if (m_exposureSpin) {
+    camCfg.exposureUs = m_exposureSpin->value();
+  }
+  if (m_gainSpin) {
+    camCfg.gainDb = m_gainSpin->value();
+  }
+  if (m_captureIntervalSpin) {
+    camCfg.captureIntervalMs = m_captureIntervalSpin->value();
+  }
+  if (m_loopCheck) {
+    camCfg.loop = m_loopCheck->isChecked();
+  }
+  
+  // 保存到配置（不自动触发save，由SettingsDialog统一保存）
+  gConfig.setCameraConfig(camCfg, false);
+  
+  qDebug() << "CameraSettingsPage::saveSettings - Done";
 }
 
 void CameraSettingsPage::onBrowseImageDir() {

@@ -6,6 +6,7 @@
 #include "postprocess/NMSFilter.h"
 #include "scoring/DefectScorer.h"
 #include "common/Logger.h"
+#include <opencv2/imgproc.hpp>  // for resize
 
 #include <QMetaType>
 #include <QTimer>

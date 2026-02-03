@@ -75,6 +75,11 @@ private:
   void openConfigFile();
   void saveConfigFile();
   void updateMenuPermissions();
+  
+  // 统计数据持久化
+  void loadStatistics();
+  void saveStatistics();
+  void resetStatistics();
 
   // UI 组件
   QWidget* m_centralWidget;
@@ -100,6 +105,7 @@ private:
   QAction* m_actionUserManagement;
   QAction* m_actionChangePassword;
   QAction* m_actionLogout;
+  QAction* m_actionResetStats;
 
   // 状态栏组件
   QLabel* m_cycleTimeLabel;
@@ -122,7 +128,6 @@ private:
 
   // 检测流水线
   DetectPipeline* m_pipeline = nullptr;
-  void drawDetectionResult(const cv::Mat& frame, const DetectResult& result);
 
   // 数据库管理器
   DatabaseManager* m_dbManager = nullptr;

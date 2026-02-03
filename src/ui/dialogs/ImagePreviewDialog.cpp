@@ -3,6 +3,7 @@
 #include "../widgets/AnnotationPanel.h"
 #include "data/DatabaseManager.h"
 #include "data/repositories/DefectRepository.h"
+#include <opencv2/imgproc.hpp>  // for cvtColor
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>

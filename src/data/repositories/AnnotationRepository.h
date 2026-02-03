@@ -17,7 +17,7 @@
 #define ANNOTATIONREPOSITORY_H
 
 #include "IRepository.h"
-#include "data_global.h"
+#include "../data_global.h"
 #include <QObject>
 #include <QDateTime>
 #include <QVector>
@@ -80,6 +80,8 @@ public:
   explicit AnnotationRepository(const QString& connectionName, QObject* parent = nullptr);
 
   QString name() const override { return "AnnotationRepository"; }
+  bool isReady() const override;
+  int totalCount() const override;
 
   // === 标注 CRUD ===
   qint64 insert(const AnnotationRecord& record);

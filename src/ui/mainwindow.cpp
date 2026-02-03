@@ -32,11 +32,14 @@
 #include <QLatin1String>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QLineEdit>
 #include <QSize>
 #include <QFile>
 #include <QFileDialog>
 #include <QTimer>
 #include <QDateTime>
+#include <QDate>
+#include <QSettings>
 #include <QFileInfo>
 #include <QImage>
 #include <QDebug>
@@ -55,8 +58,9 @@ MainWindow::MainWindow(QWidget *parent) : FramelessMainWindow(parent) {
     // 执行 schema 初始化表结构 - 尝试多个位置
     QStringList schemaPaths = {
       QCoreApplication::applicationDirPath() + "/config/schema.sql",
-      QCoreApplication::applicationDirPath() + "/../../../../config/schema.sql",  // 开发环境 (build/Desktop.../src/app -> config)
-      "F:/Code/QT/DefectDetection/config/schema.sql",  // 绝对路径后备
+      QCoreApplication::applicationDirPath() + "/../config/schema.sql",      // bin 同级
+      QCoreApplication::applicationDirPath() + "/../../config/schema.sql",   // 项目根目录
+      QCoreApplication::applicationDirPath() + "/../../../config/schema.sql",
       ":/config/schema.sql"  // 资源文件
     };
     
@@ -75,15 +79,29 @@ MainWindow::MainWindow(QWidget *parent) : FramelessMainWindow(parent) {
     }
     
     if (!schemaFound) {
-      LOG_WARN("Schema file not found in any location!");
+      LOG_ERROR("Schema file not found in any location! Database tables may not exist.");
+      QTimer::singleShot(0, this, [this]() {
+        QMessageBox::warning(this, tr("数据库警告"),
+          tr("数据库表结构初始化失败，历史记录和统计功能可能不可用。\n"
+             "请确保 config/schema.sql 文件存在。"));
+      });
     }
   } else {
-    LOG_WARN("Failed to initialize database");
+    LOG_ERROR("Failed to initialize database");
+    QTimer::singleShot(0, this, [this]() {
+      QMessageBox::warning(this, tr("数据库错误"),
+        tr("数据库初始化失败，部分功能将不可用。"));
+    });
   }
+  
+  // 加载上次的统计数据
+  loadStatistics();
 }
 
 MainWindow::~MainWindow()
 {
+  // 保存统计数据
+  saveStatistics();
 }
 
 void MainWindow::setPipeline(DetectPipeline* pipeline)
@@ -144,16 +162,29 @@ void MainWindow::onSettingsClicked()
 {
     SettingsDialog dialog(this);
 
-    // 监听配置变更信号，动态更新 Pipeline
-    // 注意：暂时禁用此连接来测试崩溃问题
+    // 暂时禁用配置变更信号处理来排查崩溃问题
+    // TODO: 在确认稳定后重新启用
     // connect(&dialog, &SettingsDialog::settingsChanged, this, [this]() {
     //     LOG_INFO("MainWindow: settingsChanged signal received");
-    //     if (m_pipeline) {
-    //         auto camCfg = gConfig.cameraConfig();
-    //         m_pipeline->setImageDir(camCfg.imageDir);
-    //         m_pipeline->setCaptureInterval(camCfg.captureIntervalMs);
-    //         LOG_INFO("Pipeline updated: imageDir={}, interval={}ms",
-    //                  camCfg.imageDir, camCfg.captureIntervalMs);
+    //     try {
+    //         if (m_pipeline) {
+    //             auto camCfg = gConfig.cameraConfig();
+    //             m_pipeline->setImageDir(camCfg.imageDir);
+    //             m_pipeline->setCaptureInterval(camCfg.captureIntervalMs);
+    //             LOG_INFO("Pipeline updated: imageDir={}, interval={}ms",
+    //                      camCfg.imageDir, camCfg.captureIntervalMs);
+    //         }
+    //         
+    //         // 更新其他组件配置
+    //         if (m_paramPanel) {
+    //             m_paramPanel->loadFromConfig();
+    //         }
+    //         
+    //         statusBar()->showMessage(tr("配置已更新"), 2000);
+    //     } catch (const std::exception& e) {
+    //         LOG_ERROR("Failed to apply settings: {}", e.what());
+    //         QMessageBox::warning(this, tr("配置错误"), 
+    //             tr("应用配置时出错: %1").arg(QString::fromStdString(e.what())));
     //     }
     //     LOG_INFO("MainWindow: settingsChanged handler done");
     // });
@@ -163,12 +194,34 @@ void MainWindow::onSettingsClicked()
 
 void MainWindow::onStatisticsClicked()
 {
+    // 双重权限检查（Action已禁用，但作为安全措施）
+    if (!UserManager::instance()->hasPermission(Permission::ViewStatistics)) {
+        QMessageBox::warning(this, tr("权限不足"), tr("您没有查看统计信息的权限"));
+        return;
+    }
+    
+    if (!m_dbManager || !m_dbManager->isOpen()) {
+        QMessageBox::warning(this, tr("数据库错误"), tr("数据库未连接，无法查看统计信息"));
+        return;
+    }
+    
     StatisticsDialog dialog(m_dbManager, this);
     dialog.exec();
 }
 
 void MainWindow::onHistoryClicked()
 {
+    // 双重权限检查（Action已禁用，但作为安全措施）
+    if (!UserManager::instance()->hasPermission(Permission::ViewHistory)) {
+        QMessageBox::warning(this, tr("权限不足"), tr("您没有查看历史记录的权限"));
+        return;
+    }
+    
+    if (!m_dbManager || !m_dbManager->isOpen()) {
+        QMessageBox::warning(this, tr("数据库错误"), tr("数据库未连接，无法查看历史记录"));
+        return;
+    }
+    
     HistoryDialog dialog(m_dbManager, this);
     dialog.exec();
 }
@@ -280,6 +333,80 @@ void MainWindow::updateStatistics()
     }
 }
 
+void MainWindow::loadStatistics()
+{
+    QSettings settings(QCoreApplication::organizationName(), 
+                       QCoreApplication::applicationName());
+    
+    settings.beginGroup(QStringLiteral("SessionStatistics"));
+    
+    // 检查是否是今天的数据（每日重置）
+    QDate savedDate = settings.value(QStringLiteral("date"), QDate()).toDate();
+    QDate today = QDate::currentDate();
+    
+    if (savedDate == today) {
+        m_totalCount = settings.value(QStringLiteral("totalCount"), 0).toInt();
+        m_okCount = settings.value(QStringLiteral("okCount"), 0).toInt();
+        m_ngCount = settings.value(QStringLiteral("ngCount"), 0).toInt();
+        m_lastCycleTimeMs = settings.value(QStringLiteral("lastCycleTime"), 0).toInt();
+        
+        LOG_INFO("Statistics loaded: total={}, ok={}, ng={}", 
+                 m_totalCount, m_okCount, m_ngCount);
+    } else {
+        // 新的一天，重置统计
+        LOG_INFO("New day detected, statistics reset");
+        m_totalCount = 0;
+        m_okCount = 0;
+        m_ngCount = 0;
+        m_lastCycleTimeMs = 0;
+    }
+    
+    settings.endGroup();
+    
+    // 更新UI显示
+    updateStatistics();
+    if (m_cycleTimeLabel && m_lastCycleTimeMs > 0) {
+        m_cycleTimeLabel->setText(tr("节拍: %1 ms").arg(m_lastCycleTimeMs));
+    }
+}
+
+void MainWindow::saveStatistics()
+{
+    QSettings settings(QCoreApplication::organizationName(), 
+                       QCoreApplication::applicationName());
+    
+    settings.beginGroup(QStringLiteral("SessionStatistics"));
+    settings.setValue(QStringLiteral("date"), QDate::currentDate());
+    settings.setValue(QStringLiteral("totalCount"), m_totalCount);
+    settings.setValue(QStringLiteral("okCount"), m_okCount);
+    settings.setValue(QStringLiteral("ngCount"), m_ngCount);
+    settings.setValue(QStringLiteral("lastCycleTime"), m_lastCycleTimeMs);
+    settings.endGroup();
+    
+    LOG_INFO("Statistics saved: total={}, ok={}, ng={}", 
+             m_totalCount, m_okCount, m_ngCount);
+}
+
+void MainWindow::resetStatistics()
+{
+    m_totalCount = 0;
+    m_okCount = 0;
+    m_ngCount = 0;
+    m_lastCycleTimeMs = 0;
+    
+    updateStatistics();
+    
+    if (m_cycleTimeLabel) {
+        m_cycleTimeLabel->setText(tr("节拍: -- ms"));
+    }
+    
+    // 立即保存重置后的状态
+    saveStatistics();
+    
+    statusBar()->showMessage(tr("统计数据已重置"), 2000);
+    LOG_INFO("Statistics reset by user");
+}
+
 void MainWindow::setupUI()
 {
   setWindowTitle(tr("缺陷检测系统 v1.0"));
@@ -287,16 +414,28 @@ void MainWindow::setupUI()
   resize(1280, 800);
 
   // 加载深色主题样式表
-  QFile styleFile(QStringLiteral(":/styles/dark-theme.qss"));
-  if (!styleFile.exists()) {
-    // 如果资源文件不存在，尝试从文件系统加载
-    styleFile.setFileName(QStringLiteral("resources/styles/dark-theme.qss"));
+  QStringList stylePaths = {
+    QStringLiteral(":/styles/dark-theme.qss"),                                    // 资源文件
+    QCoreApplication::applicationDirPath() + "/styles/dark-theme.qss",            // 可执行文件目录
+    QCoreApplication::applicationDirPath() + "/../resources/styles/dark-theme.qss", // 相对路径
+    QStringLiteral("resources/styles/dark-theme.qss")                             // 当前工作目录
+  };
+  
+  bool styleLoaded = false;
+  for (const QString& stylePath : stylePaths) {
+    QFile styleFile(stylePath);
+    if (styleFile.exists() && styleFile.open(QFile::ReadOnly)) {
+      QString styleSheet = QString::fromUtf8(styleFile.readAll());
+      qApp->setStyleSheet(styleSheet);  // 应用到整个应用程序
+      styleFile.close();
+      LOG_INFO("Dark theme loaded from: {}", stylePath);
+      styleLoaded = true;
+      break;
+    }
   }
-
-  if (styleFile.open(QFile::ReadOnly)) {
-    QString styleSheet = QLatin1String(styleFile.readAll());
-    setStyleSheet(styleSheet);
-    styleFile.close();
+  
+  if (!styleLoaded) {
+    LOG_WARN("Failed to load dark theme, using default style");
   }
 
   m_centralWidget = new QWidget(this);
@@ -327,6 +466,10 @@ void MainWindow::setupUI()
   // 右侧面板
   m_rightPanel = new QWidget(this);
   m_rightPanel->setObjectName(QStringLiteral("rightPanel"));
+  m_rightPanel->setAutoFillBackground(true);
+  m_rightPanel->setStyleSheet(QStringLiteral(
+    "QWidget#rightPanel { background-color: #1a1f2e; border-radius: 8px; }"
+  ));
   auto* rightLayout = new QVBoxLayout(m_rightPanel);
   rightLayout->setContentsMargins(8, 8, 8, 8);
   rightLayout->setSpacing(12);
@@ -340,6 +483,12 @@ void MainWindow::setupUI()
   // 创建选项卡控件来容纳参数面板和标注面板
   auto* tabWidget = new QTabWidget(this);
   tabWidget->setObjectName(QStringLiteral("rightTabWidget"));
+  tabWidget->setStyleSheet(QStringLiteral(
+    "QTabWidget::pane { background-color: #232937; border: none; border-radius: 4px; }"
+    "QTabBar::tab { background-color: #1a1f2e; color: #9ca3af; padding: 8px 16px; margin-right: 2px; }"
+    "QTabBar::tab:selected { background-color: #232937; color: #e0e0e0; }"
+    "QTabBar::tab:hover { background-color: #2d3445; }"
+  ));
 
   // 参数面板
   m_paramPanel = new ParamPanel(this);
@@ -352,6 +501,7 @@ void MainWindow::setupUI()
 
   // 缺陷详情表格
   auto* defectListWidget = new QWidget(this);
+  defectListWidget->setStyleSheet(QStringLiteral("background: transparent;"));
   auto* defectListLayout = new QVBoxLayout(defectListWidget);
   defectListLayout->setContentsMargins(0, 0, 0, 0);
   
@@ -419,6 +569,10 @@ void MainWindow::createActions()
   m_actionUserManagement = new QAction(tr("用户管理"), this);
   m_actionChangePassword = new QAction(tr("修改密码"), this);
   m_actionLogout = new QAction(tr("注销登录"), this);
+  
+  // 统计操作
+  m_actionResetStats = new QAction(tr("重置统计"), this);
+  m_actionResetStats->setToolTip(tr("重置当天的检测统计数据"));
 }
 
 
@@ -436,8 +590,11 @@ void MainWindow::setupMenuBar()
 
   auto* settingsMenu = bar->addMenu(tr("设置"));
   settingsMenu->addAction(m_actionSettings);
+  settingsMenu->addSeparator();
   settingsMenu->addAction(m_actionStatistics);
   settingsMenu->addAction(m_actionHistory);
+  settingsMenu->addSeparator();
+  settingsMenu->addAction(m_actionResetStats);
 
   auto* userMenu = bar->addMenu(tr("用户"));
   userMenu->addAction(m_actionUserManagement);
@@ -592,6 +749,15 @@ void MainWindow::setupConnections()
     connect(m_actionUserManagement, &QAction::triggered, this, &MainWindow::onUserManagementClicked);
     connect(m_actionChangePassword, &QAction::triggered, this, &MainWindow::onChangePasswordClicked);
     connect(m_actionLogout, &QAction::triggered, this, &MainWindow::onLogoutClicked);
+    
+    // 重置统计
+    connect(m_actionResetStats, &QAction::triggered, this, [this]() {
+        auto result = QMessageBox::question(this, tr("确认重置"),
+            tr("确定要重置今天的统计数据吗？此操作不可恢复。"));
+        if (result == QMessageBox::Yes) {
+            resetStatistics();
+        }
+    });
 }
 
 void MainWindow::onUserManagementClicked()

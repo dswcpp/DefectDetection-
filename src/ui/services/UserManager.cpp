@@ -55,11 +55,22 @@ bool UserManager::login(const QString& username, const QString& password) {
         return false;
     }
 
-    if (!UserRepository::verifyPassword(password, user.passwordHash)) {
+    // 检查账户是否锁定（在密码验证之前）
+    if (m_userRepo->isUserLocked(user.id)) {
+        LOG_WARN("UserManager::login - User locked: {}", username.toStdString());
+        emit loginFailed(tr("账户已锁定，请稍后再试"));
+        return false;
+    }
+
+    if (!UserRepository::verifyPassword(password, user.passwordHash, user.salt)) {
         LOG_WARN("UserManager::login - Invalid password for: {}", username.toStdString());
+        m_userRepo->recordLoginFailure(user.id);
         emit loginFailed(tr("用户名或密码错误"));
         return false;
     }
+
+    // 登录成功，重置登录失败计数
+    m_userRepo->resetLoginFailCount(user.id);
 
     // 缓存当前用户信息
     m_currentUserId = user.id;
@@ -127,11 +138,13 @@ bool UserManager::createUser(const QString& username, const QString& password,
 
     UserInfo user;
     user.username = username;
-    user.passwordHash = UserRepository::hashPassword(password);
+    user.salt = UserRepository::generateSalt();
+    user.passwordHash = UserRepository::hashPassword(password, user.salt);
     user.displayName = displayName;
     user.role = role;
     user.permissions = permissions;
     user.isActive = true;
+    user.mustChangePassword = false;
 
     qint64 id = m_userRepo->insert(user);
     if (id > 0) {
@@ -173,20 +186,20 @@ bool UserManager::deleteUser(qint64 userId) {
 
 bool UserManager::resetPassword(qint64 userId, const QString& newPassword) {
     if (!m_userRepo) return false;
-    QString hash = UserRepository::hashPassword(newPassword);
-    return m_userRepo->updatePassword(userId, hash);
+    // updatePassword 内部处理 salt 生成和 hash
+    return m_userRepo->updatePassword(userId, newPassword);
 }
 
 bool UserManager::changeOwnPassword(const QString& oldPassword, const QString& newPassword) {
     if (!m_isLoggedIn || !m_userRepo) return false;
 
     UserInfo user = m_userRepo->findById(m_currentUserId);
-    if (!UserRepository::verifyPassword(oldPassword, user.passwordHash)) {
+    if (!UserRepository::verifyPassword(oldPassword, user.passwordHash, user.salt)) {
         return false;
     }
 
-    QString hash = UserRepository::hashPassword(newPassword);
-    return m_userRepo->updatePassword(m_currentUserId, hash);
+    // updatePassword 内部处理 salt 生成和 hash
+    return m_userRepo->updatePassword(m_currentUserId, newPassword);
 }
 
 QString UserManager::permissionName(Permission perm) {
